@@ -1,0 +1,49 @@
+{
+  "seva": {
+    "title": {
+      "book_order_seva": "Book Order Seva",
+      "book_order_complain_seva": "Book Order Complain Seva",
+      "book_delivery_seva": "Book Delivery Seva",
+      "book_not_receive": "Book Not Receive Seva",
+      "calling_seva": "Calling Seva",
+      "allot_role": "Allot Roles",
+      "transfer": "Transfer",
+      "permission": "Permissions",
+      "assign_permission": "Assign Permissions",
+      "role_permission": "Role Permissions",
+      "user_permission": "Sevadar Permissions",
+      "post_order_seva": "Postal Order List",
+      "channels_seva": "Channel Seva",
+      "export_disciples": "Download Disciples List",
+      "manage_books": "Manage Books",
+      "book_language": "Manage Books Language",
+      "set_pincode": "Set Pincode",
+      "sangat_list": "Sangat List",
+      "social_media": "SM Seva",
+      "social_media_inner": "SM Seva Update",
+      "ramaini_seva": "Ramaini Seva",
+      "register_user": "Register Sevadar",
+      "other_login": "Other Login"
+    },
+    "subtitle": {
+      "book_order_seva": "Find Book Order Seva Details here",
+      "book_order_complain_seva": "Find Book Order Complain Here",
+      "book_delivery_seva": "Find Book Delivery Seva Details here",
+      "book_not_receive": "Find Book Not Receive Seva Details here",
+      "calling_seva": "Find Calling Seva Details here",
+      "allot_role": "Allot roles like team leaders & distributors",
+      "transfer": "Transfer state, district or tehsil",
+      "permission": "Allot and Revoke permissions",
+      "assign_permission": "Allot and Revoke permissions",
+      "role_permission": "Allot Permissions to Roles",
+      "user_permission": "Allot Permissions to Sevadar",
+      "post_order_seva": "Find By Post Order Seva Details Here",
+      "channels_seva": "Manage TV Channels",
+      "export_disciples": "Download Disciples Created From Forms",
+      "social_media": "SM Seva",
+      "social_media_inner": "SM Seva Update",
+      "ramaini_seva": "Ramaini Seva",
+      "register_user": "Register Sevadar"
+    }
+  }
+}

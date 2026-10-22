@@ -1,0 +1,41 @@
+{
+  "seva": {
+    "title": {
+      "book_order_seva": "बुक ऑर्डर सेवा",
+      "book_order_complain_seva": "बुक ऑर्डर शिकायत सेवा",
+      "book_delivery_seva": "बुक डिलीवरी सेवा",
+      "book_not_receive": "बुक प्राप्त नहीं हुई सेवा",
+      "calling_seva": "कॉलिंग सेवा",
+      "allot_role": "रोल नियुक्त करें",
+      "transfer": "ट्रांसफर करें",
+      "permission": "अनुमति",
+      "role_permission": "रोल अनुमति",
+      "user_permission": "सेवादार अनुमति",
+      "post_order_seva": "पोस्टल ऑर्डर सूची",
+      "channels_seva": "चैनल सेवा",
+      "export_disciples": "सेवादारों की सूची डाउनलोड करें",
+      "manage_books": "पुस्तक",
+      "book_language": "पुस्तकों की भाषाएँ",
+      "set_pincode": "पिनकोड सेट करें",
+      "sangat_list": "संगत लिस्ट",
+      "social_media": "सोशल मीडिया सेवा",
+      "register_user": "सेवादार जोड़ें",
+      "other_login": "Other Login"
+    },
+    "subtitle": {
+      "book_order_seva": "बुक ऑर्डर सेवा विवरण यहां पाएं",
+      "book_order_complain_seva": "बुक ऑर्डर शिकायत यहां पाएं",
+      "book_delivery_seva": "बुक डिलीवरी सेवा विवरण यहां पाएं",
+      "book_not_receive": "बुक प्राप्त नहीं हुई सेवा विवरण यहां पाएं",
+      "calling_seva": "कॉलिंग सेवा की जानकारी यहां पाएं",
+      "allot_role": "टीम लीडर और डिस्ट्रीब्यूटर के रोल नियुक्त करें",
+      "transfer": "राज्य, जिला या तहसील ट्रांसफर करें",
+      "permission": "अनुमति नियुक्त करें",
+      "role_permission": "रोल अनुमति नियुक्त करें",
+      "user_permission": "सेवादार अनुमति नियुक्त करें",
+      "post_order_seva": "पोस्टल ऑर्डर सेवा विवरण यहां पाएं",
+      "channels_seva": "टीवी चैनल प्रबंधित करें",
+      "social_media": "सोशल मीडिया सेवा"
+    }
+  }
+}

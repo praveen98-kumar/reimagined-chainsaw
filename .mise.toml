@@ -1,0 +1,5 @@
+[env]
+_.path = "{{ cwd }}/bin"
+
+[tools]
+node = "24"

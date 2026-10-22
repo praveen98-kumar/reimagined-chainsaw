@@ -1,0 +1,181 @@
+{
+  "heading": "Calling Seva",
+  "book": {
+    "heading": "Book Calling Seva",
+    "upload": "Upload Calling List",
+    "download": "Download Calling List",
+    "status": "Book Calling Seva Status",
+    "allot": "Book Calling Allot Seva",
+    "seva": {
+      "title": {
+        "allot": "Allot Seva",
+        "records": "Book Calling Seva Records",
+        "list": "Book Calling Seva",
+        "not-receive": "Book Calling Not Receive Seva",
+        "review": "Book Calling Review"
+      },
+      "subtitle": {
+        "allot": "Find the number alloted to you for book calling seva here.",
+        "records": "Find records of previously done seva here.",
+        "list": "Find the number alloted to you for book calling seva here.",
+        "not-receive": "Find the number of book calling seva marked as not receive by sevadar."
+      }
+    }
+  },
+  "ruchi": {
+    "heading": "Jyada Ruchi Calling Seva",
+    "upload": "Upload Calling List",
+    "download": "Download Calling List",
+    "status": "Jyada Ruchi Calling Seva Status",
+    "allot": "Jyada Ruchi Calling Allot Seva",
+    "seva": {
+      "title": {
+        "seva_in": "Jyada Ruchi Calling Seva IN",
+        "seva_out": "Jyada Ruchi Calling Seva OUT",
+        "record_in": "Records IN",
+        "record_out": "Records OUT"
+      },
+      "subtitle": {
+        "seva_in": "Find incoming Jyada Ruchi calling seva details here.",
+        "seva_out": "Find your accepted Jyada Ruchi book calling seva details here.",
+        "record_in": "Find incoming Jyada Ruchi calling records here",
+        "record_out": "Find records of previously done seva here"
+      }
+    }
+  },
+  "miss": {
+    "heading": "Missed Call Calling Seva",
+    "upload": "Upload Calling List",
+    "download": "Download Calling List",
+    "status": "Missed Call Calling Seva Status",
+    "allot": "Missed Call Calling Allot Seva",
+    "seva": {
+      "title": {
+        "allot": "Allot Seva",
+        "records": "Missed Call Calling Seva Records",
+        "list": "Missed Call Calling Seva"
+      },
+      "subtitle": {
+        "allot": "Find the number alloted to you for Missed call calling seva here.",
+        "records": "Find records of previously done seva here.",
+        "list": "Find the number alloted to you for Missed Call calling seva here."
+      }
+    }
+  },
+  "incomplete": {
+    "heading": "Incomplete Calling Seva",
+    "allot": "Incomplete Calling Allot Seva",
+    "status": "Incomplete Calling Seva Status",
+    "upload": "Upload Calling List",
+    "download": "Download Incomplete Orders",
+    "seva": {
+      "title": {
+        "allot": "Allot Seva",
+        "records": "Incomplete Calling Records",
+        "list": "Incomplete Calling Seva"
+      },
+      "subtitle": {
+        "allot": "Find the number alloted to you for Incorrect Message seva here.",
+        "records": "Find records of previously done seva here.",
+        "list": "Find the number alloted to you for Incorrect Message seva here."
+      }
+    }
+  },
+  "sincomplete": {
+    "heading": "S-Incomplete Calling Seva",
+    "allot": "S-Incomplete Calling Allot Seva",
+    "status": "S-Incomplete Calling Seva Status",
+    "upload": "Upload Calling List",
+    "download": "Download S-Incomplete Orders",
+    "not_interested": "Not Interested",
+    "seva": {
+      "title": {
+        "allot": "Allot Seva",
+        "records": "S-Incomplete Calling Records",
+        "list": "S-Incomplete Calling Seva"
+      },
+      "subtitle": {
+        "allot": "Find the number alloted to you for Incorrect Message seva here.",
+        "records": "Find records of previously done seva here.",
+        "list": "Find the number alloted to you for Incorrect Message seva here."
+      }
+    }
+  },
+  "duplicate": {
+    "heading": "Duplicate Order Seva",
+    "allot": "Duplicate Order Allot Seva",
+    "status": "Duplicate Order Seva Status",
+    "upload": "Upload Calling List",
+    "download": "Download Incomplete Orders",
+    "seva": {
+      "title": {
+        "allot": "Allot Seva",
+        "records": "Duplicate Calling Seva Records",
+        "list": "Duplicate Calling Seva"
+      },
+      "subtitle": {
+        "allot": "Find the number alloted to you for Duplicate calling seva here.",
+        "records": "Find records of previously done seva here.",
+        "list": "Find the number alloted to you for Duplicate calling seva here."
+      }
+    }
+  },
+  "namdan": {
+    "heading": "Namdan Calling Seva",
+    "allot": "Namdan Calling Allot Seva",
+    "status": "Namdan Calling Seva Status",
+    "upload": "Upload Calling List",
+    "seva": {
+      "title": {
+        "seva_in": "Namdan Calling Seva IN",
+        "seva_out": "Namdan Calling Seva OUT",
+        "allot": "Allot Seva",
+        "records_in": "Namdan Calling Seva IN Records",
+        "records_out": "Namdan Calling Seva OUT Records",
+        "list": "Namdan Calling Seva"
+      },
+      "subtitle": {
+        "seva_in": "Find incoming Namdan calling seva details here.",
+        "seva_out": "Find your accepted Namdan calling seva details here.",
+        "allot": "Find the number alloted to you for Namdan calling seva here.",
+        "records_in": "Find records of seva to accept here.",
+        "records_out": "Find records of previously done seva here.",
+        "list": "Find the number alloted to you for Namdan calling seva here."
+      }
+    }
+  },
+  "satnam": {
+    "heading": "Satnam Calling Seva",
+    "allot": "Satnam Calling Allot Seva",
+    "seva": {
+      "title": {
+        "allot": "Allot Seva",
+        "not_interested": "Not Interested Seva List",
+        "records": "Satnam Calling Seva Records",
+        "list": "Satnam Calling Seva"
+      },
+      "subtitle": {
+        "allot": "Find the number alloted to you for Satnam calling seva here.",
+        "not_interested": "Find the number of not interested seva allotted to District Sevadar.",
+        "records": "Find records of previously done seva here.",
+        "list": "Find the number alloted to you for Satnam calling seva here."
+      }
+    }
+  },
+  "old": {
+    "heading": "Old Calling Seva",
+    "allot": "Old Calling Allot Seva",
+    "seva": {
+      "title": {
+        "allot": "Allot Seva",
+        "records": "Old Calling Seva Records",
+        "list": "Old Calling Seva"
+      },
+      "subtitle": {
+        "allot": "Find the number alloted to you for Old calling seva here.",
+        "records": "Find records of previously done seva here.",
+        "list": "Find the number alloted to you for Old calling seva here."
+      }
+    }
+  }
+}

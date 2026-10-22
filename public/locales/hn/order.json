@@ -1,0 +1,42 @@
+{
+  "today_national": "आज के राष्ट्रीय ऑर्डर्स",
+  "today_international": "आज के अंतरराष्ट्रीय ऑर्डर्स",
+  "month_national": "इस महीने के राष्ट्रीय ऑर्डर्स",
+  "month_international": "इस महीने के अंतरराष्ट्रीय ऑर्डर्स",
+  "status": {
+    "book_order_status": "बुक ऑर्डर स्टेटस",
+    "national_order_status": "राष्ट्रीय बुक ऑर्डर स्टेटस",
+    "international_order_status": "अंतरराष्ट्रीय बुक ऑर्डर स्टेटस"
+  },
+  "seva": {
+    "title": {
+      "order_form_national": "राष्ट्रीय ऑर्डर्स फॉर्म",
+      "emergency_order_national": "राष्ट्रीय इमरजेंसी ऑर्डर्स फॉर्म",
+      "order_form_international": "अंतरराष्ट्रीय ऑर्डर्स फॉर्म",
+      "add_complaint": "बुक ऑर्डर शिकायत",
+      "download_national": "राष्ट्रीय ऑर्डर्स डाउनलोड करें",
+      "upload_national": "राष्ट्रीय ऑर्डर्स अपलोड करें",
+      "download_book_complain": "बुक ऑर्डर शिकायत डाउनलोड करें",
+      "download_international": "अंतरराष्ट्रीय ऑर्डर्स डाउनलोड करें",
+      "upload_international": "अंतरराष्ट्रीय ऑर्डर्स अपलोड करें"
+    },
+    "heading": {
+      "main": "बुक ऑर्डर सेवा",
+      "order_form": "बुक ऑर्डर फॉर्म",
+      "order_complain_form": "बुक ऑर्डर शिकायत फॉर्म",
+      "namdan_form": "नामदान में रुचि फॉर्म",
+      "order": "{{emergency}} बुक ऑर्डर फॉर्म ({{countryType}})"
+    }
+  },
+  "track_order": "ऑर्डर्स ट्रैक करें",
+  "create_order": "ऑर्डर्स बनाएं",
+  "delete_order": "ऑर्डर्स हटाए",
+  "reopen_order": "ऑर्डर्स को दोबारा खोलें",
+  "send_to_emergency": "इमरजेंसी में भेजें",
+  "raise_complain": "शिकायत दर्ज करें",
+  "no_order": "ऑर्डर्स नहीं मिला",
+  "showing_result": "लोड हो रहा है",
+  "submit_order": "सबमिट",
+  "top10": "{{date}} तक टॉप 10 सेवादार",
+  "order_list": "ऑर्डर लिस्ट"
+}

@@ -1,0 +1,43 @@
+{
+  "today_national": "Today's National Order",
+  "today_international": "Today's International Order",
+  "month_national": "This Month's National Order",
+  "month_international": "This Month's International Order",
+  "status": {
+    "book_order_status": "Book Order Status",
+    "national_order_status": "National Book Order Status",
+    "international_order_status": "International Book Order Status"
+  },
+  "seva": {
+    "title": {
+      "order_form_national": "Book Order Form (National)",
+      "emergency_order_national": "Emergency Order Form (National)",
+      "order_form_international": "Book Order Form (International)",
+      "add_complaint": "Book Order Complaint",
+      "download_national": "Download National Orders",
+      "upload_national": "Upload National Orders",
+      "download_book_complain": "Download Book Order Complains",
+      "download_international": "Download International Orders",
+      "upload_international": "Upload International Orders",
+      "upload_national_sm": "SM Office Upload Orders"
+    },
+    "heading": {
+      "main": "Book Order Seva",
+      "order_form": "Book Order Form",
+      "order_complain_form": "Book Order Complain Form",
+      "namdan_form": "Interested (Namdan) Form",
+      "order": "{{emergency}} Book Order Form ({{countryType}})"
+    }
+  },
+  "track_order": "Track Order",
+  "create_order": "Create Order",
+  "delete_order": "Delete Order",
+  "reopen_order": "Reopen Order",
+  "send_to_emergency": "Send to Emergency Orders",
+  "raise_complain": "Raise Complain",
+  "no_order": "No Order Found",
+  "showing_result": "Showing Result",
+  "submit_order": "Submit Order",
+  "top10": "Top 10 sevadar as on {{date}}",
+  "order_list": "Orders List"
+}

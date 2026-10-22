@@ -1,0 +1,37 @@
+{
+  "no_order": "No order found",
+  "update_location_status": "Update Location Status",
+  "update_postal_location": "Update Postal Location",
+  "download_order_list": "Download Order List",
+  "download_incomplete_order": "Download Incomplete Order ",
+  "download_postal_order_list": "Download Postal Order List",
+  "status": "Book Delivery Status",
+  "seva": {
+    "title": {
+      "main": "Book Delivery Seva",
+      "seva_in": "Book Delivery Seva In",
+      "seva_out": "Book Delivery Seva Out",
+      "not_receive_main": "Book Not Receive",
+      "not_receive_seva_in": "Book Not Receive In",
+      "not_receive_seva_out": "Book Not Receive Out",
+      "records_in": "In Records",
+      "records_out": "Out Records",
+      "wrong_location": "Update Address",
+      "not_receive": "Calling - Book Compliant Seva",
+      "wrong_location_records": "Update Address Records",
+      "not_receive_records": "Book Compliant (Calling) Records"
+    },
+    "subtitle": {
+      "seva_in": "Find incoming book delivery address from here.",
+      "seva_out": "Find your accepted book delivery address from here.",
+      "records_in": "Find incoming book delivery address records from here.",
+      "records_out": "Find record of all your accepted book delivery address from here.",
+      "wrong_location": "Book Delivery Update Address",
+      "not_receive": "Find the number of book delivery seva marked as not receive by sevadar.",
+      "wrong_location_records": "Book Delivery Update Address",
+      "not_receive_records": "Find the number of book delivery seva marked as not receive by sevadar."
+    }
+  },
+  "alert_10": "Please complete your pending delivery seva.",
+  "alert_15": "Please complete your pending delivery seva to accept more order."
+}

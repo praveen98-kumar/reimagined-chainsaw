@@ -1,0 +1,37 @@
+{
+  "no_order": "ऑर्डर्स नहीं मिला",
+  "update_location_status": "पता",
+  "update_postal_location": "Update Postal Location",
+  "download_order_list": "ऑर्डर्स डाउनलोड करें",
+  "download_incomplete_order": "अपूर्ण ऑर्डर्स डाउनलोड करें",
+  "download_postal_order_list": "ऑर्डर्स डाउनलोड करें",
+  "status": "बुक डिलीवरी सेवा स्टेटस",
+  "seva": {
+    "title": {
+      "main": "बुक डिलीवरी सेवा",
+      "seva_in": "बुक डिलीवरी सेवा In",
+      "seva_out": "बुक डिलीवरी सेवा Out",
+      "not_receive_main": "बुक प्राप्त नहीं हुई",
+      "not_receive_seva_in": "बुक प्राप्त नहीं हुई In",
+      "not_receive_seva_out": "बुक प्राप्त नहीं हुई Out",
+      "records_in": "In Records",
+      "records_out": "Out Records",
+      "wrong_location": "स्थान अपडेट करें",
+      "not_receive": "कॉलिंग पुस्तक कंप्लेंट सेवा",
+      "wrong_location_records": "स्थान अपडेट करें Records",
+      "not_receive_records": "पुस्तक कंप्लेंट (कॉलिंग) Records"
+    },
+    "subtitle": {
+      "seva_in": "बुक डिलीवरी कॉलिंग सेवा के लिए मेसेज यहां से प्राप्त करें",
+      "seva_out": "प्राप्त  हुई बुक डिलीवरी कॉलिंग सेवा पूर्ण यहां करे",
+      "records_in": "आने वाली बुक डिलीवरी- कॉलिंग सेवा विवरण यहाँ प्राप्त करें",
+      "records_out": "प्राप्त हुई बुक डिलीवरी कॉलिंग सेवा के रेकॉर्ड्स",
+      "wrong_location": "बुक डिलीवरी स्थान अपडेट करें",
+      "not-receive": "प्राप्त हुई कॉलिंग पुस्तक नहीं मिली सेवा यहां पाएं",
+      "wrong_location_records": "बुक डिलीवरी स्थान अपडेट करें Records",
+      "not_receive_records": "प्राप्त हुई कॉलिंग पुस्तक नहीं मिली सेवा यहां पाएं"
+    }
+  },
+  "alert_10": "कृपया अपनी पेंडिंग सेवा पूरी करें।",
+  "alert_15": "अधिक ऑर्डर स्वीकार करने के लिए कृपया अपनी पेंडिंग डिलीवरी सेवा पूरी करें।"
+}
