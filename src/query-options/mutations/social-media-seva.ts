@@ -27,7 +27,7 @@ async function queueSocialAnswers(
 
 export function useSocialMediaSevaMutation(
   options?: UseMutationOptions<Response, Error, Input>,
-  headers = {},
+  headers?: Record<string, unknown> = {},
 ) {
   return useMutation({
     mutationFn: (values) => queueSocialAnswers(values, headers),
