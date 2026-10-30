@@ -2,7 +2,7 @@ import FingerprintJS from "@fingerprintjs/fingerprintjs";
 import { Form, Formik, type FormikValues } from "formik";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import * as Yup from "yup";
 import Button from "@/components/Button";
@@ -40,6 +40,59 @@ const detectLoginMethod = (input: string) => {
   const isMobile = /^\d{10}$/.test(input);
   return isMobile ? "mobile" : "username";
 };
+
+/* ---------- "Saffron & Ivory" look ---------- */
+
+// Ivory card that holds each form
+const cardClass =
+  "relative mt-5 w-full space-y-4 rounded-[22px] border border-orange-200 bg-white p-5 " +
+  "shadow-[0_10px_26px_rgba(154,52,18,0.14)]";
+
+// Deep-orange gradient primary button (the "!" wins over the Button variant styles)
+const primaryButtonClass =
+  "mx-auto w-full !h-[52px] !rounded-[14px] !border-0 !text-lg !font-bold !text-white " +
+  "!bg-gradient-to-r !from-[#c2410c] !to-[#9a3412] " +
+  "!shadow-[0_6px_16px_rgba(154,52,18,0.3)]";
+
+const linkClass =
+  "text-[15px] font-semibold text-[#9a3412] hover:text-[#431407] hover:underline";
+
+const AuthShell = ({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  children: ReactNode;
+}) => (
+  <div className="min-h-screen w-full bg-[#fffaf0]">
+    <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col items-center overflow-hidden px-5 pb-8 pt-14">
+      {/* saffron-to-gold curved banner */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 h-[330px] rounded-b-[40px]"
+        style={{
+          background: "linear-gradient(160deg, #fdba74 0%, #fde68a 100%)",
+        }}
+      />
+      <div className="relative h-[230px] w-[230px] shrink-0 overflow-hidden rounded-full border-[5px] border-white bg-white shadow-[0_0_0_6px_#f59e0b,0_14px_32px_rgba(154,52,18,0.3)]">
+        {/* biome-ignore lint/performance/noImgElement: static login artwork */}
+        <img
+          src="/assets/images/loginScreen.jpg"
+          alt=""
+          className="h-full w-full object-cover"
+          style={{ objectPosition: "center 8%" }}
+        />
+      </div>
+      <div className="relative mt-6 text-center">
+        <h1 className="text-[26px] font-bold text-[#431407]">{title}</h1>
+        <p className="text-[15px] text-[#7c2d12]">{subtitle}</p>
+      </div>
+      {children}
+    </div>
+  </div>
+);
 
 const LoginForm: NextApplicationPage = () => {
   const dispatch = useAppDispatch();
@@ -105,6 +158,14 @@ const LoginForm: NextApplicationPage = () => {
         setStartWithPin(false);
       } else {
         if (response?.data?.data?.is_pin_set === false) {
+          // Forgot-PIN / first-time verify_otp path (SAG-1378).
+          // Backend issues a 10-min JWT so the follow-up /set_pin call
+          // is authenticated. Persist it so the axios interceptor adds
+          // Authorization: Bearer <token> on /set_pin.
+          const pinResetToken = response?.data?.data?.token;
+          if (pinResetToken) {
+            localStorage.setItem("token", pinResetToken);
+          }
           setIsPinSet(false);
           setLoginWithOtp(false);
           setUserId((response?.data?.data?.user_id as number) ?? undefined);
@@ -112,7 +173,7 @@ const LoginForm: NextApplicationPage = () => {
         }
         const userAlreadyExists = userExists(
           response.data.data[0].mobile_no,
-          response.data.data[0].id
+          response.data.data[0].id,
         );
         dispatch(reduxlogin(response.data.data));
 
@@ -132,7 +193,7 @@ const LoginForm: NextApplicationPage = () => {
           ) {
             toast.success(
               `${userName} added. Maximum ${MAX_USERS} users reached. Oldest user removed.`,
-              { duration: 3000, id: loginToastId }
+              { duration: 3000, id: loginToastId },
             );
           } else {
             toast.success(`${userName} logged in successfully!`, {
@@ -149,7 +210,7 @@ const LoginForm: NextApplicationPage = () => {
         const firstUserItem = response.data.data[0];
         for (let i = 0; i < [...firstUserItem.role_level].length; i += 1) {
           const item = [...firstUserItem.permission].some((p) =>
-            [...firstUserItem.role_level][i].roles.includes(p.role_id)
+            [...firstUserItem.role_level][i].roles.includes(p.role_id),
           );
           if (item) {
             rolesList.push({
@@ -189,22 +250,26 @@ const LoginForm: NextApplicationPage = () => {
       });
       toast.success(
         `${response.data?.message}, please enter your pin to login.`,
-        { duration: 5000 }
+        { duration: 5000 },
       );
+      // Clear the short-lived PIN-reset JWT (SAG-1378). User must now
+      // log in fresh with their new PIN to get a full session token.
+      localStorage.removeItem("token");
       setIsPinSet(true);
       setStartWithPin(true);
+      setLoginWithOtp(false);
       const userObj = localStorage.getItem("user");
-      let puserObj = null;
       if (userObj) {
-        puserObj = JSON.parse(userObj);
+        const puserObj = JSON.parse(userObj);
+        puserObj.is_pin_set = true;
+        localStorage.setItem("user", JSON.stringify(puserObj));
       }
-      puserObj.is_pin_set = true;
-      localStorage.setItem("user", JSON.stringify(puserObj));
       if (user) {
         user.is_pin_set = true;
       }
-      // setClaimPinSet(false);
-      router.push("/");
+      // Stay on the Enter-PIN screen so the user signs in with their
+      // new PIN. router.push("/") would bounce back to /login anyway
+      // because there is no full session token yet.
     } catch (e: any) {
       toast.error(e?.response?.data?.error);
     } finally {
@@ -243,18 +308,16 @@ const LoginForm: NextApplicationPage = () => {
   }, [router.isReady]);
 
   return (
-    <div className="h-screen">
-      <div
-        className="min-h-screen bg-fixed w-full mx-auto max-w-md flex flex-col items-center"
-        style={{
-          backgroundImage: `url(/assets/images/loginScreen.jpg)`,
-          backgroundSize: "contain",
-          backgroundPositionY: "top",
-          backgroundPositionX: "center",
-          backgroundRepeat: "no-repeat",
-        }}
-      >
-        {loginWithOtp && (
+    <>
+      {loginWithOtp && (
+        <AuthShell
+          title={otpRequired ? "Verify OTP" : "Sevadar Login"}
+          subtitle={
+            otpRequired
+              ? "Enter the 6-digit OTP sent to your mobile"
+              : "Social Media Seva · Book Order Seva"
+          }
+        >
           <Formik
             initialValues={{ username: "", login_otp: "", device_id: "local" }}
             onSubmit={(values, { setSubmitting }) => {
@@ -269,7 +332,7 @@ const LoginForm: NextApplicationPage = () => {
             validateOnBlur={false}
           >
             {({ values, setFieldValue }) => (
-              <Form className="space-y-4 mt-96 w-full p-4">
+              <Form className={cardClass}>
                 {otpRequired ? (
                   <OtpInput
                     value={values.login_otp}
@@ -287,7 +350,7 @@ const LoginForm: NextApplicationPage = () => {
                     onChange={(e) =>
                       setFieldValue(
                         "username",
-                        String(e.target.value).replaceAll(/\s+/g, "")
+                        String(e.target.value).replaceAll(/\s+/g, ""),
                       )
                     }
                   />
@@ -295,26 +358,41 @@ const LoginForm: NextApplicationPage = () => {
                 <Button
                   variant="primary"
                   type="submit"
-                  className="mx-auto w-1/2"
+                  className={primaryButtonClass}
                   disabled={loading}
                   loading={loading}
                 >
                   {forgotPinShow || otpRequired ? "Login" : "Get OTP"}
                 </Button>
-                <div className="flex w-full pt-6 px-4 justify-center items-center">
+                <div className="flex w-full items-center justify-between pt-1">
                   {forgotPinShow && (
-                    <span onClick={forgotPin}>Forgot Pin?</span>
+                    <button
+                      type="button"
+                      onClick={forgotPin}
+                      className={linkClass}
+                    >
+                      Forgot Pin?
+                    </button>
                   )}
-                  <Link href={"/register"} className={"ml-10"}>
-                    <span className="hover:underline">Register</span>
+                  <Link href={"/register"} className={`${linkClass} ml-auto`}>
+                    Register
                   </Link>
                 </div>
               </Form>
             )}
           </Formik>
-        )}
+        </AuthShell>
+      )}
 
-        {!loginWithOtp && !isPinSet && (
+      {!loginWithOtp && !isPinSet && (
+        <AuthShell
+          title={`Set ${authMethod === "username" ? "Password" : "Pin"}`}
+          subtitle={
+            authMethod === "username"
+              ? "Create a password for your account"
+              : "Create a 4-digit PIN for quick login"
+          }
+        >
           <Formik
             initialValues={{ pin: "" }}
             onSubmit={(values, { setSubmitting }) => {
@@ -327,13 +405,7 @@ const LoginForm: NextApplicationPage = () => {
             }}
           >
             {({ values, setFieldValue }) => (
-              <Form className="space-y-4 mt-96 p-4 w-full ">
-                <div>
-                  <p className="font-bold text-center">
-                    Set {authMethod === "username" ? "Password" : "Pin"}
-                  </p>
-                </div>
-
+              <Form className={cardClass}>
                 {authMethod === "username" ? (
                   <Input
                     name="pin"
@@ -356,7 +428,7 @@ const LoginForm: NextApplicationPage = () => {
                 <Button
                   variant="primary"
                   type="submit"
-                  className="mx-auto w-1/2"
+                  className={primaryButtonClass}
                   disabled={loading}
                   loading={loading}
                 >
@@ -365,9 +437,14 @@ const LoginForm: NextApplicationPage = () => {
               </Form>
             )}
           </Formik>
-        )}
+        </AuthShell>
+      )}
 
-        {isPinSet && startWithPin && (
+      {isPinSet && startWithPin && (
+        <AuthShell
+          title={`Enter ${authMethod === "username" ? "Password" : "Pin"}`}
+          subtitle="Welcome back, Sevadar"
+        >
           <Formik
             initialValues={{
               pin: "",
@@ -384,13 +461,7 @@ const LoginForm: NextApplicationPage = () => {
             }}
           >
             {({ values, setFieldValue }) => (
-              <Form className="space-y-4 mt-96 w-full p-4">
-                <div>
-                  <p className="font-bold text-center">
-                    Enter {authMethod === "username" ? "Password" : "Pin"}
-                  </p>
-                </div>
-
+              <Form className={cardClass}>
                 {authMethod === "username" ? (
                   <Input
                     name="pin"
@@ -413,7 +484,7 @@ const LoginForm: NextApplicationPage = () => {
                 <Button
                   variant="primary"
                   type="submit"
-                  className="mx-auto w-1/2"
+                  className={primaryButtonClass}
                   disabled={loading}
                   loading={loading}
                 >
@@ -422,9 +493,9 @@ const LoginForm: NextApplicationPage = () => {
               </Form>
             )}
           </Formik>
-        )}
-      </div>
-    </div>
+        </AuthShell>
+      )}
+    </>
   );
 };
 

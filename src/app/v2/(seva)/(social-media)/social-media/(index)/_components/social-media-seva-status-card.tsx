@@ -25,7 +25,7 @@ import { useMemo } from "react";
 import type { Region } from "@/shared/interfaces/user";
 import useIsMounted from "@/hooks/useIsMounted";
 
-const blueBg = "bg-linear-to-r from-[#000c45] to-[#0C3BE3]";
+const headerBg = "bg-[#c2410c]";
 
 const ChartComponent = ({
   pending,
@@ -38,20 +38,20 @@ const ChartComponent = ({
   pending: number;
   submitted: number;
   upcomming?: number;
-  pendingColor?: string,
-  submittedColor?: string,
-  upcommingColor?: string,
+  pendingColor?: string;
+  submittedColor?: string;
+  upcommingColor?: string;
 }) => {
   const chartData = [
     {
       name: "pending",
       value: pending,
-      fill: pendingColor ?? "#010D48",
+      fill: pendingColor ?? "#dc2626",
     },
     {
       name: "submitted",
       value: submitted,
-      fill: submittedColor ?? "#2554FF",
+      fill: submittedColor ?? "#16a34a",
     },
   ];
 
@@ -73,13 +73,16 @@ const ChartComponent = ({
     // },
   } satisfies ChartConfig;
 
-  const finalChartData = upcomming ? [...chartData,
-    {
-      name: "upcomming",
-      value: upcomming,
-      fill: upcommingColor ?? "#FFCC00",
-    },
-  ] : chartData
+  const finalChartData = upcomming
+    ? [
+        ...chartData,
+        {
+          name: "upcomming",
+          value: upcomming,
+          fill: upcommingColor ?? "#f59e0b",
+        },
+      ]
+    : chartData;
   const total = finalChartData.reduce((a, c) => a + c.value, 0);
   const RADIAN = Math.PI / 180;
 
@@ -105,7 +108,7 @@ const ChartComponent = ({
       <text
         x={x}
         y={y}
-        fill="#333"
+        fill="#7c2d12"
         textAnchor={isRightSide ? "start" : "end"}
         dominantBaseline="middle"
         fontSize={11}
@@ -155,12 +158,12 @@ export const SocialMediaDataComponent = ({
   return (
     <div className="flex-1 flex gap-1 items-start py-4 justify-end text-xs">
       <div>
-        <p className="flex-1 text-right text-[#22C55E]">{submitted}</p>
-        <p className="flex-1 text-right text-[#FF383C]">{pending}</p>
+        <p className="flex-1 text-right text-[#15803d]">{submitted}</p>
+        <p className="flex-1 text-right text-[#b91c1c]">{pending}</p>
       </div>
       <div>
-        <p className="text-slate-800 text-left flex-1">Submitted</p>
-        <p className="text-slate-800 text-left flex-1">Pending</p>
+        <p className="text-[#7c2d12] text-left flex-1">Submitted</p>
+        <p className="text-[#7c2d12] text-left flex-1">Pending</p>
       </div>
     </div>
   );
@@ -212,16 +215,16 @@ export const SocialMediaSevaStatusCard = ({
     return null;
   }
   return (
-    <Card className="rounded-lg py-0 gap-0">
+    <Card className="gap-0 overflow-hidden rounded-2xl border border-orange-200 bg-white py-0 shadow-[0_8px_22px_rgba(154,52,18,0.14)]">
       <CardHeader
         className={cn(
-          "py-1.25 text-white text-xs font-bold text-center leading-tight relative",
-          blueBg,
+          "py-2 text-white text-sm font-bold text-center leading-tight relative",
+          headerBg,
         )}
       >
         <CardTitle className="font-bold">Social Media Seva Status</CardTitle>
         <Image
-          className="absolute top-3 left-2"
+          className="absolute top-2.5 left-2"
           src={"/icons/v2/social-media-update.svg"}
           alt="Social media update"
           width={30}
@@ -283,29 +286,31 @@ export const SocialMediaSevaStatusCard = ({
                 ? undefined
                 : totalDays - new Date().getDate()
             }
-
-            pendingColor="#FF383C"
-            submittedColor="#22C55E"
-            upcommingColor="#FFCC00"
+            pendingColor="#dc2626"
+            submittedColor="#16a34a"
+            upcommingColor="#f59e0b"
           />
 
           {activeRole === sevadar_type ? (
             <div className="flex-1 flex gap-1 items-start py-4 justify-end text-xs">
               <div>
-                <p className="flex-1 text-right text-[#22C55E]">
-                  {String(values.social_media_seva || 0).padStart(2, '0')}
+                <p className="flex-1 text-right text-[#15803d]">
+                  {String(values.social_media_seva || 0).padStart(2, "0")}
                 </p>
-                <p className="flex-1 text-right text-[#FF383C]">
-                  {String(new Date().getDate() - Number(values.social_media_seva || 0)).padStart(2, '0')}
+                <p className="flex-1 text-right text-[#b91c1c]">
+                  {String(
+                    new Date().getDate() -
+                      Number(values.social_media_seva || 0),
+                  ).padStart(2, "0")}
                 </p>
-                <p className="flex-1 text-right text-[#FFCC00]">
-                  {String(totalDays - new Date().getDate()).padStart(2, '0')}
+                <p className="flex-1 text-right text-[#b45309]">
+                  {String(totalDays - new Date().getDate()).padStart(2, "0")}
                 </p>
               </div>
               <div>
-                <p className="text-slate-800 text-left flex-1">Submitted</p>
-                <p className="text-slate-800 text-left flex-1">Missed</p>
-                <p className="text-slate-800 text-left flex-1">Upcomming</p>
+                <p className="text-[#7c2d12] text-left flex-1">Submitted</p>
+                <p className="text-[#7c2d12] text-left flex-1">Missed</p>
+                <p className="text-[#7c2d12] text-left flex-1">Upcoming</p>
               </div>
             </div>
           ) : (
@@ -313,8 +318,10 @@ export const SocialMediaSevaStatusCard = ({
           )}
         </div>
         {activeRole === "ashram_admin" && (
-          <div className=" px-1">
-            <h3 className="font-semibold text-md">Today's Top Platforms</h3>
+          <div className="px-1 pb-3">
+            <h3 className="pb-1 font-semibold text-[#431407]">
+              Today's Top Platforms
+            </h3>
             <PlatformList />
           </div>
         )}

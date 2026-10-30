@@ -27,15 +27,15 @@ async function queueSocialAnswers(
 
 export function useSocialMediaSevaMutation(
   options?: UseMutationOptions<Response, Error, Input>,
-  headers?: Record<string, unknown> = {},
+  headers: Record<string, unknown> = {},
 ) {
   return useMutation({
     mutationFn: (values) => queueSocialAnswers(values, headers),
     onSuccess: (data) => {
-      const queryClient = getQueryClient()
+      const queryClient = getQueryClient();
       queryClient.invalidateQueries({
-        queryKey: ["social_media_seva", headers?.user_role_id]
-      })
+        queryKey: ["social_media_seva", headers?.user_role_id],
+      });
       toast.success(data.message);
     },
     ...options,

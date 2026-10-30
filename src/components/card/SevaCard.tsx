@@ -50,7 +50,7 @@ const SevaCard: React.FC<SevaCardProps> = React.forwardRef(
     return (
       <div
         ref={ref}
-        className="bg-white flex flex-col items-center justify-start space-y-1 rounded-lg border border-gray-400 drop-shadow-lg cursor-pointer px-2 py-3"
+        className="flex cursor-pointer flex-col items-center justify-start space-y-1 rounded-2xl border border-orange-200 bg-white px-2 py-3 shadow-[0_8px_22px_rgba(154,52,18,0.14)] transition-colors hover:bg-orange-50"
         onClick={
           onClick
             ? () => onClick()
@@ -81,11 +81,11 @@ const SevaCard: React.FC<SevaCardProps> = React.forwardRef(
         }
       >
         {Icon}
-        <p className="text-center leading-snug text-primary font-medium text-md">
+        <p className="text-md text-center font-semibold leading-snug text-[#9a3412]">
           {title}
         </p>
         <p
-          className={`text-center text-sm leading-snug font-medium text-gray-500 ${
+          className={`text-center text-sm leading-snug font-medium text-[#7c2d12]/80 ${
             showSubTitle ? "" : "hidden"
           }`}
         >

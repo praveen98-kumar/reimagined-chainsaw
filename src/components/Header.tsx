@@ -57,9 +57,11 @@ const Header: React.FC<HeaderProps> = ({
   //       ];
   return (
     <div
-      className={`flex px-3 py-2 z-20 fixed bg-black top-0 left-0 w-full right-0 items-center shadow-lg justify-${
-        isBack ? "center h-[75px]" : "between"
-      } bg-primary`}
+      className={`flex px-3 py-2 z-20 fixed top-0 left-0 w-full right-0 items-center ${
+        isBack
+          ? "justify-center h-[75px] bg-black bg-primary shadow-lg"
+          : "justify-between bg-[#fffaf0] border-b border-orange-200 shadow-[0_4px_16px_rgba(154,52,18,0.10)]"
+      }`}
     >
       {isBack ? (
         <>
@@ -85,15 +87,18 @@ const Header: React.FC<HeaderProps> = ({
         </>
       ) : (
         <>
-          <RiMenuFill
+          <button
+            type="button"
+            aria-label="Open menu"
             onClick={() => (setShow ? setShow(true) : {})}
-            color="white"
-            className="w-6 h-6 cursor-pointer"
-          />
+            className="flex size-10 items-center justify-center rounded-full bg-orange-100 text-[#9a3412] hover:bg-orange-200"
+          >
+            <RiMenuFill className="size-6" />
+          </button>
 
-          <div className="text-center text-white font-normal">
-            <p className="text-2xl">Satlok Ashram</p>
-            <span className="text-xl leading-snug">
+          <div className="text-center font-normal">
+            <p className="text-2xl font-bold text-[#431407]">Satlok Ashram</p>
+            <span className="text-lg font-medium leading-snug text-[#9a3412]">
               {active_permission?.role === "ashram_sevadar"
                 ? "Ashram Sevadar"
                 : all_permission && all_permission.group
@@ -107,8 +112,7 @@ const Header: React.FC<HeaderProps> = ({
           </div>
 
           <RiSearchLine
-            color="white"
-            className="w-6 h-6 cursor-pointer"
+            className="size-10 cursor-pointer p-2"
             style={{ visibility: "hidden" }}
           />
         </>

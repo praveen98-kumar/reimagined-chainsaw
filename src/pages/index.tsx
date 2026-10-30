@@ -299,7 +299,13 @@ const Home: NextApplicationPage = () => {
 
   return (
     <Layout>
-      <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      <div
+        className="min-h-full bg-[#fffaf0] p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 content-start gap-4"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 100% 0%, rgba(253,186,116,0.35), transparent 45%), radial-gradient(circle at 0% 100%, rgba(253,230,138,0.35), transparent 45%)",
+        }}
+      >
         {list.map((item) => {
           let title = item.title;
           let subtitle = item.subtitle;

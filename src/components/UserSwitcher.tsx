@@ -4,12 +4,11 @@ import { useRouter } from "next/router";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { FaUsers } from "react-icons/fa";
+import { FaCheck, FaChevronDown, FaUsers } from "react-icons/fa";
 import { MdLogin } from "react-icons/md";
 
-import { removeUser, switchUser } from "@/redux/features/authSlice";
+import { removeUser, switchUser, updateRole } from "@/redux/features/authSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/store";
-import { cn } from "@/shared/functions/utils";
 import {
   getActiveUserId,
   getUsersCount,
@@ -17,6 +16,18 @@ import {
   MAX_USERS,
   type StoredUser,
 } from "@/utils/multi-user-storage";
+import { RoleLevel } from "@/shared/interfaces/user";
+import {
+  countBadge,
+  dashedAction,
+  iconChip,
+  menuRowClosed,
+  menuRowOpen,
+  rowLabel,
+  subItem,
+  subItemActive,
+  subPanel,
+} from "./sidebarTheme";
 
 const UserSwitcher = ({
   setShow,
@@ -57,6 +68,22 @@ const UserSwitcher = ({
 
     dispatch(switchUser(discipleId));
     setOpen(false);
+    const selectedUser = users.find((user) => user.disciple_id === discipleId);
+    if (selectedUser) {
+      const rolesList: RoleLevel[] = [];
+      for (let i = 0; i < selectedUser.user.role_level.length; i++) {
+        const item = selectedUser.user.permission.some((p) =>
+          selectedUser.user.role_level[i].roles.includes(p.role_id),
+        );
+        if (item) {
+          rolesList.push({
+            group: selectedUser.user.role_level[i].group,
+            roles: selectedUser.user.role_level[i].roles,
+          });
+        }
+      }
+      dispatch(updateRole(rolesList[0]));
+    }
     setTimeout(() => {
       setShow(false);
       router.reload();
@@ -105,23 +132,29 @@ const UserSwitcher = ({
 
   return (
     <div>
-      <motion.div
+      <button
+        type="button"
+        aria-expanded={open}
         onClick={() => users.length > 0 && setOpen((pre) => !pre)}
-        className={`bg-gray-100 p-2 py-3 border border-gray-300 ${
-          open ? "rounded-t-md" : "rounded-md"
-        } flex w-full items-center space-between cursor-pointer`}
+        className={open ? menuRowOpen : menuRowClosed}
       >
-        <FaUsers className="mr-4" />
-        <span className="font-bold text-gray-700 cursor-pointer flex-1">
-          Switch User ({usersCount})
+        <span className={iconChip}>
+          <FaUsers className="size-4" />
         </span>
-      </motion.div>
+        <span className={rowLabel}>Switch User</span>
+        <span className={countBadge}>{usersCount}</span>
+        <FaChevronDown
+          className={`size-3.5 text-[#9a3412] transition-transform ${
+            open ? "rotate-180" : ""
+          }`}
+        />
+      </button>
       <AnimatePresence initial={false}>
         {open && users.length > 0 && (
           <motion.div
-            className="p-2 space-y-2 bg-gray-900 rounded-b-lg max-h-96 overflow-y-auto"
+            className={`${subPanel} max-h-96 overflow-y-auto`}
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", maxHeight: "96", opacity: 1 }}
+            animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
@@ -132,23 +165,12 @@ const UserSwitcher = ({
                   type="button"
                   key={storedUser.disciple_id}
                   onClick={() => handleSwitchUser(storedUser.disciple_id)}
-                  className={`${
-                    isActive ? "bg-white text-gray-800" : "text-white"
-                  } rounded-md p-2 flex w-full items-center space-between cursor-pointer`}
+                  className={isActive ? subItemActive : subItem}
                 >
-                  <div className="flex-1 min-w-0 font-bold truncate">
+                  <span className="flex-1 min-w-0 truncate">
                     {storedUser.name || storedUser.mobile_no}
-                  </div>
-                  {isActive && (
-                    <span
-                      className={cn(
-                        "inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden",
-                        "h-6 bg-blue-500 text-white",
-                      )}
-                    >
-                      Active
-                    </span>
-                  )}
+                  </span>
+                  {isActive && <FaCheck className="size-3.5 text-green-700" />}
                 </button>
               );
             })}
@@ -156,12 +178,10 @@ const UserSwitcher = ({
               <Link
                 href={"/login"}
                 onClick={() => setShow(false)}
-                className={`bg-white text-gray-800 rounded-md p-2 flex w-full items-center space-between cursor-pointer`}
+                className={dashedAction}
               >
-                <MdLogin className="mr-4 w-5 h-5" />
-                <span className="font-bold text-gray-700 cursor-pointer">
-                  Login Another Account
-                </span>
+                <MdLogin className="size-5" />
+                <span>Login Another Account</span>
               </Link>
             )}
           </motion.div>

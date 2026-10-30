@@ -1,11 +1,20 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
-import { FaUser } from "react-icons/fa";
+import { FaCheck, FaChevronDown, FaUser } from "react-icons/fa";
 import { updateRole } from "@/redux/features/authSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/store";
 import type { RoleSwitch } from "@/shared/interfaces/seva";
 import type { RoleLevel } from "@/shared/interfaces/user";
+import {
+  iconChip,
+  menuRowClosed,
+  menuRowOpen,
+  rowLabel,
+  subItem,
+  subItemActive,
+  subPanel,
+} from "./sidebarTheme";
 
 const SwitchRoleComponent = ({
   setShow,
@@ -59,40 +68,45 @@ const SwitchRoleComponent = ({
 
   return (
     <div>
-      <motion.div
+      <button
+        type="button"
+        aria-expanded={open}
         onClick={() => roles.length && setOpen((pre) => !pre)}
-        className={`bg-gray-100 p-2 py-3 border border-gray-300  ${
-          open ? "rounded-t-md" : "rounded-md"
-        } flex w-full items-center space-between`}
+        className={open ? menuRowOpen : menuRowClosed}
       >
-        <FaUser className="mr-4" />
-        <span className="font-bold text-gray-700 cursor-pointer">
-          Switch Account
+        <span className={iconChip}>
+          <FaUser className="size-4" />
         </span>
-      </motion.div>
+        <span className={rowLabel}>Switch Account</span>
+        <FaChevronDown
+          className={`size-3.5 text-[#9a3412] transition-transform ${
+            open ? "rotate-180" : ""
+          }`}
+        />
+      </button>
       <AnimatePresence initial={false}>
         {open && (
           <motion.div
-            className="p-2 space-y-1 bg-gray-900 rounded-b-lg"
+            className={subPanel}
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", maxHeight: "full", opacity: 1 }}
+            animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            {roles.map(({ group, roles }) => (
-              <button
-                type="button"
-                key={group}
-                onClick={() => onClick({ group, roles })}
-                className={`${
-                  group === activeGroup
-                    ? "bg-white text-gray-800"
-                    : "text-white"
-                } rounded-md p-2 flex w-full items-center space-between cursor-pointer`}
-              >
-                <span className="font-bold">{group}</span>
-              </button>
-            ))}
+            {roles.map(({ group, roles }) => {
+              const isActive = group === activeGroup;
+              return (
+                <button
+                  type="button"
+                  key={group}
+                  onClick={() => onClick({ group, roles })}
+                  className={isActive ? subItemActive : subItem}
+                >
+                  <span>{group}</span>
+                  {isActive && <FaCheck className="size-3.5 text-green-700" />}
+                </button>
+              );
+            })}
           </motion.div>
         )}
       </AnimatePresence>

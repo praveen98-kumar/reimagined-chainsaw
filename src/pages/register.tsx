@@ -49,7 +49,7 @@ const schema = Yup.object({
     .test(
       "test-district-min",
       "District is required",
-      (v) => v != null && v > 0
+      (v) => v != null && v > 0,
     ),
   tehsil_id: Yup.number()
     .nullable()
@@ -150,10 +150,10 @@ function RegistrationForm({
             value: occ.name,
             label: occ.name,
           };
-        }
+        },
       );
       setOccupation(
-        occupations1.concat([{ value: "Other", label: "Other/ अन्य" }])
+        occupations1.concat([{ value: "Other", label: "Other/ अन्य" }]),
       );
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
@@ -195,7 +195,7 @@ function RegistrationForm({
         validateOnBlur={false}
       >
         {({ values, setFieldValue }) => (
-          <Form className="space-y-3 w-full p-4 py-0">
+          <Form className="w-full space-y-3 rounded-[22px] border border-orange-200 bg-white p-4 shadow-[0_10px_26px_rgba(154,52,18,0.14)]">
             {/* Name */}
             <TextInput
               name="name"
@@ -229,7 +229,7 @@ function RegistrationForm({
             <TextInput
               appendEle={
                 <p
-                  className="absolute bg-gray-200 rounded p-2 px-2 font-semibold text-gray-800 -translate-y-1/2 pointer-events-none top-1/2 left-0"
+                  className="absolute bg-orange-100 rounded-lg p-2 px-2 font-semibold text-[#9a3412] -translate-y-1/2 pointer-events-none top-1/2 left-0"
                   style={{
                     marginLeft: "1px",
                   }}
@@ -258,7 +258,8 @@ function RegistrationForm({
             {isValidUser("add_disciple") && (
               <Button
                 type="button"
-                className="ml-auto"
+                variant="primary-reverse"
+                className="ml-auto rounded-xl border-orange-500 bg-white text-[#9a3412] hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
                 onClick={() => getDuplicateDisciples()}
                 loading={loading}
                 disabled={
@@ -315,7 +316,7 @@ function RegistrationForm({
             <Button
               variant="primary"
               type="submit"
-              className="mx-auto w-full"
+              className="mx-auto w-full rounded-xl !bg-gradient-to-r !from-[#c2410c] !to-[#9a3412] py-3 shadow-[0_6px_16px_rgba(154,52,18,0.35)] disabled:!opacity-60"
               disabled={loading}
               loading={loading}
             >
@@ -358,18 +359,28 @@ const RegisterPage: NextApplicationPage = () => {
   if (user) {
     return (
       <Layout headerProps={{ isBack: true, heading: "Register User" }}>
-        <div className="py-4 mx-auto w-full max-w-xl space-y-4">
-          <RegistrationForm requireConfirmation />
+        <div
+          className="min-h-full bg-[#fffaf0] px-4 py-4"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 100% 0%, rgba(253,186,116,0.35), transparent 45%), radial-gradient(circle at 0% 100%, rgba(253,230,138,0.35), transparent 45%)",
+          }}
+        >
+          <div className="mx-auto w-full max-w-xl space-y-4">
+            <RegistrationForm requireConfirmation />
+          </div>
         </div>
       </Layout>
     );
   }
   return (
-    <div className="w-full min-h-screen relative justify-center items-center">
+    <div className="relative min-h-screen w-full items-center justify-center bg-[#fffaf0] px-4 pb-8">
       <div className="mx-auto mt-5 w-full h-full max-w-md flex flex-col items-center justify-center">
         <div className="w-full space-y-3">
           <div className="w-full">
-            <h1 className="text-2xl font-semibold text-center">Register</h1>
+            <h1 className="mb-3 text-center text-2xl font-bold text-[#431407]">
+              Register
+            </h1>
             <RegistrationForm />
           </div>
         </div>

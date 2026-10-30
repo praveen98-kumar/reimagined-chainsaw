@@ -35,8 +35,8 @@ const TextInput: React.FC<TextInputProps> = ({
       <div className="relative">
         {appendEle && appendEle}
         <input
-          className={`w-full px-4 py-2 border text-gray-700 placeholder-gray-500 bg-white rounded-md  focus:border-gray-800  focus:ring-opacity-40 focus:outline-none focus:ring focus:ring-gray-300 disabled:bg-gray-100 disabled:border-gray-100 ${
-            error && touched ? "border-red-500" : "border-slate-300"
+          className={`w-full px-4 py-2 border text-[#431407] placeholder-[#a78b78] bg-white rounded-xl focus:border-orange-500 focus:ring-opacity-40 focus:outline-none focus:ring focus:ring-orange-200 disabled:bg-orange-50 disabled:border-orange-100 ${
+            error && touched ? "border-red-500" : "border-orange-200"
           } ${Icon ? "pr-12" : ""} ${className}`}
           required={required}
           {...field}

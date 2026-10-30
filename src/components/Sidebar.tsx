@@ -2,18 +2,26 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { ImCancelCircle } from "react-icons/im";
-import { MdVideoSettings } from "react-icons/md";
+import { FaChevronRight } from "react-icons/fa";
+import { IoClose } from "react-icons/io5";
+import { MdLogout, MdVideoSettings } from "react-icons/md";
 
-import { removeUser } from "@/redux/features/authSlice";
-import { useAppDispatch, useAppSelector } from "@/redux/store";
+import apiClient from "@/http";
+import { useAppSelector } from "@/redux/store";
 import type { Disciple } from "@/shared/interfaces/user";
-import { getActiveUserId, getUsersList } from "@/utils/multi-user-storage";
+import { getUsersList } from "@/utils/multi-user-storage";
 
-import DiscipleCard from "./card/DiscipleCard";
+import SidebarUserCard from "./SidebarUserCard";
 import LanguageSwitch from "./LanguageSwitch";
+import {
+  iconChip,
+  logoutButton,
+  menuRowClosed,
+  rowLabel,
+  sidebarPanelBackground,
+} from "./sidebarTheme";
 import SwichRoleComponent from "./SwitchRole";
 import UserSwitcher from "./UserSwitcher";
 
@@ -21,6 +29,7 @@ interface SidebarProps {
   show: boolean;
   setShow: React.Dispatch<React.SetStateAction<boolean>>;
 }
+
 const backdrop = {
   visible: { opacity: 1 },
   hidden: { opacity: 0 },
@@ -30,25 +39,19 @@ const Sidebar = (props: SidebarProps) => {
   const { t: tc } = useTranslation("common");
   const { show, setShow } = props;
   const { user } = useAppSelector((state) => state.auth);
-  const dispatch = useAppDispatch();
   const router = useRouter();
-  const [usersCount, setUsersCount] = useState(() => {
-    const userList = getUsersList();
-    return userList.length;
-  });
 
-  const logout = () => {
-    const activeUserId = getActiveUserId();
-    const users = getUsersList();
-
-    if (activeUserId && users.length > 1) {
-      dispatch(removeUser(activeUserId));
-      setUsersCount((prev) => prev - 1);
-    } else {
+  const logout = async () => {
+    const endpoint = getUsersList().length > 1 ? "logout_all" : "logout";
+    try {
+      await apiClient.post(endpoint, {});
+    } catch (error) {
+      console.log(error);
+    } finally {
       localStorage.clear();
+      setShow(false);
+      router.reload();
     }
-    router.reload();
-    setShow(false);
   };
   useEffect(() => {
     if (show) {
@@ -68,7 +71,7 @@ const Sidebar = (props: SidebarProps) => {
             initial="hidden"
             animate="visible"
             exit="hidden"
-            className="fixed cursor-pointer inset-0 z-40 bg-slate-800/50 w-full h-screen"
+            className="fixed cursor-pointer inset-0 z-40 bg-[#431407]/40 w-full h-screen"
           />
           <motion.div
             initial={{ x: "-100%" }}
@@ -77,46 +80,41 @@ const Sidebar = (props: SidebarProps) => {
             transition={{
               duration: 0.2,
             }}
-            className="fixed inset-y-0 z-50 w-80 bg-white shadow-xl p-2"
+            className="fixed inset-y-0 z-50 w-80 overflow-hidden rounded-r-3xl shadow-[8px_0_30px_rgba(67,20,7,0.35)]"
+            style={{ background: sidebarPanelBackground }}
           >
             <button
               type="button"
+              aria-label="Close menu"
               onClick={() => setShow(false)}
-              className="absolute z-50 flex items-center justify-center rounded-lg top-4 right-4 size-8 text-gray-700 hover:text-gray-800 bg-white"
+              className="absolute z-50 flex items-center justify-center rounded-full top-6 right-6 size-8 bg-white text-[#9a3412] shadow hover:bg-orange-50"
             >
-              <ImCancelCircle className="size-6" />
+              <IoClose className="size-5" />
             </button>
-            <div className="h-full w-full flex flex-col px-1 bg-white">
-              <DiscipleCard
-                showLevel={false}
+            <div className="h-full w-full flex flex-col px-3 pt-3 pb-4">
+              <SidebarUserCard
                 disciple={
                   {
                     ...user?.disciple,
                     mobile_no: user?.mobile_no,
-                  } as Disciple & Record<string, Record<string, unknown>>
+                  } as Disciple
                 }
               />
-              <div className="flex-1 py-2 rounded-b-md  overflow-y-visible overflow-x-hidden space-y-2">
+              <div className="flex-1 py-3 overflow-y-auto overflow-x-hidden space-y-1">
                 <UserSwitcher setShow={setShow} />
                 <SwichRoleComponent setShow={setShow} />
                 <LanguageSwitch />
-                <Link
-                  href={"/tutorials"}
-                  className={`bg-gray-100 p-2 py-3 border border-gray-300 flex w-full items-center space-between rounded-md`}
-                >
-                  <MdVideoSettings className="mr-4 w-5 h-5" />
-                  <span className="font-bold text-gray-700 cursor-pointer">
-                    {tc("tutorial")}
+                <Link href={"/tutorials"} className={menuRowClosed}>
+                  <span className={iconChip}>
+                    <MdVideoSettings className="size-5" />
                   </span>
+                  <span className={rowLabel}>{tc("tutorial")}</span>
+                  <FaChevronRight className="size-3.5 text-[#9a3412]" />
                 </Link>
               </div>
-              <button
-                type="button"
-                onClick={logout}
-                className="w-full px-3 py-2 justify-items-end rounded-lg font-bold text-gray-100 bg-gray-800"
-              >
-                Logout{" "}
-                {usersCount > 1 ? `(${user?.disciple?.name || "Current"})` : ""}
+              <button type="button" onClick={logout} className={logoutButton}>
+                <MdLogout className="size-5" />
+                Logout
               </button>
             </div>
           </motion.div>
