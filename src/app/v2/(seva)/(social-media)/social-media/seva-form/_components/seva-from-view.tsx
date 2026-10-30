@@ -55,7 +55,7 @@ export function SevaFormView() {
     }
   }, [data]);
 
-  if (!socialMediaMatch) {
+  if (!socialMediaMatch || questions?.length === 0) {
     return null;
   }
   return (
@@ -63,7 +63,7 @@ export function SevaFormView() {
       key={socialMediaMatch.userRoleId}
       //@ts-expect-error
       questions={questions || []}
-      isLoadng={isPending}
+      isLoading={isPending}
       onSubmit={(data) => {
         const payload = data.map((q) => ({
           question_id: Number(q.id),

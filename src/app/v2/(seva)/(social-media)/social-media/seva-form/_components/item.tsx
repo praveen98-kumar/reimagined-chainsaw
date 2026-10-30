@@ -93,7 +93,7 @@ const SevaTypeField = ({
               },
             });
           }}
-          className="flex size-5 items-center justify-center rounded-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-blue-800 data-[checked]:bg-gray-900 data-[unchecked]:border data-[unchecked]:border-gray-300"
+          className="flex size-5 items-center justify-center rounded-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-blue-800 data-checked:bg-gray-900 data-unchecked:border data-unchecked:border-gray-300"
         >
           <CheckboxPrimitive.Indicator className="flex text-gray-50 data-unchecked:hidden">
             <CheckIcon className="size-3" />
@@ -264,24 +264,45 @@ const QuestionRenderer = ({
               },
             });
           }}
-          className="flex size-5 items-center justify-center rounded-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-green-800 data-checked:bg-green-600 data-unchecked:border data-unchecked:border-gray-300"
+          className="flex size-8 items-center justify-center rounded-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-green-800 data-checked:bg-green-600 data-unchecked:border data-unchecked:border-gray-300"
         >
           <CheckboxPrimitive.Indicator className="flex text-gray-50 data-unchecked:hidden">
-            <CheckIcon className="size-3" />
+            <CheckIcon className="size-5 font-bold" strokeWidth={5} />
           </CheckboxPrimitive.Indicator>
         </CheckboxPrimitive.Root>
       ) : (
         <input
             className={cn(
-              "border border-gray-300 h-8 w-12 rounded-lg text-center text-md p-0 m-0",
+              "border border-gray-300 size-8 rounded-lg text-center text-md p-0 m-0",
               {
             "border-2 bg-green-100 border-green-600 text-green-600":
               loadedValue !== values.questions?.[index!]?.answer,
           })}
           inputMode={isNumberInput ? "numeric" : "text"}
           type={isNumberInput ? "number" : "text"}
+          placeholder={isNumberInput ? "0" : undefined}
           {...field}
           value={field.value ?? ""}
+          onFocus={() => {
+            if (field.value === 0) {
+              field.onChange({
+                target: {
+                  name: `questions.${index}.answer`,
+                  value: "",
+                },
+              });
+            }
+          }}
+            onBlur={() => {
+              if (field.value === "") {
+                field.onChange({
+                  target: {
+                    name: `questions.${index}.answer`,
+                    value: 0,
+                  },
+                });
+              }
+          }}
         />
       )}
     </div>
@@ -304,7 +325,7 @@ const SevaLevelRenderer = ({
 }) => (
   <div>
     <SevaLevelHeader sevaLevel={sevaLevel} />
-    <div className="flex flex-col bg-white rounded-b-md px-2 space-y-1 -mt-1">
+    <div className="flex flex-col bg-white rounded-b-md px-3 py-2 space-y-2 -mt-1">
       {questions.map((question) => (
         <QuestionRenderer
           key={question.id}
@@ -321,7 +342,7 @@ const SevaLevelRenderer = ({
 const SocialMediaUpdateForm = ({
   questions = [],
   onSubmit,
-  isLoading,
+  isLoading
 }: {
   questions: SocialMediaQuestionWithAnswer[];
   onSubmit: (values: SocialMediaQuestionWithAnswer[]) => void;

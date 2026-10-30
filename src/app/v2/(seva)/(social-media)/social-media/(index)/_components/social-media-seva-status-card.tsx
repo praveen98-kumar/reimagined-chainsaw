@@ -31,21 +31,27 @@ const ChartComponent = ({
   pending,
   submitted,
   upcomming,
+  pendingColor,
+  submittedColor,
+  upcommingColor,
 }: {
   pending: number;
   submitted: number;
   upcomming?: number;
+  pendingColor?: string,
+  submittedColor?: string,
+  upcommingColor?: string,
 }) => {
   const chartData = [
     {
       name: "pending",
       value: pending,
-      fill: "#010D48",
+      fill: pendingColor ?? "#010D48",
     },
     {
       name: "submitted",
       value: submitted,
-      fill: "#2554FF",
+      fill: submittedColor ?? "#2554FF",
     },
   ];
 
@@ -67,7 +73,14 @@ const ChartComponent = ({
     // },
   } satisfies ChartConfig;
 
-  const total = chartData.reduce((a, c) => a + c.value, 0);
+  const finalChartData = upcomming ? [...chartData,
+    {
+      name: "upcomming",
+      value: upcomming,
+      fill: upcommingColor ?? "#FFCC00",
+    },
+  ] : chartData
+  const total = finalChartData.reduce((a, c) => a + c.value, 0);
   const RADIAN = Math.PI / 180;
 
   const renderLabel = (props: PieLabelRenderProps) => {
@@ -115,27 +128,7 @@ const ChartComponent = ({
             content={<ChartTooltipContent hideLabel />}
           />
           <Pie
-            data={
-              upcomming
-                ? [
-                    {
-                      name: "pending",
-                      value: pending,
-                      fill: "#FF383C",
-                    },
-                    {
-                      name: "submitted",
-                      value: submitted,
-                      fill: "#22C55E",
-                    },
-                    {
-                      name: "upcomming",
-                      value: upcomming,
-                      fill: "#FFCC00",
-                    },
-                  ]
-                : chartData
-            }
+            data={finalChartData}
             dataKey="value"
             nameKey="name"
             innerRadius={25}
@@ -290,19 +283,23 @@ export const SocialMediaSevaStatusCard = ({
                 ? undefined
                 : totalDays - new Date().getDate()
             }
+
+            pendingColor="#FF383C"
+            submittedColor="#22C55E"
+            upcommingColor="#FFCC00"
           />
 
           {activeRole === sevadar_type ? (
             <div className="flex-1 flex gap-1 items-start py-4 justify-end text-xs">
               <div>
                 <p className="flex-1 text-right text-[#22C55E]">
-                  {Number(values.social_media_seva || 0)}
+                  {String(values.social_media_seva || 0).padStart(2, '0')}
                 </p>
                 <p className="flex-1 text-right text-[#FF383C]">
-                  {new Date().getDate() - Number(values.social_media_seva || 0)}
+                  {String(new Date().getDate() - Number(values.social_media_seva || 0)).padStart(2, '0')}
                 </p>
                 <p className="flex-1 text-right text-[#FFCC00]">
-                  {totalDays - new Date().getDate()}
+                  {String(totalDays - new Date().getDate()).padStart(2, '0')}
                 </p>
               </div>
               <div>
