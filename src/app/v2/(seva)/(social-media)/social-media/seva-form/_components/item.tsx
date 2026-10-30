@@ -321,9 +321,11 @@ const SevaLevelRenderer = ({
 const SocialMediaUpdateForm = ({
   questions = [],
   onSubmit,
+  isLoading,
 }: {
   questions: SocialMediaQuestionWithAnswer[];
   onSubmit: (values: SocialMediaQuestionWithAnswer[]) => void;
+  isLoadng: boolean
 }) => {
   const loadedQuestion = useMemo(() => {
     return new Map(questions.map((q) => [q.id, q.answer]));
@@ -341,7 +343,7 @@ const SocialMediaUpdateForm = ({
       initialValues={{ questions }}
       onSubmit={(v) => onSubmit(v.questions)}
     >
-      {({ values, isSubmitting }) => (
+      {({ values }) => (
         <Form suppressHydrationWarning>
           <FieldArray name="questions">
             {() => {
@@ -369,10 +371,10 @@ const SocialMediaUpdateForm = ({
               <Button
                 variant="submit"
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isLoading}
                 className="w-1/2 h-12 font-bold text-xl shadow-lg active:scale-95 transition-transform inline-flex mx-auto"
               >
-                {isSubmitting ? "Submitting..." : "Submit"}
+                {isLoading ? "Submitting..." : "Submit"}
               </Button>
             </div>
           )}
