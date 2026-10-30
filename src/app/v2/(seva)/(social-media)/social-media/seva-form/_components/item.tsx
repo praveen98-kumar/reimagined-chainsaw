@@ -33,8 +33,8 @@ const groupSocialMediaQuestion = (data: SocialMediaQuestionWithAnswer[]) => {
 };
 
 const SevaLevelHeader = ({ sevaLevel }: { sevaLevel: string }) => (
-  <div className="p-2 rounded-t-lg bg-linear-to-r from-yellow-400 to-orange-400">
-    <h2 className="text-lg font-medium">{sevaLevel}</h2>
+  <div className="px-2 py-1 rounded-t-lg bg-linear-to-r from-yellow-400 to-orange-400">
+    <h2 className="text-lg font-semibold">{sevaLevel}</h2>
   </div>
 );
 
@@ -249,7 +249,7 @@ const QuestionRenderer = ({
         className="cursor-pointer max-h-8 w-auto h-auto"
         priority
       />
-      <p className="text-lg font-bold flex-1 line-clamp-1">{topic}</p>
+      <p className="text-lg font-medium flex-1 line-clamp-1">{topic}</p>
 
       {isCheckbox ? (
         <CheckboxPrimitive.Root
@@ -264,15 +264,17 @@ const QuestionRenderer = ({
               },
             });
           }}
-          className="flex size-5 items-center justify-center rounded-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-blue-800 data-[checked]:bg-gray-900 data-[unchecked]:border data-[unchecked]:border-gray-300"
+          className="flex size-5 items-center justify-center rounded-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-green-800 data-checked:bg-green-600 data-unchecked:border data-unchecked:border-gray-300"
         >
           <CheckboxPrimitive.Indicator className="flex text-gray-50 data-unchecked:hidden">
             <CheckIcon className="size-3" />
           </CheckboxPrimitive.Indicator>
         </CheckboxPrimitive.Root>
       ) : (
-        <Input
-          className={cn({
+        <input
+            className={cn(
+              "border border-gray-300 h-8 w-12 rounded-lg text-center text-md p-0 m-0",
+              {
             "border-2 bg-green-100 border-green-600 text-green-600":
               loadedValue !== values.questions?.[index!]?.answer,
           })}
@@ -302,7 +304,7 @@ const SevaLevelRenderer = ({
 }) => (
   <div>
     <SevaLevelHeader sevaLevel={sevaLevel} />
-    <div className="flex flex-col space-y-2 -mt-1">
+    <div className="flex flex-col bg-white rounded-b-md px-2 space-y-1 -mt-1">
       {questions.map((question) => (
         <QuestionRenderer
           key={question.id}
