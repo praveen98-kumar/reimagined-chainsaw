@@ -325,7 +325,7 @@ const SocialMediaUpdateForm = ({
 }: {
   questions: SocialMediaQuestionWithAnswer[];
   onSubmit: (values: SocialMediaQuestionWithAnswer[]) => void;
-  isLoadng: boolean
+  isLoading: boolean
 }) => {
   const loadedQuestion = useMemo(() => {
     return new Map(questions.map((q) => [q.id, q.answer]));
