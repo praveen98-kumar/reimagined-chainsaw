@@ -27,18 +27,14 @@ export default function RootLayout({
       <body
         className={cn(
           // "w-full min-h-screen antialiased relative bg-center bg-cover bg-no-repeat",
-          "relative min-h-dvh w-full bg-center bg-cover bg-no-repeat antialiased",
+          "relative h-screen w-full bg-center bg-cover bg-no-repeat antialiased overflow-hidden",
           abeeZee.className,
         )}
         style={{
           backgroundImage: `url("https://res.cloudinary.com/dwzdwuh4t/image/upload/e_improve,w_300,h_600,c_thumb,g_auto/v1768835270/background_d2la5n.png")`,
         }}
       >
-        <Providers>
-          <div className="relative min-h-dvh bg-white/60 backdrop-blur-sm">
-            {children}
-          </div>
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

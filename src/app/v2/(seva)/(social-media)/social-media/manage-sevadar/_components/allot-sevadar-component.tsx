@@ -1,33 +1,40 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { PaginatedList } from "@/components/v2/ui/list";
 import { Separator } from "@/components/v2/ui/separator";
 import { useGetDisciplesWithRole } from "@/query-options/queries/get-disciples";
-import { store, useAppSelector } from "@/redux/store";
+import { useAppSelector } from "@/redux/store";
 import { getInitialValues, objectWithValues } from "@/shared/functions/utils";
-import { useFilters } from "@/store/useFilterStore";
+import { useFilters, useActiveTab } from "@/store/useFilterStore";
 
 import { AllotSevadarCard } from "./allot-sevadar-card";
 import { ManageSMSevadarFilters } from "./manage-sevadar-filters";
+import { TransferResults } from "./transfer-results";
 import { type AuthContext, canCheck } from "@/components/v2/Can";
+import { SEVA_PAGE_CONFIG } from "@/constants/roles";
+import { useLocationChange } from "@/hooks/useActiveLocationContext";
+import { useEnsureActiveContext } from "@/hooks/useEnsureActiveContext";
 
 const MemoizedSevadarCard = memo(AllotSevadarCard);
 
 export function AllotSevadarPageComponent() {
+  useEnsureActiveContext(SEVA_PAGE_CONFIG.manageSevadar);
   const queryClient = useQueryClient();
   const filters = useFilters();
+  const activeTab = useActiveTab();
+  const [hasSearched, setHasSearched] = useState(false);
   const active_region_index = useAppSelector((s) => s.auth.active_region_index);
   const active_permission = useAppSelector((s) => s.auth.active_permission);
   const active_region = useAppSelector((s) => s.auth.active_region);
 
-  const auth: AuthContext = store.getState().auth;
+  const auth: AuthContext = useAppSelector((state) => state.auth);
 
   const bookOrderMatch = useMemo(
     () =>
       canCheck(auth, {
-        sevadarType: "book_order",
+        sevaType: "book_order",
         permissions: "book_order_seva",
       }) !== null,
     [auth],
@@ -36,7 +43,7 @@ export function AllotSevadarPageComponent() {
   const socialMediaMatch = useMemo(
     () =>
       canCheck(auth, {
-        sevadarType: "social_media",
+        sevaType: "social_media",
         permissions: "social_media_seva",
       }) !== null,
     [auth],
@@ -75,9 +82,14 @@ export function AllotSevadarPageComponent() {
   });
 
   const handleSearch = useCallback(() => {
+    setHasSearched(true);
     queryClient.removeQueries({ queryKey: ["disciples_with_role"] });
     refetchDisciples();
   }, [queryClient, refetchDisciples]);
+
+  useLocationChange(() => {
+    if (hasSearched) handleSearch();
+  });
 
   const handleCardSuccess = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["disciples_with_role"] });
@@ -101,14 +113,18 @@ export function AllotSevadarPageComponent() {
 
       <Separator className="bg-gray-400" />
 
-      <PaginatedList
-        items={discipleItems}
-        keyExtractor={(item) => item.disciple_id}
-        renderItem={renderDiscipleItem}
-        fetchNextPage={fetchNextDisciplePage}
-        hasNextPage={hasNextDisciplePage}
-        isFetchingNextPage={isFetchingNextPage}
-      />
+      {activeTab === "transfer" ? (
+        <TransferResults items={discipleItems} />
+      ) : (
+        <PaginatedList
+          items={discipleItems}
+          keyExtractor={(item) => item.disciple_id}
+          renderItem={renderDiscipleItem}
+          fetchNextPage={fetchNextDisciplePage}
+          hasNextPage={hasNextDisciplePage}
+          isFetchingNextPage={isFetchingNextPage}
+        />
+      )}
     </div>
   );
 }

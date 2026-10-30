@@ -10,7 +10,8 @@ import {
   useFilterActions,
   useFilterCollapsed,
 } from "@/store/useFilterStore";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { canCheck } from "@/components/v2/Can";
 import { format } from "date-fns";
 import apiClient from "@/http/index";
 import { useAppSelector } from "@/redux/store";
@@ -55,16 +56,22 @@ const TOP_TABS: { label: string; value: TabState; className?: string }[] = [
     className: "from-[#000C45] to-[#0C3BE3]",
   },
   {
-    label: "Trend Seva",
-    value: "trend-seva",
-    className: "from-[#1B0052] to-[#581FC8]",
-  },
-  {
     label: "Book Order",
     value: "book-order",
     className: "from-[#2C0033] to-[#5B036C]",
   },
 ];
+
+// Trend Seva is intentionally hidden until its role mapping is available.
+const TAB_ACCESS: Partial<
+  Record<
+    TabState,
+    { sevadarType: "social_media" | "book_order"; permissions: string }
+  >
+> = {
+  "sm-seva": { sevadarType: "social_media", permissions: "social_media_seva" },
+  "book-order": { sevadarType: "book_order", permissions: "book_order_seva" },
+};
 
 const SUB_TAB_COLORS: Record<TabState, string> = {
   "sm-seva": "bg-[#0C3BE3]",
@@ -122,8 +129,8 @@ const CHECKBOX_CLASS =
 const PILL_CLASS =
   "flex items-center gap-2 rounded-full bg-white px-4 py-1 shadow-[0_2px_8px_rgba(24,35,90,0.08)] cursor-pointer";
 
-const PILL_RADIO_CLASS =
-  "flex items-center justify-center gap-1.5 rounded-full bg-white px-3 py-1 shadow-[0_2px_8px_rgba(24,35,90,0.08)] cursor-pointer";
+// const PILL_RADIO_CLASS =
+// "flex items-center justify-center gap-1.5 rounded-full bg-white px-3 py-1 shadow-[0_2px_8px_rgba(24,35,90,0.08)] cursor-pointer";
 
 const SELECT_TRIGGER_CLASS = "w-full";
 
@@ -246,9 +253,8 @@ export function ReportFilters() {
     setSelectedPlatformId,
     setFilterCollapsed,
   } = useFilterActions();
-  const { active_permission, active_region_index } = useAppSelector(
-    (s) => s.auth,
-  );
+  const auth = useAppSelector((s) => s.auth);
+  const { active_permission, active_region_index, all_permission } = auth;
   const activeRegion = (active_permission?.region as any)?.[
     active_region_index
   ];
@@ -257,6 +263,22 @@ export function ReportFilters() {
   const activeRoleRegion = active_permission?.role_region as RoleRegion;
   const currentUserHierarchy = regionHirarchyMap[activeRoleRegion];
 
+  const activeGroup = all_permission?.group ?? "";
+  const isSevadarGroup =
+    activeGroup
+      .trim()
+      .toLowerCase()
+      .replace(/[\s_-]+/g, "") === "sevadar";
+
+  const visibleTabs = useMemo(
+    () =>
+      TOP_TABS.filter((tab) => {
+        const rule = TAB_ACCESS[tab.value];
+        return rule ? canCheck(auth, rule) !== null : false;
+      }),
+    [auth],
+  );
+
   const [topTab, setTopTab] = useState<TabState>("sm-seva");
   const [subTab, setSubTab] = useState("sm-sevadar");
   const [scope, setScope] = useState("sevadar");
@@ -264,6 +286,10 @@ export function ReportFilters() {
   const [dateRange, setDateRange] = useState<DateRange>();
   const [status, setStatus] = useState<string[]>(["pending", "submitted"]);
   const [bookOrderScope, setBookOrderScope] = useState<string[]>([]);
+
+  const activeTopTab = visibleTabs.some((tab) => tab.value === topTab)
+    ? topTab
+    : (visibleTabs[0]?.value ?? "sm-seva");
 
   const [countryId, setCountryId] = useState<number>();
   const [stateFilterId, setStateFilterId] = useState<number>();
@@ -280,13 +306,16 @@ export function ReportFilters() {
 
   const isPlatformTab = PLATFORM_SUB_TABS.includes(subTab);
   const isSevadarTab = subTab === "sm-sevadar";
+  const limitSevadarTimePeriods = isSevadarTab && !isSevadarGroup;
   const showPlatformField = subTab === "platform-wise";
   const showSevadarField = isPlatformTab && scope === "sevadar";
 
   const userLevel = currentUserHierarchy ?? 0;
-  const locationFields = (SCOPE_LOCATION_FIELDS[scope] ?? []).filter(
-    (field) => LOCATION_FIELD_LEVEL[field] > userLevel,
-  );
+  const locationFields: LocationField[] = isSevadarGroup
+    ? []
+    : (SCOPE_LOCATION_FIELDS[scope] ?? []).filter(
+        (field) => LOCATION_FIELD_LEVEL[field] > userLevel,
+      );
   const showCountry = locationFields.includes("country");
   const showState = locationFields.includes("state");
   const showDivision = locationFields.includes("division");
@@ -328,8 +357,15 @@ export function ReportFilters() {
   }, [resetFilters]);
 
   useEffect(() => {
+    if (visibleTabs.length === 0 || activeTopTab === topTab) return;
+    setTopTab(activeTopTab);
+    setSubTab(activeTopTab === "book-order" ? "" : "sm-sevadar");
+  }, [activeTopTab, topTab, visibleTabs.length]);
+
+  useEffect(() => {
+    if (visibleTabs.length === 0) return;
     setFilters({
-      top_tab: topTab,
+      top_tab: activeTopTab,
       sub_tab: subTab,
       scope,
       time_period: timePeriod,
@@ -343,7 +379,7 @@ export function ReportFilters() {
         timePeriod === "custom" ? (dateRange?.to?.toISOString() ?? null) : null,
     });
   }, [
-    topTab,
+    activeTopTab,
     subTab,
     scope,
     timePeriod,
@@ -351,6 +387,7 @@ export function ReportFilters() {
     status,
     bookOrderScope,
     setFilters,
+    visibleTabs.length,
   ]);
 
   useEffect(() => {
@@ -468,40 +505,41 @@ export function ReportFilters() {
   const filteredScope = SCOPE_OPTIONS.filter(
     (scope) => scope.index > currentUserHierarchy,
   );
-  const scopeSection = (
-    <div>
-      <SectionLabel label="Scope" />
-      <RadioGroup
-        value={scope}
-        onValueChange={setScope}
-        className={cn(
-          "grid gap-0 gap-y-1",
-          filteredScope.length === 2
-            ? "grid-cols-2"
-            : filteredScope.length === 3
-              ? "grid-cols-3"
-              : filteredScope.length === 4
-                ? "grid-cols-4"
-                : "grid-cols-6",
-        )}
-      >
-        {filteredScope.map((opt) => (
-          <label
-            key={opt.value}
-            htmlFor={`scope-${opt.value}`}
-            className={cn("flex flex-1 cursor-pointer items-center gap-1")}
-          >
-            <RadioGroupItem
-              value={opt.value}
-              id={`scope-${opt.value}`}
-              className={RADIO_CLASS}
-            />
-            <span className="text-[13px] font-medium">{opt.label}</span>
-          </label>
-        ))}
-      </RadioGroup>
-    </div>
-  );
+  const scopeSection =
+    filteredScope.length > 0 ? (
+      <div>
+        <SectionLabel label="Scope" />
+        <RadioGroup
+          value={scope}
+          onValueChange={setScope}
+          className={cn(
+            "grid gap-0 gap-y-1",
+            filteredScope.length === 2
+              ? "grid-cols-2"
+              : filteredScope.length === 3
+                ? "grid-cols-3"
+                : filteredScope.length === 4
+                  ? "grid-cols-4"
+                  : "grid-cols-6",
+          )}
+        >
+          {filteredScope.map((opt) => (
+            <label
+              key={opt.value}
+              htmlFor={`scope-${opt.value}`}
+              className={cn("flex flex-1 cursor-pointer items-center gap-1")}
+            >
+              <RadioGroupItem
+                value={opt.value}
+                id={`scope-${opt.value}`}
+                className={RADIO_CLASS}
+              />
+              <span className="text-[13px] font-medium">{opt.label}</span>
+            </label>
+          ))}
+        </RadioGroup>
+      </div>
+    ) : null;
 
   const locationSection = (
     <div className="space-y-1">
@@ -585,7 +623,7 @@ export function ReportFilters() {
         className="grid grid-cols-2 gap-2"
       >
         {TIME_PERIODS.filter((t) =>
-          isSevadarTab ? !t.value.includes("this") : true,
+          limitSevadarTimePeriods ? !t.value.includes("this") : true,
         ).map((period) => (
           <label
             key={period.value}
@@ -603,14 +641,14 @@ export function ReportFilters() {
           </label>
         ))}
       </RadioGroup>
-      {!isSevadarTab && (
+      {!limitSevadarTimePeriods && (
         <>
           <SectionLabel label="Or" />
           <DatePickerWithRange
             className="pt-1"
             value={dateRange}
             onChange={(e) => {
-              setTimePeriod("");
+              setTimePeriod("custom");
               setDateRange(e);
             }}
           />
@@ -651,11 +689,13 @@ export function ReportFilters() {
     value?: string | number | null,
   ) => options.find((o) => String(o.value) === String(value))?.label;
 
-  const topTabLabel = TOP_TABS.find((t) => t.value === topTab)?.label ?? topTab;
+  const topTabLabel =
+    TOP_TABS.find((t) => t.value === activeTopTab)?.label ?? activeTopTab;
   const subTabLabel = SUB_TABS.find((t) => t.value === subTab)?.label;
-  const breadcrumbTitle = subTabLabel
-    ? `${topTabLabel} > ${subTabLabel}`
-    : topTabLabel;
+  const breadcrumbTitle =
+    subTabLabel && !isSevadarGroup
+      ? `${topTabLabel} > ${subTabLabel}`
+      : topTabLabel;
 
   const timePeriodLabel =
     timePeriod === "custom"
@@ -699,12 +739,27 @@ export function ReportFilters() {
     .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
     .join(", ");
 
+  const bookOrderSubtitle = [
+    isSevadarGroup ? timePeriodLabel : null,
+    bookOrderScopeLabel,
+  ]
+    .filter(Boolean)
+    .join(" | ");
+
   const filterSubtitle =
-    topTab === "book-order"
-      ? bookOrderScopeLabel || "All"
-      : [timePeriodLabel, scopeLabel, ...locationLabels, statusLabel]
-          .filter(Boolean)
-          .join(" | ");
+    activeTopTab === "book-order"
+      ? bookOrderSubtitle || "All"
+      : isSevadarGroup
+        ? timePeriodLabel
+        : [timePeriodLabel, scopeLabel, ...locationLabels, statusLabel]
+            .filter(Boolean)
+            .join(" | ");
+
+  if (visibleTabs.length === 0) {
+    return null;
+  }
+
+  const activeTabConfig = TOP_TABS.find((tab) => tab.value === activeTopTab);
 
   if (filterCollapsed) {
     return (
@@ -712,25 +767,28 @@ export function ReportFilters() {
         path={breadcrumbTitle}
         subtitle={filterSubtitle}
         onEdit={() => setFilterCollapsed(false)}
-        className={TOP_TABS[0].className}
+        className={activeTabConfig?.className}
       />
     );
   }
 
   return (
     <div className="relative overflow-hidden rounded-2xl">
-      <TabShapeBg activeTab={topTab} />
+      <TabShapeBg
+        activeTab={activeTopTab}
+        tabs={visibleTabs.map((tab) => tab.value)}
+      />
 
       {/* Top Tabs */}
       <div className="relative z-10 flex gap-1.5 px-2 py-1">
-        {TOP_TABS.map((tab) => (
+        {visibleTabs.map((tab) => (
           <button
             key={tab.value}
             type="button"
             onClick={() => handleTopTabChange(tab.value)}
             className={cn(
               "flex-1 cursor-pointer rounded-lg py-1.5 text-[13px] font-semibold whitespace-nowrap transition-all duration-200",
-              topTab === tab.value
+              activeTopTab === tab.value
                 ? "bg-linear-to-r text-white shadow-md " + tab.className
                 : "bg-white hover:bg-white/90",
             )}
@@ -743,7 +801,7 @@ export function ReportFilters() {
       {/* Content */}
       <div className="relative z-10 space-y-1 px-3 pb-4">
         {/* Sub Tabs */}
-        {topTab !== "book-order" && (
+        {!isSevadarGroup && activeTopTab !== "book-order" && (
           <div className="grid grid-cols-4 gap-1">
             {SUB_TABS.map((tab) => (
               <button
@@ -753,7 +811,7 @@ export function ReportFilters() {
                 className={cn(
                   "cursor-pointer rounded-lg px-0.5 py-1.25 text-[10px] font-semibold whitespace-nowrap transition-all duration-200",
                   subTab === tab.value
-                    ? `${SUB_TAB_COLORS[topTab]} text-white shadow-sm`
+                    ? `${SUB_TAB_COLORS[activeTopTab]} text-white shadow-sm`
                     : "bg-white",
                 )}
               >
@@ -764,26 +822,29 @@ export function ReportFilters() {
         )}
 
         {/* SM Platforms / Platform wise: Time Period leads, then Scope + locations */}
-        {topTab !== "book-order" && isPlatformTab && (
+        {activeTopTab !== "book-order" && isPlatformTab && (
           <>
             {timePeriodSection}
-            {isSevadarTab ? scopeSection : null}
-            {locationSection}
+            {isSevadarTab && !isSevadarGroup ? scopeSection : null}
+            {!isSevadarGroup && locationSection}
           </>
         )}
 
         {/* SM Sevadar / PDF Report: Scope leads, then locations + Time Period + Status */}
-        {topTab !== "book-order" && !isPlatformTab && (
+        {activeTopTab !== "book-order" && !isPlatformTab && (
           <>
             {timePeriodSection}
-            {isSevadarTab ? scopeSection : null}
-            {locationSection}
-            {statusSection}
+            {isSevadarTab && !isSevadarGroup ? scopeSection : null}
+            {!isSevadarGroup && locationSection}
+            {!isSevadarGroup && statusSection}
           </>
         )}
 
+        {/* Book Order: a Sevadar only sees the time period and order scope */}
+        {activeTopTab === "book-order" && isSevadarGroup && timePeriodSection}
+
         {/* Book Order scope */}
-        {topTab === "book-order" && (
+        {activeTopTab === "book-order" && (
           <div>
             <SectionLabel label="Scope" />
             <div className="grid grid-cols-2 gap-2">

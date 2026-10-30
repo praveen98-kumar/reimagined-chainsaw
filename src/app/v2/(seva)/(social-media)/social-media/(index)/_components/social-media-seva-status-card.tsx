@@ -22,6 +22,8 @@ import { useAppSelector } from "@/redux/store";
 import { cn } from "@/utils/cn";
 import { PlatformList } from "../../_components/platform-list";
 import { useMemo } from "react";
+import type { Region } from "@/shared/interfaces/user";
+import useIsMounted from "@/hooks/useIsMounted";
 
 const blueBg = "bg-linear-to-r from-[#000c45] to-[#0C3BE3]";
 
@@ -174,10 +176,15 @@ export const SocialMediaDataComponent = ({
 export const SocialMediaSevaStatusCard = ({
   userRoleId,
   userRole: activeRole,
+  roleRegion,
+  region,
 }: {
   userRoleId?: number;
   userRole?: string;
+  roleRegion?: string;
+  region?: Region | null;
 }) => {
+  const isMounted = useIsMounted();
   const queryClient = useQueryClient();
   const type = "socialMediaCounts";
   const sevadar_type = "social_media_sevadar";
@@ -193,6 +200,8 @@ export const SocialMediaSevaStatusCard = ({
     sevadar_type,
     path: "social_media_seva_count",
     userRoleId,
+    roleRegion,
+    region,
   });
 
   const submitted = Number(values?.social_media_seva || 0);
@@ -205,6 +214,10 @@ export const SocialMediaSevaStatusCard = ({
       queryKey: ["platform_report"],
     });
   };
+
+  if (!isMounted) {
+    return null;
+  }
   return (
     <Card className="rounded-lg py-0 gap-0">
       <CardHeader

@@ -2,110 +2,131 @@
 
 import type { ComponentType, ReactNode } from "react";
 import { useMemo } from "react";
-import {
-  type RegionLevel,
-  ROLES,
-  SEVA_TYPE_REGIONS,
-  type SevaType,
-} from "@/config/roles";
+import { sevaWiseRoleIds } from "@/constants/roles";
+import type { SevaType } from "@/config/roles";
 import { useAppSelector } from "@/redux/store";
-import type { Permission, Region, User } from "@/shared/interfaces/user";
+import {
+  findLocationMatch,
+  getActiveLocation,
+  getActivePermissions,
+  permissionSatisfies,
+} from "@/shared/functions/seva-region";
+import type {
+  GroupPermission,
+  Permission,
+  Region,
+  User,
+} from "@/shared/interfaces/user";
 
 export interface AuthContext {
   user: User | null;
   active_region: Region | null;
   active_permission: Permission | null;
   active_region_index: number;
+  all_permission: GroupPermission;
+  seva_regions: Record<string, Region>;
 }
 
 export interface MatchResult {
   userRole: string;
   userRoleId: number;
+  roleRegion: string;
+  region: Region;
+  permission: Permission;
 }
 
 interface CanParams {
   roleId?: number;
-  sevadarType?: SevaType;
+  sevaType?: SevaType;
   permissions: string | string[];
+}
+
+function toMatchResult(
+  permission: Permission,
+  region: Region,
+  roleRegion: string,
+): MatchResult {
+  return {
+    userRole: permission.role,
+    userRoleId: region.user_role_id,
+    roleRegion,
+    region,
+    permission,
+  };
 }
 
 export function canCheck(
   auth: AuthContext,
-  { roleId, sevadarType, permissions }: CanParams,
+  { roleId, sevaType, permissions }: CanParams,
 ): MatchResult | null {
-  const { user, active_region, active_permission, active_region_index } = auth;
+  const {
+    user,
+    all_permission,
+    active_region,
+    active_permission,
+    active_region_index,
+  } = auth;
 
-  if (!user || !active_permission) {
+  if (!user) {
     return null;
   }
 
-  const roleRegion = active_permission.role_region as RegionLevel | undefined;
+  const activePermissions = getActivePermissions(user, all_permission);
+  const activeLocation = getActiveLocation(
+    active_permission,
+    active_region,
+    active_region_index,
+  );
 
-  let sevaRoleId: number;
-
-  if (sevadarType) {
-    const validRegion = SEVA_TYPE_REGIONS[sevadarType];
-
-    if (!roleRegion || !validRegion.includes(roleRegion)) {
+  if (sevaType) {
+    const roleIds = sevaWiseRoleIds[sevaType];
+    if (!roleIds?.length) {
       return null;
     }
 
-    const role = Object.values(ROLES).find((r) => {
-      if (roleRegion !== "ashram") {
-        return r.region === roleRegion && r.name.startsWith(sevadarType);
-      }
-      return r.region === roleRegion;
-    });
+    const sevaPermissions = activePermissions.filter(
+      (permission) =>
+        roleIds.includes(permission.role_id) &&
+        permissionSatisfies(permission, permissions),
+    );
+    const match = findLocationMatch(
+      sevaPermissions,
+      activeLocation,
+      active_permission,
+    );
 
-    if (!role) {
+    if (!match) {
       return null;
     }
 
-    sevaRoleId = role.id;
-  } else {
-    if (roleId === undefined) {
-      return null;
-    }
-    sevaRoleId = roleId;
+    return toMatchResult(match.permission, match.region, match.roleRegion);
   }
 
-  const rolePermission = user.permission.find((r) => r.role_id === sevaRoleId);
+  if (roleId === undefined) {
+    return null;
+  }
 
-  const roleRegionIdKey =
-    `${rolePermission?.role_region === "ashram" ? "country" : rolePermission?.role_region}_id` as keyof Region;
+  const rolePermission = activePermissions.find(
+    (permission) =>
+      permission.role_id === roleId &&
+      permissionSatisfies(permission, permissions),
+  );
 
   if (!rolePermission) {
     return null;
   }
 
-  const permissionMatch = Array.isArray(permissions)
-    ? rolePermission.permissions.some((p) => permissions.includes(p))
-    : rolePermission.permissions.includes(permissions);
+  const match = findLocationMatch(
+    [rolePermission],
+    activeLocation,
+    active_permission,
+  );
 
-  if (!permissionMatch) {
+  if (!match) {
     return null;
   }
 
-  const regionMatch = rolePermission.region.find((r) => {
-    if (active_region) {
-      return (
-        String(r[roleRegionIdKey]) === String(active_region[roleRegionIdKey])
-      );
-    }
-    return (
-      String(r[roleRegionIdKey]) ===
-      String(active_permission.region?.[active_region_index][roleRegionIdKey])
-    );
-  });
-
-  if (!regionMatch) {
-    return null;
-  }
-
-  return {
-    userRole: rolePermission.role,
-    userRoleId: regionMatch.user_role_id,
-  };
+  return toMatchResult(match.permission, match.region, match.roleRegion);
 }
 
 interface CommonProps {
@@ -116,12 +137,12 @@ interface CommonProps {
 }
 
 type Props =
-  | ({ roleId?: never; sevadarType: SevaType } & CommonProps)
-  | ({ roleId: number; sevadarType?: never } & CommonProps);
+  | ({ roleId?: never; sevaType: SevaType } & CommonProps)
+  | ({ roleId: number; sevaType?: never } & CommonProps);
 
 export function Can({
   roleId,
-  sevadarType,
+  sevaType,
   permissions,
   render,
   component: Component,
@@ -130,8 +151,8 @@ export function Can({
   const auth = useAppSelector((s) => s.auth);
 
   const match = useMemo(
-    () => canCheck(auth, { roleId, sevadarType, permissions }),
-    [auth, permissions, roleId, sevadarType],
+    () => canCheck(auth, { roleId, sevaType, permissions }),
+    [auth, permissions, roleId, sevaType],
   );
 
   if (!match) {

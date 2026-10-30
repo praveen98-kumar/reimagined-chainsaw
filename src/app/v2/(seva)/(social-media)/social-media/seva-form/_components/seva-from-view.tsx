@@ -1,29 +1,19 @@
 "use client";
 
 import { useMemo } from "react";
-import { type AuthContext, canCheck } from "@/components/v2/Can";
+import { useSevaContext } from "@/hooks/useSevaContext";
 import { useSocialMediaSevaMutation } from "@/query-options/mutations/social-media-seva";
 import { useSocialMediaQuery } from "@/query-options/queries/social-media-seva";
-import { store } from "@/redux/store";
 import SocialMediaUpdateForm from "./item";
 
 export function SevaFormView() {
-  const auth: AuthContext = store.getState().auth;
-  const socialMediaMatch = useMemo(
-    () =>
-      canCheck(auth, {
-        sevadarType: "social_media",
-        permissions: "social_media_seva",
-      }),
-    [auth],
-  );
+  const socialMediaMatch = useSevaContext("social_media", "social_media_seva");
 
   const { data } = useSocialMediaQuery(
-    socialMediaMatch
-      ? {
-          user_role_id: socialMediaMatch.userRoleId,
-        }
-      : {},
+    {
+      user_role_id: socialMediaMatch?.userRoleId,
+    },
+    { enabled: Boolean(socialMediaMatch?.userRoleId) },
   );
   const { mutate } = useSocialMediaSevaMutation(
     {},
@@ -70,6 +60,7 @@ export function SevaFormView() {
   }
   return (
     <SocialMediaUpdateForm
+      key={socialMediaMatch.userRoleId}
       //@ts-expect-error
       questions={questions || []}
       onSubmit={(data) => {

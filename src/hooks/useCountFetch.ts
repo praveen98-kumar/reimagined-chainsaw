@@ -35,6 +35,8 @@ interface UseCountFetchOptions {
   sevadar_type: string;
   activeRole: string | undefined;
   userRoleId?: number;
+  roleRegion?: string;
+  region?: Region | null;
 }
 
 interface LocalCountStore {
@@ -82,7 +84,15 @@ function getLocationIdKey(
 }
 
 export function useCountFetch(options: UseCountFetchOptions) {
-  const { type, path, sevadar_type, activeRole, userRoleId } = options;
+  const {
+    type,
+    path,
+    sevadar_type,
+    activeRole,
+    userRoleId,
+    roleRegion,
+    region,
+  } = options;
 
   const { data: countData, add, upsert } = useCount();
   const dispatch = useAppDispatch();
@@ -98,18 +108,19 @@ export function useCountFetch(options: UseCountFetchOptions) {
 
   const activeRegion = useMemo(
     () =>
+      region ??
       active_region ??
       (active_permission?.region[active_region_index] as Region | undefined),
-    [active_permission?.region, active_region_index, active_region],
+    [active_permission?.region, active_region_index, active_region, region],
   );
 
-  const activeRoleRegion = useMemo(
-    () =>
-      (active_permission?.role_region === "ashram"
-        ? "country"
-        : active_permission?.role_region) as RoleRegion | undefined,
-    [active_permission?.role_region],
-  );
+  const activeRoleRegion = useMemo(() => {
+    const currentRoleRegion = roleRegion ?? active_permission?.role_region;
+
+    return (currentRoleRegion === "ashram" ? "country" : currentRoleRegion) as
+      | RoleRegion
+      | undefined;
+  }, [active_permission?.role_region, roleRegion]);
 
   const locationID = useMemo(
     () => getLocationIdKey(activeRoleRegion),

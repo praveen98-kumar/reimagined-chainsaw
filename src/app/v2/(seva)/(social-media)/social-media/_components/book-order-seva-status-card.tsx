@@ -13,7 +13,9 @@ import {
 } from "@/components/v2/ui/card";
 import { useCountFetch } from "@/hooks/useCountFetch";
 import { useAppSelector } from "@/redux/store";
+import type { Region } from "@/shared/interfaces/user";
 import { cn } from "@/utils/cn";
+import useIsMounted from "@/hooks/useIsMounted";
 
 const adminChartConfig = {
   width: "130",
@@ -53,10 +55,15 @@ const internationalChartConfig = {
 export function BookOrderSevaStatusCard({
   userRoleId,
   userRole: activeRole,
+  roleRegion,
+  region,
 }: {
   userRoleId?: number;
   userRole?: string;
+  roleRegion?: string;
+  region?: Region | null;
 }) {
+  const isMounted = useIsMounted();
   const path = "book_order_count";
   const type = "bookOrderCounts";
   const sevadar_type = "book_order_sevadar";
@@ -69,11 +76,14 @@ export function BookOrderSevaStatusCard({
     activeRole,
     sevadar_type,
     userRoleId,
+    roleRegion,
+    region,
   });
 
   const handleRefresh = async () => {
     await getCountsForSevadars();
   };
+  if (!isMounted) return null;
   return (
     <Card className="rounded-xl overflow-hidden shadow-md p-0 pb-2 relative gap-0">
       {/* HEADER */}

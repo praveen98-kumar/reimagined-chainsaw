@@ -4,6 +4,7 @@ import { useState } from "react";
 import { OrderSevaForm, type OrderType } from "./order-seva-form";
 export type { OrderType };
 import { ResultDialog } from "@/components/v2/ResultDialog";
+import { useSevaContext } from "@/hooks/useSevaContext";
 
 interface Props {
   type: OrderType;
@@ -12,7 +13,11 @@ interface Props {
 
 type DialogMode = "success" | "error" | "warn";
 
+const BOOK_ORDER_PERMISSIONS = ["book_order_seva", "create_book_order"];
+
 export function OrderSevaFormPage({ type, userRoleId }: Props) {
+  const bookOrderMatch = useSevaContext("book_order", BOOK_ORDER_PERMISSIONS);
+  const currentUserRoleId = bookOrderMatch?.userRoleId ?? userRoleId;
   const [resultDialogOpen, setResultDialogOpen] = useState(false);
   const [resultDialog, setResultDialog] = useState<{
     mode: DialogMode;
@@ -23,8 +28,9 @@ export function OrderSevaFormPage({ type, userRoleId }: Props) {
   return (
     <>
       <OrderSevaForm
+        key={currentUserRoleId ?? "pending"}
         type={type}
-        userRoleId={userRoleId}
+        userRoleId={currentUserRoleId}
         onSubmitSuccess={(_data, message) => {
           setResultDialog({
             mode: "success",

@@ -1,5 +1,6 @@
-import { PageHeader } from "@/components/v2/PageHeader";
+import { AppShell } from "@/components/v2/AppShell";
 import { IMAGES } from "@/constants/images";
+import { SEVA_PAGE_CONFIG } from "@/constants/roles";
 import { OrderSevaFormPage, type OrderType } from "./order-seva-form-page";
 
 export default async function Page({
@@ -36,14 +37,13 @@ export default async function Page({
   }[type];
 
   return (
-    <>
-      <PageHeader
-        title={headerConfig.title}
-        icon={headerConfig.icon}
-        titleClassName={headerConfig.titleColor}
-      />
-
+    <AppShell
+      title={headerConfig.title}
+      icon={headerConfig.icon}
+      titleClassName={headerConfig.titleColor}
+      sevas={SEVA_PAGE_CONFIG.bookOrderForm}
+    >
       <OrderSevaFormPage type={type} userRoleId={userRoleId} />
-    </>
+    </AppShell>
   );
 }

@@ -27,6 +27,7 @@ import threads3d from "../../public/icons/v2/social/threads.svg";
 import instagram3d from "../../public/icons/v2/social/instagram.svg";
 import sharechat3d from "../../public/icons/v2/social/sharechat.svg";
 import dailyhunt3d from "../../public/icons/v2/social/dailyhunt.svg";
+import platforms3d from "../../public/icons/v2/platforms.svg";
 import whatsapp3d from "../../public/icons/v2/social/Share on WhatsApp.svg";
 
 import heart from "../../public/icons/v2/social/heart.svg";
@@ -37,6 +38,7 @@ import upvote from "../../public/icons/v2/social/upvote.svg";
 import repost from "../../public/icons/v2/social/repost.svg";
 import comment from "../../public/icons/v2/social/comment.svg";
 import subscribe from "../../public/icons/v2/social/subscribe.svg";
+import share from "../../public/icons/v2/social/share.svg";
 // V2 Imports
 import fb from "../../public/icons/v2/fb-v2.svg";
 import yt from "../../public/icons/v2/yt-v2.svg";
@@ -51,6 +53,7 @@ import trendSeva from "../../public/icons/v2/trend-seva.svg";
 import whatsappShare from "../../public/icons/v2/whatsapp-share.svg";
 import defaultUser from "../../public/icons/v2/defaultUser.svg";
 import addSevadar from "../../public/icons/v2/add-sevadar.svg";
+import questions from "../../public/icons/v2/questions.svg";
 import file from "../../public/icons/v2/file.svg";
 import indiaFlag from "../../public/icons/v2/india-flag.svg";
 import emergencyLight from "../../public/icons/v2/emergency-light.svg";
@@ -93,12 +96,13 @@ export const socialMediaActionImages: Record<string, string> = {
   repost,
   comment,
   subscribe,
+  share,
 };
 export const socialImages3d: Record<string, string> = {
   facebook: facebook3d,
   twitter: twitter3d,
   google: google3d,
-  common: common,
+  common: platforms3d,
   koo: koo,
   linkedin: linkedin3d,
   linked: linkedin3d,
@@ -130,6 +134,7 @@ export const IMAGES: Record<string, any> = {
   whatsappShare,
   defaultUser,
   addSevadar,
+  questions,
   file,
   indiaFlag,
   emergencyLight,

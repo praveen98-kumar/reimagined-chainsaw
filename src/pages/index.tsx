@@ -35,10 +35,10 @@ const sevaList: ISevaList[] = [
     subtitle: "seva.subtitle.social_media",
     permission: ["social_media_seva", "book_order_seva"],
     setPermission: true,
-    checkPermission: true,
+    checkPermission: false,
   },
   {
-    href: "/v2/social-media",
+    href: "/social-media",
     Icon: <Icon src="/assets/icons/social_media_platforms.png" />,
     title: "seva.title.social_media",
     subtitle: "seva.subtitle.social_media",

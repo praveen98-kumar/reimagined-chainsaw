@@ -8,6 +8,7 @@ import {
   setActiveRegionIndex,
 } from "@/redux/features/authSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/store";
+import { getRegionIndex, isSameRegion } from "@/shared/functions/seva-region";
 import type { Region } from "@/shared/interfaces/user";
 import useValidUser from "../../hooks/useValidUser";
 
@@ -68,8 +69,12 @@ const SevaCard: React.FC<SevaCardProps> = React.forwardRef(
                       );
                     }
                   });
+                  const activePermission = item[0] ?? null;
                   dispatch(setActiveRegionIndex(0));
-                  dispatch(setActivePermission(item[0]));
+                  dispatch(setActivePermission(activePermission));
+                  dispatch(
+                    setActiveRegion(activePermission?.region?.[0] ?? null),
+                  );
                 }
                 href && router.push(href, undefined, { locale: router.locale });
               }
@@ -103,9 +108,9 @@ export const SevaCardWithMenu = ({
     (state) => state.auth,
   );
   const hasPermission = useValidUser(props.permission);
-  const navigate = () => {
+  const navigate = (region?: Region) => {
     if (props.changePermission && user) {
-      const item = user.permission.filter((p) => {
+      const items = user.permission.filter((p) => {
         if (Array.isArray(props.permission)) {
           return (
             all_permission.roles.includes(p.role_id) &&
@@ -118,7 +123,23 @@ export const SevaCardWithMenu = ({
           );
         }
       });
-      dispatch(setActivePermission(item[0]));
+
+      const permission = region
+        ? (items.find((item) =>
+            item.region?.some((itemRegion) =>
+              isSameRegion(itemRegion, region, item.role_region),
+            ),
+          ) ?? items[0])
+        : items[0];
+
+      dispatch(setActivePermission(permission ?? null));
+
+      if (permission) {
+        dispatch(setActiveRegionIndex(getRegionIndex(permission, region)));
+        if (region) {
+          dispatch(setActiveRegion(region));
+        }
+      }
     }
     href && router.push(href, undefined, { locale: router.locale });
   };
@@ -146,7 +167,7 @@ export const SevaCardWithMenu = ({
       (o) => !seen.has(getUniqueKey(o)) && seen.add(getUniqueKey(o)),
     );
   }, [regions, getUniqueKey]);
-  console.log({ uniqueRegion, regions });
+
   if (!hasPermission) {
     return null;
   }
@@ -184,9 +205,7 @@ export const SevaCardWithMenu = ({
                 className="rounded-full w-full max-w-sm"
                 key={`region_index_${index.toString()}`}
                 onClick={() => {
-                  dispatch(setActiveRegionIndex(index));
-                  dispatch(setActiveRegion(region));
-                  navigate();
+                  navigate(region);
                 }}
               >
                 {locationName}

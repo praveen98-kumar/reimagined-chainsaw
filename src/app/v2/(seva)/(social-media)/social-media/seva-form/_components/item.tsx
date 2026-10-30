@@ -10,18 +10,24 @@ import { CheckIcon } from "lucide-react";
 import Image from "next/image";
 import { useMemo } from "react";
 
+// export type SocialMediaGroupData = Record<
+//   string,
+//   Record<string, Record<string, SocialMediaQuestionWithAnswer[]>>
+// >;
 export type SocialMediaGroupData = Record<
   string,
-  Record<string, Record<string, SocialMediaQuestionWithAnswer[]>>
+  SocialMediaQuestionWithAnswer[]
 >;
 
 const groupSocialMediaQuestion = (data: SocialMediaQuestionWithAnswer[]) => {
   return data.reduce((acc: SocialMediaGroupData, curr) => {
     const sevaRegion = curr.is_common ? "Ashram Seva" : "State Seva";
-    acc[sevaRegion] ??= {};
-    acc[sevaRegion][curr.icon!] ??= {};
-    acc[sevaRegion][curr.icon!][curr.topic!] ??= [];
-    acc[sevaRegion][curr.icon!][curr.topic!].push(curr);
+    // acc[sevaRegion] ??= {};
+    // acc[sevaRegion][curr.icon!] ??= {};
+    // acc[sevaRegion][curr.icon!][curr.topic!] ??= [];
+    // acc[sevaRegion][curr.icon!][curr.topic!].push(curr);
+    acc[sevaRegion] ??= [];
+    acc[sevaRegion].push(curr);
     return acc;
   }, {}) as SocialMediaGroupData;
 };
@@ -87,9 +93,9 @@ const SevaTypeField = ({
               },
             });
           }}
-          className="flex size-5 items-center justify-center rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-800 data-[checked]:bg-gray-900 data-[unchecked]:border data-[unchecked]:border-gray-300"
+          className="flex size-5 items-center justify-center rounded-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-blue-800 data-[checked]:bg-gray-900 data-[unchecked]:border data-[unchecked]:border-gray-300"
         >
-          <CheckboxPrimitive.Indicator className="flex text-gray-50 data-[unchecked]:hidden">
+          <CheckboxPrimitive.Indicator className="flex text-gray-50 data-unchecked:hidden">
             <CheckIcon className="size-3" />
           </CheckboxPrimitive.Indicator>
         </CheckboxPrimitive.Root>
@@ -186,7 +192,7 @@ const TopicCard = ({
   </div>
 );
 
-const PlatformRenderer = ({
+export const PlatformRenderer = ({
   platformData,
   platformIcon,
   indexMap,
@@ -214,15 +220,82 @@ const PlatformRenderer = ({
   </div>
 );
 
+const QuestionRenderer = ({
+  question,
+  loadedValue,
+  index,
+  values,
+}: {
+  question: SocialMediaQuestionWithAnswer;
+  loadedValue: string | boolean | number | undefined;
+  index: number;
+  values: any;
+}) => {
+  const { icon, topic, question_type } = question;
+  const isNumberInput = question_type === "numeric";
+  const isCheckbox = question_type === "checkbox";
+
+  const [field] = useField({
+    name: `questions.${index}.answer`,
+  });
+  return (
+    <div className="flex w-full py-1.5 gap-1 items-center justify-between not-last:border-b not-last:border-gray-300">
+      <Image
+        height={28}
+        width={28}
+        style={{ width: "32px", height: "auto" }}
+        src={socialImages3d[icon || "common"]}
+        alt={`facebook_satsang_seva_alt_image`}
+        className="cursor-pointer max-h-8 w-auto h-auto"
+        priority
+      />
+      <p className="text-lg font-bold flex-1 line-clamp-1">{topic}</p>
+
+      {isCheckbox ? (
+        <CheckboxPrimitive.Root
+          checked={Boolean(field.value)}
+          onCheckedChange={(
+            checked: boolean | string | string[] | undefined,
+          ) => {
+            field.onChange({
+              target: {
+                name: `questions.${index}.answer`,
+                value: checked,
+              },
+            });
+          }}
+          className="flex size-5 items-center justify-center rounded-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-blue-800 data-[checked]:bg-gray-900 data-[unchecked]:border data-[unchecked]:border-gray-300"
+        >
+          <CheckboxPrimitive.Indicator className="flex text-gray-50 data-unchecked:hidden">
+            <CheckIcon className="size-3" />
+          </CheckboxPrimitive.Indicator>
+        </CheckboxPrimitive.Root>
+      ) : (
+        <Input
+          className={cn({
+            "border-2 bg-green-100 border-green-600 text-green-600":
+              loadedValue !== values.questions?.[index!]?.answer,
+          })}
+          inputMode={isNumberInput ? "numeric" : "text"}
+          type={isNumberInput ? "number" : "text"}
+          {...field}
+          value={field.value ?? ""}
+        />
+      )}
+    </div>
+  );
+};
+
 const SevaLevelRenderer = ({
   sevaLevel,
-  platforms,
+  questions,
   indexMap,
   loadedQuestion,
   values,
 }: {
   sevaLevel: string;
-  platforms: Record<string, Record<string, SocialMediaQuestionWithAnswer[]>>;
+  // platforms: Record<string, Record<string, SocialMediaQuestionWithAnswer[]>>;
+  questions: SocialMediaQuestionWithAnswer[];
   indexMap: Map<number, number>;
   loadedQuestion: Record<string, any>;
   values: any;
@@ -230,13 +303,12 @@ const SevaLevelRenderer = ({
   <div>
     <SevaLevelHeader sevaLevel={sevaLevel} />
     <div className="flex flex-col space-y-2 -mt-1">
-      {Object.entries(platforms).map(([platformIcon, platformData]) => (
-        <PlatformRenderer
-          key={platformIcon}
-          platformData={platformData}
-          platformIcon={platformIcon}
-          indexMap={indexMap}
-          loadedQuestion={loadedQuestion}
+      {questions.map((question) => (
+        <QuestionRenderer
+          key={question.id}
+          question={question}
+          index={indexMap.get(question.id) ?? 0}
+          loadedValue={loadedQuestion.get(question.id)}
           values={values}
         />
       ))}
@@ -252,13 +324,7 @@ const SocialMediaUpdateForm = ({
   onSubmit: (values: SocialMediaQuestionWithAnswer[]) => void;
 }) => {
   const loadedQuestion = useMemo(() => {
-    return questions?.reduce(
-      (
-        a: Record<string, string | number | boolean>,
-        p: SocialMediaQuestionWithAnswer,
-      ) => Object.assign(a, { [p.id]: p.answer }),
-      {},
-    );
+    return new Map(questions.map((q) => [q.id, q.answer]));
   }, [questions]);
   const indexMap = useMemo(() => {
     const map = new Map<number, number>();
@@ -280,16 +346,18 @@ const SocialMediaUpdateForm = ({
               const grouped = groupSocialMediaQuestion(questions);
               return (
                 <div className="flex flex-col gap-8">
-                  {Object.entries(grouped).map(([sevaLevel, platforms]) => (
-                    <SevaLevelRenderer
-                      key={sevaLevel}
-                      sevaLevel={sevaLevel}
-                      platforms={platforms}
-                      indexMap={indexMap}
-                      loadedQuestion={loadedQuestion}
-                      values={values}
-                    />
-                  ))}
+                  {Object.entries(grouped).map(
+                    ([sevaLevel, groupQuestions]) => (
+                      <SevaLevelRenderer
+                        key={sevaLevel}
+                        sevaLevel={sevaLevel}
+                        questions={groupQuestions}
+                        indexMap={indexMap}
+                        loadedQuestion={loadedQuestion}
+                        values={values}
+                      />
+                    ),
+                  )}
                 </div>
               );
             }}

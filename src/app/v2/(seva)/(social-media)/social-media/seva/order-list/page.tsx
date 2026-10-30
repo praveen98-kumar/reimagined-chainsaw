@@ -3,9 +3,10 @@
 import dayjs from "dayjs";
 import { useCallback, useMemo, useState } from "react";
 import { BookOrderCard } from "@/app/v2/(seva)/(social-media)/social-media/_components/book-order-card";
-import { PageHeader } from "@/components/v2/PageHeader";
+import { AppShell } from "@/components/v2/AppShell";
 import { PaginatedList } from "@/components/v2/ui/list";
 import { IMAGES } from "@/constants/images";
+import { SEVA_PAGE_CONFIG } from "@/constants/roles";
 import { useGetOrdersList } from "@/query-options/queries/get-orders";
 
 import { objectWithValues } from "@/shared/functions/utils";
@@ -17,6 +18,8 @@ import {
 } from "../order-seva-form/order-seva-form";
 import { useAppSelector } from "@/redux/store";
 import { ResultDialog } from "@/components/v2/ResultDialog";
+import { useActiveLocationContext } from "@/hooks/useActiveLocationContext";
+import { useSevaContext } from "@/hooks/useSevaContext";
 
 const BookIdToImageMap: Record<number, any> = {
   1: IMAGES.jkr,
@@ -24,11 +27,12 @@ const BookIdToImageMap: Record<number, any> = {
   4: IMAGES.gg,
 };
 
+const BOOK_ORDER_PERMISSIONS = ["book_order_seva", "create_book_order"];
+
 export default function BookOrderList() {
-  const { user, active_permission, active_region_index } = useAppSelector(
-    (state) => state.auth,
-  );
-  const tehsil_id = active_permission?.region[active_region_index]?.tehsil_id;
+  useSevaContext("book_order", BOOK_ORDER_PERMISSIONS);
+  const { user } = useAppSelector((state) => state.auth);
+  const location = useActiveLocationContext();
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
   const [resultDialogOpen, setResultDialogOpen] = useState(false);
@@ -44,9 +48,9 @@ export default function BookOrderList() {
         from_date: dayjs().subtract(24, "hour").startOf("day").toISOString(),
         to_date: dayjs().toISOString(),
         created_by: user?.id,
-        ...(tehsil_id && { tehsil_id }),
+        ...(location?.params ?? {}),
       }),
-    [user?.id, tehsil_id],
+    [user?.id, location?.key, location?.params],
   );
 
   const {
@@ -54,7 +58,9 @@ export default function BookOrderList() {
     isFetchingNextPage,
     fetchNextPage,
     refetch,
-  } = useGetOrdersList(params, { enabled: true });
+  } = useGetOrdersList(params, {
+    enabled: Boolean(location),
+  });
 
   const orderItems = ordersList?.pages.flatMap((page) => page.data) ?? [];
 
@@ -91,8 +97,11 @@ export default function BookOrderList() {
   }, [selectedOrder]);
 
   return (
-    <>
-      <PageHeader title="Order List" icon={IMAGES.file} />
+    <AppShell
+      title="Order List"
+      icon={IMAGES.file}
+      sevas={SEVA_PAGE_CONFIG.bookOrderList}
+    >
       <div className="space-y-4 px-4 py-4">
         <PaginatedList
           items={orderItems}
@@ -136,6 +145,6 @@ export default function BookOrderList() {
           }
         }}
       />
-    </>
+    </AppShell>
   );
 }

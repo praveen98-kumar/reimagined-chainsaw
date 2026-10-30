@@ -8,6 +8,7 @@ import {
   useFilterActions,
 } from "@/store/useFilterStore";
 import { useAppSelector } from "@/redux/store";
+import { useActiveLocationContext } from "@/hooks/useActiveLocationContext";
 import { getRegionValue } from "@/shared/functions/location";
 import { getDateFilters } from "@/shared/functions/filter";
 import apiClient from "@/http/index";
@@ -255,6 +256,8 @@ export function ReportResults() {
   const { active_permission, active_region_index } = useAppSelector(
     (s) => s.auth,
   );
+  const activeLocation = useActiveLocationContext();
+  const locationKey = activeLocation?.key ?? null;
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -436,7 +439,7 @@ export function ReportResults() {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTrigger]);
+  }, [searchTrigger, locationKey]);
 
   useEffect(() => {
     fetchData();

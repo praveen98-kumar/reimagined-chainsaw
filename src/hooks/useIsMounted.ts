@@ -1,21 +1,22 @@
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 /**
  * Returns `false` while server rendering and during the very first client
- * render, and `true` right after the component mounted.
+ * render, and `true` right after the component mounts.
+ *
+ * Implemented with `useSyncExternalStore` instead of `useEffect` + `useState`
+ * so there is no extra render pass and no hydration mismatch.
  *
  * Use it to gate markup that depends on client-only state (e.g. redux state
  * hydrated from `localStorage`) so the server rendered HTML is identical to the
- * first client render and React does not report a hydration mismatch.
+ * first client render.
  */
-const useIsMounted = () => {
-  const [isMounted, setIsMounted] = useState(false);
+const subscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  return isMounted;
-};
+const useIsMounted = () =>
+  useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
 
 export default useIsMounted;
+export { useIsMounted };

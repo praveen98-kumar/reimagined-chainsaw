@@ -39,24 +39,24 @@ const navItems = [
 ];
 
 export function SocialMediaNav() {
-  const isMounted = useIsMounted();
-  const { active_permission } = useAppSelector((s) => s.auth);
-
-  const activeRoleRegion = active_permission?.role_region as RoleRegion;
-  const currentUserHierarchy = regionHirarchyMap[activeRoleRegion];
-  const filtered = useMemo(() => {
-    // The auth state lives in `localStorage`, so it only exists on the client.
-    // Until the component is mounted we render the role independent subset of
-    // items, which is exactly what the server renders. This keeps the server
-    // HTML and the first client render identical (no hydration mismatch),
-    // the role based list is applied right after mounting.
-    if (!isMounted) return sevadarNavItems;
-
-    return currentUserHierarchy < 5
-      ? navItems
-      : active_permission?.role === "social_media_sevadar"
-        ? navItems
-        : sevadarNavItems;
-  }, [isMounted, currentUserHierarchy, active_permission?.role]);
-  return <MobileNav items={filtered} />;
+  //   const isMounted = useIsMounted();
+  //   const { active_permission } = useAppSelector((s) => s.auth);
+  //
+  //   const activeRoleRegion = active_permission?.role_region as RoleRegion;
+  //   const currentUserHierarchy = regionHirarchyMap[activeRoleRegion];
+  //   const filtered = useMemo(() => {
+  //     // The auth state lives in `localStorage`, so it only exists on the client.
+  //     // Until the component is mounted we render the role independent subset of
+  //     // items, which is exactly what the server renders. This keeps the server
+  //     // HTML and the first client render identical (no hydration mismatch),
+  //     // the role based list is applied right after mounting.
+  //     if (!isMounted) return sevadarNavItems;
+  //
+  //     return currentUserHierarchy < 5
+  //       ? navItems
+  //       : active_permission?.role === "social_media_sevadar"
+  //         ? navItems
+  //         : sevadarNavItems;
+  //   }, [isMounted, currentUserHierarchy, active_permission?.role]);
+  return <MobileNav items={navItems} />;
 }

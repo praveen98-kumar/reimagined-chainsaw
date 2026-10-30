@@ -1,17 +1,18 @@
 "use client";
 
-import { PageHeader } from "@/components/v2/PageHeader";
+import { AppShell } from "@/components/v2/AppShell";
 import { IMAGES } from "@/constants/images";
+import { SEVA_PAGE_CONFIG } from "@/constants/roles";
 import { AllotSevadarPageComponent } from "./_components/allot-sevadar-component";
 
 export default function Page() {
   return (
-    <>
-      <PageHeader
-        title="Manage Sevadar"
-        icon={IMAGES.addSevadar}
-      />
+    <AppShell
+      title="Manage Sevadar"
+      icon={IMAGES.addSevadar}
+      sevas={SEVA_PAGE_CONFIG.manageSevadar}
+    >
       <AllotSevadarPageComponent />
-    </>
+    </AppShell>
   );
 }

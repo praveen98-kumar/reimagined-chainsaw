@@ -8,7 +8,6 @@ import { cn } from "@/utils/cn";
 import { ChevronRight } from "lucide-react";
 
 export default function BookOrderSevaFormCard({
-  userRole,
   userRoleId,
 }: {
   userRole: string;
@@ -106,7 +105,9 @@ export default function BookOrderSevaFormCard({
               width={32}
               height={32}
             />
-            <span className="font-medium text-[16px] text-slate-700">Order List</span>
+            <span className="font-medium text-[16px] text-slate-700">
+              Order List
+            </span>
           </div>
           <ChevronRight className="text-slate-800 size-5" />
         </Link>

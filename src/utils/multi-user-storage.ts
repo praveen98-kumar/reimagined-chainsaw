@@ -14,6 +14,7 @@ export interface StoredUser {
   active_region_index: number;
   all_permission?: GroupPermission;
   active_region: Region | null;
+  seva_regions?: Record<string, Region>;
   login_time: string;
   mobile_no: string;
   name: string;
@@ -68,6 +69,7 @@ export const migrateOldStorage = (): void => {
         active_region_index: regionIndex,
         all_permission: oldAllPermission,
         active_region: null,
+        seva_regions: {},
         login_time: new Date().toISOString(),
         mobile_no: parsedUser.mobile_no,
         name: parsedUser.disciple?.name || parsedUser.mobile_no,
@@ -169,6 +171,7 @@ export const addOrUpdateUser = (
     active_region_index,
     active_region: null,
     all_permission: all_permission,
+    seva_regions: userIndex >= 0 ? (users[userIndex].seva_regions ?? {}) : {},
     login_time: new Date().toISOString(),
     mobile_no: user.mobile_no,
     name: user.disciple?.name || user.mobile_no,
@@ -260,7 +263,7 @@ export const updateActiveUserPermission = (
 /**
  * Updates active region index for the active user
  */
-export const updateActiveUserRegion = (region: Region): void => {
+export const updateActiveUserRegion = (region: Region | null): void => {
   const activeUser = getActiveUser();
   if (!activeUser) return;
 
@@ -271,6 +274,26 @@ export const updateActiveUserRegion = (region: Region): void => {
 
   if (userIndex >= 0) {
     users[userIndex].active_region = region;
+    localStorage.setItem(USERS_LIST_KEY, JSON.stringify(users));
+  }
+};
+
+/**
+ * Updates the per-level region selections for the active user
+ */
+export const updateActiveUserSevaRegions = (
+  sevaRegions: Record<string, Region>,
+): void => {
+  const activeUser = getActiveUser();
+  if (!activeUser) return;
+
+  const users = getUsersList();
+  const userIndex = users.findIndex(
+    (u) => u.disciple_id === activeUser.disciple_id,
+  );
+
+  if (userIndex >= 0) {
+    users[userIndex].seva_regions = sevaRegions;
     localStorage.setItem(USERS_LIST_KEY, JSON.stringify(users));
   }
 };

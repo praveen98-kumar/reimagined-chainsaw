@@ -26,10 +26,19 @@ export interface Question {
   seva_type: string;
 }
 
-export async function getSocialMediaSeva(headers = {}): Promise<QuestionData> {
+export interface SocialMediaSevaParams {
+  user_role_id?: number;
+}
+
+export async function getSocialMediaSeva(
+  params: SocialMediaSevaParams = {},
+): Promise<QuestionData> {
   try {
     const { data } = await apiClient.get<Response>("social_media_seva", {
-      headers,
+      headers:
+        params.user_role_id !== undefined
+          ? { user_role_id: params.user_role_id }
+          : undefined,
     });
     return data?.data;
   } catch (_e: unknown) {
@@ -37,12 +46,18 @@ export async function getSocialMediaSeva(headers = {}): Promise<QuestionData> {
   }
 }
 
-export const useSocialMediaQueryOptions = (options = {}, headers = {}) =>
+export const useSocialMediaQueryOptions = (
+  params: SocialMediaSevaParams = {},
+  options: Record<string, unknown> = {},
+) =>
   queryOptions({
-    queryKey: ["social_media_seva"],
-    queryFn: () => getSocialMediaSeva(headers),
+    queryKey: ["social_media_seva", params.user_role_id ?? null],
+    queryFn: () => getSocialMediaSeva(params),
+    enabled: params.user_role_id !== undefined,
     ...options,
   });
 
-export const useSocialMediaQuery = (headers = {}) =>
-  useQuery(useSocialMediaQueryOptions({}, headers));
+export const useSocialMediaQuery = (
+  params: SocialMediaSevaParams = {},
+  options: Record<string, unknown> = {},
+) => useQuery(useSocialMediaQueryOptions(params, options));
