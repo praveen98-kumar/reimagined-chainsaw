@@ -6,7 +6,7 @@ interface Props extends PageHeaderProps {
 
 export function AppShell({ children, ...props }: Props) {
   return (
-    <div className="relative flex flex-col h-full bg-white/60 backdrop-blur-sm overflow-y-auto">
+    <div className="relative flex flex-col h-full overflow-y-auto">
       <PageHeader {...props} />
       <div className="flex-1 pb-16 sm:pb-0">{children}</div>
     </div>

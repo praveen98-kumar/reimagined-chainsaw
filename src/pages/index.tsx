@@ -52,15 +52,6 @@ interface ISevaList {
 }
 
 const sevaList: ISevaList[] = [
-  // {
-  //   href: "/v2/social-media",
-  //   Icon: <Icon src="/assets/icons/social_media_platforms.png" />,
-  //   title: "Social Media New",
-  //   subtitle: "seva.subtitle.social_media",
-  //   permission: ["social_media_seva", "book_order_seva"],
-  //   setPermission: true,
-  //   checkPermission: false,
-  // },
   {
     href: "/v2/social-media",
     Icon: <Share2 />,

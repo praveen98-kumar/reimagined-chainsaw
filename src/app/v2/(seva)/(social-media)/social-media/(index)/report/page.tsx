@@ -16,7 +16,7 @@ export default function Page() {
       icon={IMAGES.allSocial}
       sevas={SEVA_PAGE_CONFIG.socialMediaReport}
     >
-      <div className="p-4 space-y-4">
+      <div className="p-4 space-y-3">
         <ReportFilters />
         <ReportResults />
       </div>

@@ -6,7 +6,7 @@ import BookOrderSevaFormCard from "../../_components/book-order-seva-form-card";
 import { SocialMediaSevaListCard } from "../_components/social-media-seva-list-card";
 import { TrendSevaListCard } from "../_components/trend-seva-list-card";
 import { AppShell } from "@/components/v2/AppShell";
-import ActionsCard from "../../_components/actions-card";
+// import ActionsCard from "../../_components/actions-card";
 
 export default function Page() {
   return (
@@ -34,7 +34,7 @@ export default function Page() {
           )}
         />
 
-        <ActionsCard />
+        {/*<ActionsCard />*/}
       </div>
     </AppShell>
   );

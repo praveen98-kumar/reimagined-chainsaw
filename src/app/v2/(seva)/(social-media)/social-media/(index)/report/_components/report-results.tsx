@@ -13,7 +13,7 @@ import { getRegionValue } from "@/shared/functions/location";
 import { getDateFilters } from "@/shared/functions/filter";
 import apiClient from "@/http/index";
 import { CopyBar } from "./copy-bar";
-import { SevadarList, type SevadarRow } from "./sevadar-list";
+import { type SevadarRow } from "./sevadar-list";
 import { AllPlatformsList, type PlatformRow } from "./all-platforms-list";
 import { BookOrderList, type BookOrderRow } from "./book-order-list";
 import {
@@ -22,112 +22,6 @@ import {
   buildPlatformWiseMsg,
   splitLongMessage,
 } from "../_utils/message-templates";
-import { Card } from "@/components/v2/ui/card";
-import { MoreHorizontal } from "lucide-react";
-import { Separator } from "@/components/v2/ui/separator";
-
-const DUMMY_SEVADAR = [
-  {
-    father: "Rajesh Kumar",
-    son: "Amit Kumar",
-  },
-  {
-    father: "Ramesh Sharma",
-    son: "Rohit Sharma",
-  },
-  {
-    father: "Suresh Verma",
-    son: "Rahul Verma",
-  },
-  {
-    father: "Mahesh Patel",
-    son: "Karan Patel",
-  },
-  {
-    father: "Vijay Singh",
-    son: "Arjun Singh",
-  },
-  {
-    father: "Manoj Gupta",
-    son: "Ankit Gupta",
-  },
-  {
-    father: "Ashok Yadav",
-    son: "Deepak Yadav",
-  },
-  {
-    father: "Pradeep Mishra",
-    son: "Aditya Mishra",
-  },
-  {
-    father: "Sunil Thakur",
-    son: "Vikram Thakur",
-  },
-  {
-    father: "Dinesh Tiwari",
-    son: "Harsh Tiwari",
-  },
-  {
-    father: "Rakesh Sahu",
-    son: "Mohit Sahu",
-  },
-  {
-    father: "Anil Agrawal",
-    son: "Nikhil Agrawal",
-  },
-  {
-    father: "Om Prakash",
-    son: "Shivam Prakash",
-  },
-  {
-    father: "Mohan Lal",
-    son: "Gaurav Lal",
-  },
-  {
-    father: "Krishna Das",
-    son: "Abhishek Das",
-  },
-  {
-    father: "Harish Chandra",
-    son: "Sandeep Chandra",
-  },
-  {
-    father: "Ram Kumar",
-    son: "Pankaj Kumar",
-  },
-  {
-    father: "Gopal Singh",
-    son: "Yash Singh",
-  },
-  {
-    father: "Narendra Patel",
-    son: "Rohan Patel",
-  },
-  {
-    father: "Shyam Sundar",
-    son: "Manish Sundar",
-  },
-];
-
-function DebugBar({ data }: { data: unknown }) {
-  const [open, setOpen] = useState(false);
-  if (process.env.NODE_ENV === "production") return null;
-  return (
-    <div className="fixed bottom-4 left-4 z-[9999] max-w-[90vw]">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="bg-black/80 text-green-400 text-[11px] font-mono px-3 py-1 rounded-full shadow-lg"
-      >
-        {open ? "x debug" : "debug"}
-      </button>
-      {open && (
-        <div className="mt-2 bg-black/90 text-green-300 text-[10px] font-mono rounded-xl p-3 max-h-[50vh] overflow-auto shadow-2xl whitespace-pre-wrap break-all">
-          {JSON.stringify(data, null, 2)}
-        </div>
-      )}
-    </div>
-  );
-}
 
 function resolveName(r: any): string {
   return (
@@ -236,11 +130,13 @@ function transformPlatformWiseResult(apiData: any): SevadarRow[] {
 
 function transformAllPlatformsResult(apiData: any) {
   return {
-    rows: (apiData?.reports ?? []).map((r: any): PlatformRow => ({
-      question: r.question ?? "",
-      icon: r.icon ?? "facebook",
-      seva_count: r.seva_count ?? 0,
-    })),
+    rows: (apiData?.reports ?? []).map(
+      (r: any): PlatformRow => ({
+        question: r.question ?? "",
+        icon: r.icon ?? "facebook",
+        seva_count: r.seva_count ?? 0,
+      }),
+    ),
     total_sevadar: apiData?.total_sevadar ?? 0,
     total_submissions: apiData?.total_submissions ?? 0,
   };
@@ -382,6 +278,24 @@ export function ReportResults() {
             },
           );
           setRawDebug(data);
+          const questionIdToCountMap = new Map(
+            (data?.data?.report?.seva_count ?? []).map((q: any) => [
+              q.question_id,
+              q.seva_count,
+            ]),
+          );
+          const repsonsePlatformRows = (
+            data?.data?.report?.questions ?? []
+          ).map(
+            (q) =>
+              ({
+                question: q.question as string,
+                icon: q.icon as string,
+                seva_count: questionIdToCountMap.get(q.id) ?? 0,
+              }) as PlatformRow,
+          );
+          setPlatformRows(repsonsePlatformRows);
+          console.log(questionIdToCountMap, repsonsePlatformRows);
           const rows = transformSevadarWiseResult(data?.data);
           setSevadarRows(rows);
           const msg = buildSevadarPendingMsg({
@@ -460,8 +374,6 @@ export function ReportResults() {
 
   return (
     <div className="space-y-3">
-      <DebugBar data={rawDebug} />
-
       {messages.length > 0 && <CopyBar messages={messages} />}
 
       {loading && (
@@ -484,54 +396,7 @@ export function ReportResults() {
               <AllPlatformsList rows={platformRows} />
             )}
 
-          {(topTab === "sm-seva" || topTab === "trend-seva") &&
-            subTab !== "all-platforms" && (
-              // <SevadarList rows={filteredSevadarRows} />
-              <Card className="rounded-2xl ring-0 shadow-sm p-2 gap-1 overflow-hidden">
-                <div className="flex items-center gap-2">
-                  <span className="h-px flex-1 bg-[#C3C9D8]" />
-                  <span className="text-[11px] font-medium whitespace-nowrap text-[#8A93A8]">
-                    Pune City
-                  </span>
-                  <span className="h-px flex-1 bg-[#C3C9D8]" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="size-8 grid place-content-center rounded-lg bg-amber-200 text-amber-800 font-semibold">
-                      TL1
-                    </div>
-                    <p className="text-lg">
-                      Ramesh Das{" "}
-                      <span className="text-xs">s/o Abhinav Das</span>
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-md">5/10</p>
-                    <MoreHorizontal className="size-4 text-gray-400" />
-                  </div>
-                </div>
-                <Separator />
-                {DUMMY_SEVADAR.map(({ father, son }) => (
-                  <>
-                    <div
-                      className="flex items-center justify-between"
-                      key={`${son}-${father}`}
-                    >
-                      <p className="text-lg">
-                        {son} <span className="text-xs">s/o {father}</span>
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <p className="text-md">
-                          {Math.round(Math.random() * 30)}
-                        </p>
-                        <MoreHorizontal className="size-4 text-gray-400" />
-                      </div>
-                    </div>
-                    <Separator />
-                  </>
-                ))}
-              </Card>
-            )}
+          {platformRows.length > 0 && <AllPlatformsList rows={platformRows} />}
 
           {topTab === "book-order" && (
             <BookOrderList

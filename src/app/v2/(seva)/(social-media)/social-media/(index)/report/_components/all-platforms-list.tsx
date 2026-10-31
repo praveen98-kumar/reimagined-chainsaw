@@ -55,35 +55,35 @@ export function AllPlatformsList({ rows }: AllPlatformsListProps) {
     );
   }
 
-  const totalPosts = rows.reduce((sum, row) => sum + row.seva_count, 0);
+  // const totalPosts = rows.reduce((sum, row) => sum + row.seva_count, 0);
 
   return (
-    <Card className="rounded-2xl ring-0 shadow-sm py-0 overflow-hidden gap-0">
+    <Card className="rounded-2xl ring-0 shadow-sm p-2 overflow-hidden gap-0">
       <CardContent className="px-0 py-0">
         <table className="w-full border-collapse">
           <tbody>
             {rows.map((row) => (
               <tr
                 key={row.question}
-                className="border-b border-border/60 last:border-0"
+                className="border-b border-border/80 last:border-0"
               >
-                <td className="w-12 py-0 pl-4 pr-2 align-middle">
+                <td className="w-10 py-0 align-middle">
                   <div className="flex size-8 items-center justify-center rounded-xl bg-muted/50">
                     <PlatformIcon icon={row.icon} size={24} />
                   </div>
                 </td>
-                <td className="py-1 pr-3 align-middle text-left text-[13px] font-medium text-foreground">
+                <td className="pr-3 align-middle text-left text-sm font-medium text-foreground">
                   {row.question}
                 </td>
-                <td className="py-1 pr-4 align-middle text-right text-sm font-medium tabular-nums text-foreground">
-                  {row.seva_count}
+                <td className="pr-4 align-middle text-right text-sm font-medium tabular-nums text-foreground">
+                  {String(row.seva_count).padStart(2, "0")}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </CardContent>
-      <CardFooter className="flex items-center justify-around gap-0 px-4 py-1.5">
+      {/*<CardFooter className="flex items-center justify-around gap-0 px-4 py-1.5">
         <div className="text-center">
           <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
             Total Posts
@@ -101,7 +101,7 @@ export function AllPlatformsList({ rows }: AllPlatformsListProps) {
             {rows.length}
           </p>
         </div>
-      </CardFooter>
+      </CardFooter>*/}
     </Card>
   );
 }

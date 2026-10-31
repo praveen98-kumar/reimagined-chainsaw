@@ -26,7 +26,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   }, []);
 
   return (
-    <header className="sticky top-0 z-100 inset-x-0 min-h-19 p-4 bg-white">
+    <header className="sticky top-0 z-100 inset-x-0 min-h-19 p-4">
       <div className="flex w-full min-h-11 items-center justify-between">
         <BackButton />
         <div className="text-center flex-1">

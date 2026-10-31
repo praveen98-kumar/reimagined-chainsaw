@@ -26,13 +26,9 @@ export default function RootLayout({
     <html lang="en" className="h-full" suppressHydrationWarning>
       <body
         className={cn(
-          // "w-full min-h-screen antialiased relative bg-center bg-cover bg-no-repeat",
-          "relative h-screen w-full bg-center bg-cover bg-no-repeat antialiased overflow-hidden",
+          "relative h-screen w-full bg-center bg-cover bg-no-repeat antialiased overflow-hidden bg-app-gradient",
           abeeZee.className,
         )}
-        style={{
-          backgroundImage: `url("https://res.cloudinary.com/dwzdwuh4t/image/upload/e_improve,w_300,h_600,c_thumb,g_auto/v1768835270/background_d2la5n.png")`,
-        }}
       >
         <Providers>{children}</Providers>
       </body>

@@ -12,7 +12,7 @@ export function BackButton() {
   return (
     <Button
       onClick={handleBack}
-      className="cursor-pointer absolute left-3"
+      className="absolute left-4 flex size-11 items-center justify-center rounded-full bg-white text-brand-ink shadow-[0_8px_20px_-6px_rgba(76,29,149,0.35)]"
       variant={"ghost"}
       size={"icon-lg"}
     >

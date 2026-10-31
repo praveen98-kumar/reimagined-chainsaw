@@ -31,21 +31,27 @@ const ChartComponent = ({
   pending,
   submitted,
   upcomming,
+  pendingColor,
+  submittedColor,
+  upcommingColor,
 }: {
   pending: number;
   submitted: number;
   upcomming?: number;
+  pendingColor?: string;
+  submittedColor?: string;
+  upcommingColor?: string;
 }) => {
   const chartData = [
     {
       name: "pending",
       value: pending,
-      fill: "#010D48",
+      fill: pendingColor ?? "#010D48",
     },
     {
       name: "submitted",
       value: submitted,
-      fill: "#2554FF",
+      fill: submittedColor ?? "#2554FF",
     },
   ];
 
@@ -67,6 +73,25 @@ const ChartComponent = ({
     // },
   } satisfies ChartConfig;
 
+  const finalChartData = upcomming
+    ? [
+        {
+          name: "pending",
+          value: pending,
+          fill: pendingColor ?? "#FF383C",
+        },
+        {
+          name: "submitted",
+          value: submitted,
+          fill: submittedColor ?? "#22C55E",
+        },
+        {
+          name: "upcomming",
+          value: upcomming,
+          fill: upcommingColor ?? "#FFCC00",
+        },
+      ]
+    : chartData;
   const total = chartData.reduce((a, c) => a + c.value, 0);
   const RADIAN = Math.PI / 180;
 
@@ -115,27 +140,7 @@ const ChartComponent = ({
             content={<ChartTooltipContent hideLabel />}
           />
           <Pie
-            data={
-              upcomming
-                ? [
-                    {
-                      name: "pending",
-                      value: pending,
-                      fill: "#FF383C",
-                    },
-                    {
-                      name: "submitted",
-                      value: submitted,
-                      fill: "#22C55E",
-                    },
-                    {
-                      name: "upcomming",
-                      value: upcomming,
-                      fill: "#FFCC00",
-                    },
-                  ]
-                : chartData
-            }
+            data={finalChartData}
             dataKey="value"
             nameKey="name"
             innerRadius={25}
@@ -290,6 +295,9 @@ export const SocialMediaSevaStatusCard = ({
                 ? undefined
                 : totalDays - new Date().getDate()
             }
+            pendingColor="#FF383C"
+            submittedColor="#22C55E"
+            upcommingColor="#FFCC00"
           />
 
           {activeRole === sevadar_type ? (

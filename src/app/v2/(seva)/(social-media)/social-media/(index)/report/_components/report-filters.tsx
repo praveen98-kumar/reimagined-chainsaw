@@ -29,11 +29,17 @@ import { ResultHeader } from "./result-header";
 import type { TabState } from "./tab-shape-bg";
 import { regionHirarchyMap } from "@/constants/app";
 import type { DateRange } from "react-day-picker";
+import { SevaType } from "@/config/roles";
 
 const TEAM_LEADER_ROLE_ID = 60;
 
 type LocationField =
-  "country" | "state" | "division" | "district" | "tehsil" | "team-leader";
+  | "country"
+  | "state"
+  | "division"
+  | "district"
+  | "tehsil"
+  | "team-leader";
 
 const LOCATION_FIELD_LEVEL: Record<LocationField, number> = {
   country: 1,
@@ -61,11 +67,15 @@ const TOP_TABS: { label: string; value: TabState; className?: string }[] = [
 const TAB_ACCESS: Partial<
   Record<
     TabState,
-    { sevadarType: "social_media" | "book_order"; permissions: string }
+    {
+      roleId?: number;
+      sevaType?: SevaType;
+      permissions: string | string[];
+    }
   >
 > = {
-  "sm-seva": { sevadarType: "social_media", permissions: "social_media_seva" },
-  "book-order": { sevadarType: "book_order", permissions: "book_order_seva" },
+  "sm-seva": { sevaType: "social_media", permissions: "social_media_seva" },
+  "book-order": { sevaType: "book_order", permissions: "book_order_seva" },
 };
 
 const SUB_TAB_COLORS: Record<TabState, string> = {
@@ -269,7 +279,7 @@ export function ReportFilters() {
     () =>
       TOP_TABS.filter((tab) => {
         const rule = TAB_ACCESS[tab.value];
-        return rule ? canCheck(auth, rule) !== null : false;
+        return rule ? canCheck(auth, rule!) !== null : false;
       }),
     [auth],
   );
@@ -867,7 +877,7 @@ export function ReportFilters() {
         )}
 
         <SearchButton
-          className="w-full rounded-full"
+          className="w-44 rounded-full mt-1"
           disabled={Object.keys(filters).length === 0}
           onClick={triggerSearch}
         />
