@@ -5,7 +5,10 @@ export function buildSevadarPendingMsg(params: {
 }): string {
   const header = `🙏 *${params.location} - SM Seva Report*\n📅 ${params.date}\n\n`;
   const body = params.rows
-    .map((r, i) => `${i + 1}. ${r.name}${r.tehsil_name ? ` (${r.tehsil_name})` : ""}`)
+    .map(
+      (r, i) =>
+        `${i + 1}. ${r.name}${r.tehsil_name ? ` (${r.tehsil_name})` : ""}`,
+    )
     .join("\n");
   return header + (body || "No data");
 }

@@ -27,7 +27,6 @@ import threads3d from "../../public/icons/v2/social/threads.svg";
 import instagram3d from "../../public/icons/v2/social/instagram.svg";
 import sharechat3d from "../../public/icons/v2/social/sharechat.svg";
 import dailyhunt3d from "../../public/icons/v2/social/dailyhunt.svg";
-import platforms3d from "../../public/icons/v2/platforms.svg";
 import whatsapp3d from "../../public/icons/v2/social/Share on WhatsApp.svg";
 
 import heart from "../../public/icons/v2/social/heart.svg";
@@ -102,7 +101,7 @@ export const socialImages3d: Record<string, string> = {
   facebook: facebook3d,
   twitter: twitter3d,
   google: google3d,
-  common: platforms3d,
+  common: common,
   koo: koo,
   linkedin: linkedin3d,
   linked: linkedin3d,

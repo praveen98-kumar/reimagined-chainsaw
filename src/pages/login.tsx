@@ -1,13 +1,13 @@
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
 import { Form, Formik, type FormikValues } from "formik";
+import { Phone } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import * as Yup from "yup";
 import Button from "@/components/Button";
 import OtpInput from "@/components/input/OtpInput";
-import TextInput from "@/components/input/TextInput";
 import { Input } from "@/components/ui/input";
 import apiClient from "@/http/index";
 import {
@@ -41,57 +41,30 @@ const detectLoginMethod = (input: string) => {
   return isMobile ? "mobile" : "username";
 };
 
-/* ---------- "Saffron & Ivory" look ---------- */
-
-// Ivory card that holds each form
 const cardClass =
-  "relative mt-5 w-full space-y-4 rounded-[22px] border border-orange-200 bg-white p-5 " +
-  "shadow-[0_10px_26px_rgba(154,52,18,0.14)]";
+  "mx-4 w-[calc(100%-2rem)] space-y-5 rounded-[28px] border border-white bg-white/90 p-5 shadow-[0_20px_40px_-20px_rgba(76,29,149,0.35)]";
 
-// Deep-orange gradient primary button (the "!" wins over the Button variant styles)
-const primaryButtonClass =
-  "mx-auto w-full !h-[52px] !rounded-[14px] !border-0 !text-lg !font-bold !text-white " +
-  "!bg-gradient-to-r !from-[#c2410c] !to-[#9a3412] " +
-  "!shadow-[0_6px_16px_rgba(154,52,18,0.3)]";
+// Portrait is cropped out of the existing login artwork.
+const PORTRAIT_SRC = "/assets/images/loginScreen.jpg";
 
-const linkClass =
-  "text-[15px] font-semibold text-[#9a3412] hover:text-[#431407] hover:underline";
-
-const AuthShell = ({
-  title,
-  subtitle,
-  children,
-}: {
-  title: string;
-  subtitle: string;
-  children: ReactNode;
-}) => (
-  <div className="min-h-screen w-full bg-[#fffaf0]">
-    <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col items-center overflow-hidden px-5 pb-8 pt-14">
-      {/* saffron-to-gold curved banner */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-x-0 top-0 h-[330px] rounded-b-[40px]"
-        style={{
-          background: "linear-gradient(160deg, #fdba74 0%, #fde68a 100%)",
-        }}
-      />
-      <div className="relative h-[230px] w-[230px] shrink-0 overflow-hidden rounded-full border-[5px] border-white bg-white shadow-[0_0_0_6px_#f59e0b,0_14px_32px_rgba(154,52,18,0.3)]">
-        {/* biome-ignore lint/performance/noImgElement: static login artwork */}
-        <img
-          src="/assets/images/loginScreen.jpg"
-          alt=""
-          className="h-full w-full object-cover"
-          style={{ objectPosition: "center 8%" }}
+const BrandHero = () => (
+  <>
+    <div className="w-full flex justify-center pt-10 pb-12 rounded-b-[50%_60px] bg-linear-to-br from-blue-200/70 via-violet-200/60 to-pink-200/80">
+      <div className="size-56 rounded-full p-1.5 bg-linear-to-b from-brand-900 to-brand-700 shadow-[0_20px_40px_-12px_rgba(76,29,149,0.5)]">
+        <div
+          className="size-full rounded-full bg-white bg-no-repeat"
+          style={{
+            backgroundImage: `url(${PORTRAIT_SRC})`,
+            backgroundSize: "200%",
+            backgroundPosition: "86% 54%",
+          }}
         />
       </div>
-      <div className="relative mt-6 text-center">
-        <h1 className="text-[26px] font-bold text-[#431407]">{title}</h1>
-        <p className="text-[15px] text-[#7c2d12]">{subtitle}</p>
-      </div>
-      {children}
     </div>
-  </div>
+    <h1 className="my-6 font-serif text-4xl font-bold text-brand-title">
+      Satlok Ashram
+    </h1>
+  </>
 );
 
 const LoginForm: NextApplicationPage = () => {
@@ -308,16 +281,11 @@ const LoginForm: NextApplicationPage = () => {
   }, [router.isReady]);
 
   return (
-    <>
-      {loginWithOtp && (
-        <AuthShell
-          title={otpRequired ? "Verify OTP" : "Sevadar Login"}
-          subtitle={
-            otpRequired
-              ? "Enter the 6-digit OTP sent to your mobile"
-              : "Social Media Seva · Book Order Seva"
-          }
-        >
+    <div className="min-h-screen bg-app-gradient">
+      <div className="mx-auto w-full max-w-md flex flex-col items-center pb-10">
+        <BrandHero />
+
+        {loginWithOtp && (
           <Formik
             initialValues={{ username: "", login_otp: "", device_id: "local" }}
             onSubmit={(values, { setSubmitting }) => {
@@ -342,57 +310,56 @@ const LoginForm: NextApplicationPage = () => {
                     numInput={6}
                   />
                 ) : (
-                  <TextInput
-                    name="username"
-                    required
-                    autoFocus
-                    placeholder="Enter your mobile number"
-                    onChange={(e) =>
-                      setFieldValue(
-                        "username",
-                        String(e.target.value).replaceAll(/\s+/g, ""),
-                      )
-                    }
-                  />
+                  <label className="flex items-center gap-3 rounded-full bg-slate-50 px-5 py-3.5 shadow-[inset_0_2px_6px_rgba(15,23,42,0.08)] focus-within:ring-2 focus-within:ring-violet-300">
+                    <Phone className="size-5 shrink-0 text-brand-900" />
+                    <input
+                      name="username"
+                      required
+                      autoFocus
+                      inputMode="tel"
+                      value={values.username}
+                      placeholder="Enter your mobile number"
+                      className="w-full bg-transparent text-lg text-gray-700 placeholder-gray-500 outline-none"
+                      onChange={(e) =>
+                        setFieldValue(
+                          "username",
+                          String(e.target.value).replaceAll(/\s+/g, ""),
+                        )
+                      }
+                    />
+                  </label>
                 )}
                 <Button
-                  variant="primary"
+                  variant="gradient"
                   type="submit"
-                  className={primaryButtonClass}
+                  className="mx-auto w-2/3"
                   disabled={loading}
                   loading={loading}
                 >
                   {forgotPinShow || otpRequired ? "Login" : "Get OTP"}
                 </Button>
-                <div className="flex w-full items-center justify-between pt-1">
-                  {forgotPinShow && (
+                <div className="flex w-full px-1 justify-between items-center font-semibold text-blue-900">
+                  {forgotPinShow ? (
                     <button
                       type="button"
                       onClick={forgotPin}
-                      className={linkClass}
+                      className="hover:underline"
                     >
                       Forgot Pin?
                     </button>
+                  ) : (
+                    <span />
                   )}
-                  <Link href={"/register"} className={`${linkClass} ml-auto`}>
+                  <Link href={"/register"} className="hover:underline">
                     Register
                   </Link>
                 </div>
               </Form>
             )}
           </Formik>
-        </AuthShell>
-      )}
+        )}
 
-      {!loginWithOtp && !isPinSet && (
-        <AuthShell
-          title={`Set ${authMethod === "username" ? "Password" : "Pin"}`}
-          subtitle={
-            authMethod === "username"
-              ? "Create a password for your account"
-              : "Create a 4-digit PIN for quick login"
-          }
-        >
+        {!loginWithOtp && !isPinSet && (
           <Formik
             initialValues={{ pin: "" }}
             onSubmit={(values, { setSubmitting }) => {
@@ -406,6 +373,10 @@ const LoginForm: NextApplicationPage = () => {
           >
             {({ values, setFieldValue }) => (
               <Form className={cardClass}>
+                <p className="text-lg font-bold text-center text-brand-ink">
+                  Set {authMethod === "username" ? "Password" : "Pin"}
+                </p>
+
                 {authMethod === "username" ? (
                   <Input
                     name="pin"
@@ -413,6 +384,7 @@ const LoginForm: NextApplicationPage = () => {
                     value={values.pin}
                     placeholder="Enter password..."
                     required={authMethod === "username"}
+                    className="h-12 rounded-full bg-slate-50 px-5"
                     onChange={(e) => setFieldValue("pin", e.target.value)}
                   />
                 ) : (
@@ -426,9 +398,9 @@ const LoginForm: NextApplicationPage = () => {
                 )}
 
                 <Button
-                  variant="primary"
+                  variant="gradient"
                   type="submit"
-                  className={primaryButtonClass}
+                  className="mx-auto w-2/3"
                   disabled={loading}
                   loading={loading}
                 >
@@ -437,14 +409,9 @@ const LoginForm: NextApplicationPage = () => {
               </Form>
             )}
           </Formik>
-        </AuthShell>
-      )}
+        )}
 
-      {isPinSet && startWithPin && (
-        <AuthShell
-          title={`Enter ${authMethod === "username" ? "Password" : "Pin"}`}
-          subtitle="Welcome back, Sevadar"
-        >
+        {isPinSet && startWithPin && (
           <Formik
             initialValues={{
               pin: "",
@@ -462,6 +429,10 @@ const LoginForm: NextApplicationPage = () => {
           >
             {({ values, setFieldValue }) => (
               <Form className={cardClass}>
+                <p className="text-lg font-bold text-center text-brand-ink">
+                  Enter {authMethod === "username" ? "Password" : "Pin"}
+                </p>
+
                 {authMethod === "username" ? (
                   <Input
                     name="pin"
@@ -469,6 +440,7 @@ const LoginForm: NextApplicationPage = () => {
                     value={values.pin}
                     placeholder="Enter password..."
                     required={authMethod === "username"}
+                    className="h-12 rounded-full bg-slate-50 px-5"
                     onChange={(e) => setFieldValue("pin", e.target.value)}
                   />
                 ) : (
@@ -482,9 +454,9 @@ const LoginForm: NextApplicationPage = () => {
                 )}
 
                 <Button
-                  variant="primary"
+                  variant="gradient"
                   type="submit"
-                  className={primaryButtonClass}
+                  className="mx-auto w-2/3"
                   disabled={loading}
                   loading={loading}
                 >
@@ -493,9 +465,9 @@ const LoginForm: NextApplicationPage = () => {
               </Form>
             )}
           </Formik>
-        </AuthShell>
-      )}
-    </>
+        )}
+      </div>
+    </div>
   );
 };
 

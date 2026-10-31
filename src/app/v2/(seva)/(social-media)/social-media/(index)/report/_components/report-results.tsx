@@ -236,13 +236,11 @@ function transformPlatformWiseResult(apiData: any): SevadarRow[] {
 
 function transformAllPlatformsResult(apiData: any) {
   return {
-    rows: (apiData?.reports ?? []).map(
-      (r: any): PlatformRow => ({
-        question: r.question ?? "",
-        icon: r.icon ?? "facebook",
-        seva_count: r.seva_count ?? 0,
-      }),
-    ),
+    rows: (apiData?.reports ?? []).map((r: any): PlatformRow => ({
+      question: r.question ?? "",
+      icon: r.icon ?? "facebook",
+      seva_count: r.seva_count ?? 0,
+    })),
     total_sevadar: apiData?.total_sevadar ?? 0,
     total_submissions: apiData?.total_submissions ?? 0,
   };

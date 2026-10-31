@@ -4,11 +4,7 @@ import type { Role } from "@/http/role";
 export type RoleOption = Option & { regionLevel?: number };
 
 export type LocationField =
-  | "country"
-  | "state"
-  | "division"
-  | "district"
-  | "tehsil";
+  "country" | "state" | "division" | "district" | "tehsil";
 
 export interface LocationValues {
   country_id: number;

@@ -36,7 +36,7 @@ const SangatList = () => {
   const [loading, setLoading] = useState(false);
   const [centerList, setCenterList] = useState<Option[]>([]);
   const { active_permission, active_region_index } = useAppSelector(
-    (state) => state.auth
+    (state) => state.auth,
   );
 
   const activeRoleRegion = active_permission?.role_region;
@@ -99,7 +99,7 @@ const SangatList = () => {
             page: 1,
             ...(params && params),
           },
-        }
+        },
       );
       setEntries(data.data.disciples);
       setTotal(data.data.total);
@@ -147,7 +147,7 @@ const SangatList = () => {
             limit: 10,
             page,
           },
-        }
+        },
       );
       setEntries((prev) => [...prev, ...data.data.disciples]);
       setTotal(data.data.total);
@@ -235,7 +235,7 @@ const SangatList = () => {
                       ? activeRoleRegion == "state"
                         ? true
                         : false
-                      : true
+                      : true,
                   )}
                   label="Search By Entry"
                   name="view_entry"
@@ -357,7 +357,7 @@ const SangatList = () => {
                       </div>
                     </td>
                     <td className={"p-2 text-center capitalize"}>
-                      {entry.occupation}
+                      {entry.occupation || entry.other_occupation}
                     </td>
                   </tr>
                 );

@@ -48,8 +48,8 @@ export function BottomSheet({
       // No body scroll lock — manipulating body position/overflow breaks
       // Telegram WebView and iOS WKWebView. The backdrop covers all touch
       // targets so background scroll is not a practical issue.
-      setIsVisible(true);
-      return;
+      const raf = requestAnimationFrame(() => setIsVisible(true));
+      return () => cancelAnimationFrame(raf);
     } else {
       setIsVisible(false);
       const t = setTimeout(() => setShouldRender(false), 320);
@@ -69,89 +69,58 @@ export function BottomSheet({
 
   // ── Keyboard avoidance (bottom sheets only) ───────────────────────────
   useEffect(() => {
-    const sheet = sheetRef.current;
-    if (side !== "bottom" || !open || !sheet) return;
+    if (side !== "bottom" || !open) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
 
-    const resetSheetBounds = () => {
-      sheet.style.top = "";
-      sheet.style.bottom = "";
-      sheet.style.maxHeight = "";
-    };
-
-    const isFocusableField = (el: Element | null) => {
-      if (!el) return false;
-      return (
-        el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT"
-      );
-    };
-
-    const update = () => {
-      const vv = window.visualViewport;
-      const viewportHeight = vv?.height ?? window.innerHeight;
-      const viewportOffsetTop = vv?.offsetTop ?? 0;
-      const rawKeyboardInset = Math.max(
-        0,
-        window.innerHeight - viewportHeight - viewportOffsetTop,
-      );
-
+    const scrollFocusedIntoView = () => {
       const focused = document.activeElement;
-      const isFieldFocusedInSheet =
-        !!focused && sheet.contains(focused) && isFocusableField(focused);
-      const keyboardInset =
-        isFieldFocusedInSheet && rawKeyboardInset > 80 ? rawKeyboardInset : 0;
-
-      sheet.style.top = "";
-      sheet.style.bottom = `${keyboardInset}px`;
-      sheet.style.maxHeight = `${Math.max(320, viewportHeight - 12)}px`;
-    };
-
-    const settleViewport = () => {
-      requestAnimationFrame(update);
-      setTimeout(update, 80);
-      setTimeout(update, 220);
-      setTimeout(update, 420);
-    };
-
-    const onFocusIn = (e: FocusEvent) => {
-      if (sheet.contains(e.target as Node)) {
-        settleViewport();
+      if (focused && sheetRef.current?.contains(focused)) {
+        setTimeout(() => {
+          focused.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        }, 50);
       }
     };
 
-    const onFocusOut = () => {
-      settleViewport();
+    const update = () => {
+      if (!sheetRef.current) return;
+      const keyboardHeight =
+        window.innerHeight - vv.height - (vv.offsetTop ?? 0);
+      if (keyboardHeight > 0) {
+        // Constrain with both top and bottom so the sheet never
+        // overshoots the screen — height becomes whatever fits.
+        sheetRef.current.style.top = "16px";
+        sheetRef.current.style.bottom = `${keyboardHeight}px`;
+        sheetRef.current.style.maxHeight = "";
+      } else {
+        sheetRef.current.style.top = "";
+        sheetRef.current.style.bottom = "";
+        sheetRef.current.style.maxHeight = "";
+      }
+      scrollFocusedIntoView();
     };
 
-    const vv = window.visualViewport;
-    vv?.addEventListener("resize", settleViewport);
-    vv?.addEventListener("scroll", settleViewport);
-    window.addEventListener("resize", settleViewport);
-    window.addEventListener("orientationchange", settleViewport);
-    sheet.addEventListener("focusin", onFocusIn);
-    sheet.addEventListener("focusout", onFocusOut);
-    const intervalId = window.setInterval(update, 350);
-    settleViewport();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    update();
 
+    const sheet = sheetRef.current;
     return () => {
-      vv?.removeEventListener("resize", settleViewport);
-      vv?.removeEventListener("scroll", settleViewport);
-      window.removeEventListener("resize", settleViewport);
-      window.removeEventListener("orientationchange", settleViewport);
-      sheet.removeEventListener("focusin", onFocusIn);
-      sheet.removeEventListener("focusout", onFocusOut);
-      window.clearInterval(intervalId);
-      resetSheetBounds();
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+      if (sheet) {
+        sheet.style.top = "";
+        sheet.style.bottom = "";
+        sheet.style.maxHeight = "";
+      }
     };
   }, [open, side]);
 
-  // ── Keep focused field visible inside sheet scroll area ────────────────
+  // ── Scroll focused input into view when user taps a field ─────────────
   useEffect(() => {
     if (!open) return;
     const sheet = sheetRef.current;
     if (!sheet) return;
-
-    const content = sheet.querySelector<HTMLElement>("[data-sheet-content]");
-    if (!content) return;
 
     const onFocusIn = (e: FocusEvent) => {
       const target = e.target as HTMLElement;
@@ -160,21 +129,10 @@ export function BottomSheet({
         target.tagName === "TEXTAREA" ||
         target.tagName === "SELECT"
       ) {
-        // Scroll only the sheet content container (not the full page).
+        // Wait for the keyboard to finish resizing, then scroll
         setTimeout(() => {
-          const targetRect = target.getBoundingClientRect();
-          const contentRect = content.getBoundingClientRect();
-
-          const overflowBottom = targetRect.bottom - (contentRect.bottom - 16);
-          if (overflowBottom > 0) {
-            content.scrollBy({ top: overflowBottom, behavior: "smooth" });
-          }
-
-          const overflowTop = contentRect.top + 16 - targetRect.top;
-          if (overflowTop > 0) {
-            content.scrollBy({ top: -overflowTop, behavior: "smooth" });
-          }
-        }, 120);
+          target.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        }, 150);
       }
     };
 
@@ -244,7 +202,7 @@ export function BottomSheet({
       {/* Backdrop — click outside to close */}
       <div
         className={[
-          "fixed inset-0 bg-black/50",
+          "fixed inset-0 bg-black/50 backdrop-blur-md",
           "transition-opacity duration-300",
           isVisible ? "opacity-100" : "opacity-0",
         ].join(" ")}
@@ -293,10 +251,7 @@ export function BottomSheet({
         )}
 
         {/* Content */}
-        <div
-          className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-0 pb-2"
-          data-sheet-content
-        >
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-0 pb-2">
           {children}
         </div>
 

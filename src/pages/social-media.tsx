@@ -11,6 +11,7 @@ import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import type { NextApplicationPage } from "@/shared/interfaces/app";
+import useLocalstorage from "@/hooks/useLocalstorage";
 
 interface ISevaList {
   href: string;
@@ -53,8 +54,20 @@ const Home: NextApplicationPage = () => {
   const { t } = useTranslation("home");
   const mounted = useRef<boolean>(false);
   const dispatch = useAppDispatch();
+  const [permissionsFetchedAt, setPermissionsFetchedAt] = useLocalstorage(
+    "permissions_fetched_at",
+    0,
+  );
 
   useEffect(() => {
+    const ONE_MINUTE = 60 * 1000;
+    if (
+      permissionsFetchedAt &&
+      Date.now() - permissionsFetchedAt < ONE_MINUTE
+    ) {
+      return;
+    }
+
     (async () => {
       try {
         const { data } = await apiClient.get(
@@ -67,11 +80,12 @@ const Home: NextApplicationPage = () => {
             roles: all_permission.roles,
           }),
         );
+        setPermissionsFetchedAt(Date.now());
       } catch (error) {
         console.log(error);
       }
     })();
-  }, []);
+  }, [permissionsFetchedAt]);
 
   useEffect(() => {
     const updateList = () => {

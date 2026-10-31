@@ -32,7 +32,7 @@ const AllotSeva = () => {
   const [sevaType, setSevaType] = useLocalstorage("sevaType");
   const [, setRoleType] = useLocalstorage("roleType");
   const { active_permission, active_region_index } = useAppSelector(
-    (state) => state.auth
+    (state) => state.auth,
   );
   const [_, selectDisciple] = useLocalstorage("selectedDisciple", null);
   const loadingRef = useRef<HTMLDivElement>(null);
@@ -75,13 +75,13 @@ const AllotSeva = () => {
                 ...params,
                 page,
               },
-            }
+            },
           );
           const temphasMore = data.data.total > 10 * page;
           const resData = params?.from_seva_app
             ? data.data.result
             : (data.data.result as Disciple[]).filter(
-                ({ created_at, ...rest }) => rest
+                ({ created_at, ...rest }) => rest,
               );
           setDisciples((pre) => (page == 1 ? resData : [...pre, ...resData]));
           setPage((p) => (page == 1 ? 2 : p + 1));
@@ -98,7 +98,7 @@ const AllotSeva = () => {
         }
       }
     },
-    [disciples, loading, sevaType]
+    [disciples, loading, sevaType],
   );
 
   const onDiscipleCardClick = (disciple: any) => {
@@ -108,6 +108,10 @@ const AllotSeva = () => {
       ? disciple?.disciple_id
       : disciple?.id;
     selectDisciple(disciple);
+    if (sevaType === "pradarshani_seva") {
+      router.push(`/pradarshani_seva/allot?discipleId=${discipleId}`);
+      return;
+    }
     if (
       active_permission?.role_region == "district" &&
       active_permission?.region[active_region_index].district_id !==
@@ -148,7 +152,7 @@ const AllotSeva = () => {
           fetchUsers(page);
         }
       },
-      { threshold: 1.0 }
+      { threshold: 1.0 },
     );
     observer.observe(loadingRef.current);
 

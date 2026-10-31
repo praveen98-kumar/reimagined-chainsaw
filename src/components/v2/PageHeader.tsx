@@ -26,16 +26,11 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   }, []);
 
   return (
-    <header className="sticky top-0 z-100 inset-x-0 min-h-19 p-4 bg-[#fdcd7e] backdrop-blur">
+    <header className="sticky top-0 z-100 inset-x-0 min-h-19 p-4 bg-white">
       <div className="flex w-full min-h-11 items-center justify-between">
         <BackButton />
         <div className="text-center flex-1">
-          <p
-            className={cn(
-              "text-2xl font-bold leading-6.5 text-[#431407]",
-              titleClassName,
-            )}
-          >
+          <p className={cn("text-2xl font-medium leading-6.5", titleClassName)}>
             {title}
           </p>
           {mounted && (

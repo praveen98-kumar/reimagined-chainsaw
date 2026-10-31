@@ -22,7 +22,7 @@ const UserCard = ({
       {/* Detail */}
       <div className="flex-1 ml-2">
         <p className="font-semibold text-md uppercase text-primary">
-          {user.name}
+          {`${user.name} ${user.relation ?? ""} ${user.guardian_name ?? ""}`}
         </p>
         <p className="font-base text-md text-gray-500">{user.mobile_no}</p>
         {user?.created_at && (
@@ -54,7 +54,7 @@ const UserCard = ({
             >
               {i + 1}
             </span>
-          )
+          ),
         )}
       </div>
     </div>
@@ -79,28 +79,33 @@ export const RoleCard = <T extends Record<string, number>>({
       <div className={"flex flex-col"}>
         <p>
           <span className="mr-2 ">{`${capitalizeWords(
-            role.role.toString().replace(/_/g, " ")
+            role.role.toString().replace(/_/g, " "),
           )}`}</span>
         </p>
         <p className={"text-sm text-slate-600"}>
+          {role.namdan_center_name
+            ? `Ashram : ${capitalizeWords(
+                role.namdan_center_name.toString().replace(/_/g, " "),
+              )},`
+            : ""}
           {role.tehsil_name
             ? `Tehsil : ${capitalizeWords(
-                role.tehsil_name.toString().replace(/_/g, " ")
+                role.tehsil_name.toString().replace(/_/g, " "),
               )},`
             : ""}
           {role.district_name
             ? ` District : ${capitalizeWords(
-                role.district_name.toString().replace(/_/g, " ")
+                role.district_name.toString().replace(/_/g, " "),
               )},`
             : ""}
           {role.division_name
             ? ` Division : ${capitalizeWords(
-                role.division_name.toString().replace(/_/g, " ")
+                role.division_name.toString().replace(/_/g, " "),
               )},`
             : ""}
           {role.state_name
             ? ` State : ${capitalizeWords(
-                role.state_name.toString().replace(/_/g, " ")
+                role.state_name.toString().replace(/_/g, " "),
               )}`
             : ""}
         </p>

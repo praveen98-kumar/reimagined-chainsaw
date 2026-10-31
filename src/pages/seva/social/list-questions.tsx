@@ -184,7 +184,7 @@ const DynamicQuestionForm: React.FC = () => {
                   <div className="flex flex-col gap-0">
                     <h3 className="text-md font-semibold">{question.topic}</h3>
                     <span className="text-sm capitalize text-gray-500">
-                      ({question.question})
+                      {question.question} ({question.question_type})
                     </span>
                   </div>
                 </div>

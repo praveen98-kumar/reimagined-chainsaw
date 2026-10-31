@@ -1,3 +1,4 @@
+import { Menu } from "lucide-react";
 import { RiSearchLine, RiMenuFill } from "react-icons/ri";
 import { useRouter } from "next/router";
 import { HiOutlineChevronLeft } from "react-icons/hi";
@@ -13,6 +14,7 @@ export interface HeaderProps {
   heading?: string;
   setShow?: React.Dispatch<React.SetStateAction<boolean>>;
   rightIcon?: React.ReactNode;
+  variant?: "classic" | "new";
 }
 
 const getNameByRegion = (region: string) => {
@@ -39,6 +41,7 @@ const Header: React.FC<HeaderProps> = ({
   setShow,
   isAuth = false,
   rightIcon,
+  variant = "classic",
 }) => {
   const router = useRouter();
   useAuthSync();
@@ -48,20 +51,48 @@ const Header: React.FC<HeaderProps> = ({
 
   const roleRegion = active_permission?.role_region || "tehsil";
   const locationName =
-    active_permission?.role.toString().replace(/_/g, " ") || "";
-  // const locationName =
-  //   active_permission?.role_region === "ashram"
-  //     ? active_permission?.role.toString().replace(/_/g, " ")
-  //     : active_permission?.region[active_region_index][
-  //         getNameByRegion(roleRegion)
-  //       ];
+    active_permission?.role_region === "ashram"
+      ? active_permission?.role.toString().replace(/_/g, " ")
+      : active_permission?.region[active_region_index][
+          getNameByRegion(roleRegion)
+        ];
+  const roleLabel =
+    active_permission?.role === "ashram_sevadar"
+      ? "Ashram Sevadar"
+      : all_permission && all_permission.group
+        ? capitalizeWords(
+            all_permission.group.replace(/_/g, " ").replace("Admin", ""),
+          )
+        : "Sevadar";
+
+  if (variant === "new" && !isBack) {
+    return (
+      <div className="absolute top-0 inset-x-0 z-20 h-18.75 flex items-center justify-center px-4">
+        <button
+          type="button"
+          aria-label="Open menu"
+          onClick={() => (setShow ? setShow(true) : {})}
+          className="absolute left-4 flex size-11 items-center justify-center rounded-full bg-white text-brand-ink shadow-[0_8px_20px_-6px_rgba(76,29,149,0.35)]"
+        >
+          <Menu className="size-5" />
+        </button>
+        <div className="flex flex-col items-center gap-1">
+          <p className="font-serif text-[26px] leading-none font-bold text-brand-title">
+            Satlok Ashram
+          </p>
+          <span className="rounded-full bg-white/70 px-3 py-0.5 text-sm font-semibold text-brand-title">
+            {roleLabel}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`flex px-3 py-2 z-20 fixed top-0 left-0 w-full right-0 items-center ${
-        isBack
-          ? "justify-center h-[75px] bg-black bg-primary shadow-lg"
-          : "justify-between bg-[#fffaf0] border-b border-orange-200 shadow-[0_4px_16px_rgba(154,52,18,0.10)]"
-      }`}
+      className={`flex px-3 py-2 z-20 fixed bg-black top-0 left-0 w-full right-0 items-center shadow-lg justify-${
+        isBack ? "center h-[75px]" : "between"
+      } bg-primary`}
     >
       {isBack ? (
         <>
@@ -87,32 +118,20 @@ const Header: React.FC<HeaderProps> = ({
         </>
       ) : (
         <>
-          <button
-            type="button"
-            aria-label="Open menu"
+          <RiMenuFill
             onClick={() => (setShow ? setShow(true) : {})}
-            className="flex size-10 items-center justify-center rounded-full bg-orange-100 text-[#9a3412] hover:bg-orange-200"
-          >
-            <RiMenuFill className="size-6" />
-          </button>
+            color="white"
+            className="w-6 h-6 cursor-pointer"
+          />
 
-          <div className="text-center font-normal">
-            <p className="text-2xl font-bold text-[#431407]">Satlok Ashram</p>
-            <span className="text-lg font-medium leading-snug text-[#9a3412]">
-              {active_permission?.role === "ashram_sevadar"
-                ? "Ashram Sevadar"
-                : all_permission && all_permission.group
-                  ? capitalizeWords(
-                      all_permission.group
-                        .replace(/_/g, " ")
-                        .replace("Admin", ""),
-                    )
-                  : "Sevadar"}
-            </span>
+          <div className="text-center text-white font-normal">
+            <p className="text-2xl">Satlok Ashram</p>
+            <span className="text-xl leading-snug">{roleLabel}</span>
           </div>
 
           <RiSearchLine
-            className="size-10 cursor-pointer p-2"
+            color="white"
+            className="w-6 h-6 cursor-pointer"
             style={{ visibility: "hidden" }}
           />
         </>

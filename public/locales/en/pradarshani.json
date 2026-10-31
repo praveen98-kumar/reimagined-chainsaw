@@ -1,0 +1,45 @@
+{
+  "title": "Pradarshani Seva",
+  "count": {
+    "title": "Feedback Status",
+    "total": "Total Feedback"
+  },
+  "list": {
+    "title": "Feedback List",
+    "submit": "Feedback Form",
+    "view": "Feedback List",
+    "export": "Export CSV",
+    "empty": "No feedback found",
+    "prev": "Previous",
+    "next": "Next",
+    "search": "Search"
+  },
+  "form": {
+    "name": "Name",
+    "ashram": "Ashram",
+    "country": "Country",
+    "state": "State",
+    "district": "District",
+    "locality": "Address",
+    "mobile_no": "Mobile No",
+    "whatsapp_no": "WhatsApp No",
+    "namdan_center": "Namdan Center",
+    "rating": "Rating",
+    "rating_1": "Very Poor",
+    "rating_2": "Poor",
+    "rating_3": "Average",
+    "rating_4": "Good",
+    "rating_5": "Excellent",
+    "remark": "Remark",
+    "submit": "Submit",
+    "success": "Feedback saved successfully!"
+  },
+  "report": {
+    "title": "Pradarshani Report",
+    "country": "Country",
+    "state": "State",
+    "district": "District",
+    "count": "Count",
+    "back": "Back"
+  }
+}

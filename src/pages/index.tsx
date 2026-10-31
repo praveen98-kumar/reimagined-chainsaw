@@ -3,15 +3,38 @@ import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
-import { ImBooks } from "react-icons/im";
-import { IoLanguageSharp } from "react-icons/io5";
-import { MdLocationOn } from "react-icons/md";
-import SevaCard, { SevaCardWithMenu } from "@/components/card/SevaCard";
-import Icon from "@/components/Icon";
+import {
+  ArrowLeftRight,
+  BookOpen,
+  Download,
+  KeyRound,
+  Languages,
+  LogIn,
+  Mail,
+  MapPin,
+  MessageSquareWarning,
+  MessageSquareX,
+  Phone,
+  Presentation,
+  Repeat,
+  ScrollText,
+  Share2,
+  ShieldCheck,
+  Tv,
+  UserCog,
+  UserPen,
+  UserPlus,
+  Users,
+} from "lucide-react";
+import SevaCard, {
+  type SevaCardTheme,
+  SevaCardWithMenu,
+} from "@/components/card/SevaCard";
 import Layout from "@/components/Layout";
 import useAuthSync from "@/hooks/useAuthSync";
 import apiClient from "@/http/index";
 import { setUserPermission, updateRole } from "@/redux/features/authSlice";
+import useLocalstorage from "@/hooks/useLocalstorage";
 import { useAppDispatch, useAppSelector } from "@/redux/store";
 import type { NextApplicationPage } from "@/shared/interfaces/app";
 import type { Region } from "@/shared/interfaces/user";
@@ -19,6 +42,7 @@ import type { Region } from "@/shared/interfaces/user";
 interface ISevaList {
   href: string;
   Icon: React.ReactNode;
+  theme: SevaCardTheme;
   title: string;
   subtitle?: string;
   permission: string | string[];
@@ -28,18 +52,19 @@ interface ISevaList {
 }
 
 const sevaList: ISevaList[] = [
+  // {
+  //   href: "/v2/social-media",
+  //   Icon: <Icon src="/assets/icons/social_media_platforms.png" />,
+  //   title: "Social Media New",
+  //   subtitle: "seva.subtitle.social_media",
+  //   permission: ["social_media_seva", "book_order_seva"],
+  //   setPermission: true,
+  //   checkPermission: false,
+  // },
   {
     href: "/v2/social-media",
-    Icon: <Icon src="/assets/icons/social_media_platforms.png" />,
-    title: "Social Media New",
-    subtitle: "seva.subtitle.social_media",
-    permission: ["social_media_seva", "book_order_seva"],
-    setPermission: true,
-    checkPermission: false,
-  },
-  {
-    href: "/social-media",
-    Icon: <Icon src="/assets/icons/social_media_platforms.png" />,
+    Icon: <Share2 />,
+    theme: "violet",
     title: "seva.title.social_media",
     subtitle: "seva.subtitle.social_media",
     permission: ["social_media_seva", "book_order_seva"],
@@ -48,7 +73,8 @@ const sevaList: ISevaList[] = [
   },
   {
     href: "/seva/delivery",
-    Icon: <Icon src="/assets/icons/book.png" className="h-10 w-10" />,
+    Icon: <MessageSquareX />,
+    theme: "rose",
     title: "seva.title.book_delivery_seva",
     subtitle: "seva.subtitle.book_delivery_seva",
     permission: "book_delivery_seva",
@@ -57,7 +83,8 @@ const sevaList: ISevaList[] = [
   },
   {
     href: "/seva/calling",
-    Icon: <Icon src="/assets/icons/calling.png" />,
+    Icon: <Phone />,
+    theme: "emerald",
     // subtitle: "",
     title: "seva.title.calling_seva",
     subtitle: "seva.subtitle.calling_seva",
@@ -67,13 +94,8 @@ const sevaList: ISevaList[] = [
   },
   {
     href: "/seva/allotseva/allotRoles",
-    Icon: (
-      <Icon
-        className="w-10 h-10"
-        containerClass="w-10 h-7"
-        src="/assets/icons/allotRoles.png"
-      />
-    ),
+    Icon: <UserCog />,
+    theme: "violet",
     title: "seva.title.allot_role",
     subtitle: "seva.subtitle.allot_role",
     permission: "allot_roles",
@@ -82,7 +104,8 @@ const sevaList: ISevaList[] = [
   },
   {
     href: "/seva/transfer/list",
-    Icon: <Icon src="/assets/icons/userTransfer.png" />,
+    Icon: <ArrowLeftRight />,
+    theme: "sky",
     title: "seva.title.transfer",
     subtitle: "seva.subtitle.transfer",
     permission: "transfer_sevadar",
@@ -91,13 +114,8 @@ const sevaList: ISevaList[] = [
   },
   {
     href: "/permission",
-    Icon: (
-      <Icon
-        className="w-10 h-10"
-        containerClass="w-10 h-7"
-        src="/assets/icons/allotRoles.png"
-      />
-    ),
+    Icon: <ShieldCheck />,
+    theme: "fuchsia",
     title: "seva.title.permission",
     subtitle: "seva.subtitle.permission",
     permission: "allot_role_permissions",
@@ -106,13 +124,8 @@ const sevaList: ISevaList[] = [
   },
   {
     href: "/assign-permission",
-    Icon: (
-      <Icon
-        className="w-10 h-10"
-        containerClass="w-10 h-7"
-        src="/assets/icons/allotRoles.png"
-      />
-    ),
+    Icon: <KeyRound />,
+    theme: "violet",
     title: "seva.title.assign_permission",
     subtitle: "seva.subtitle.assign_permission",
     permission: "role_creation_permission",
@@ -121,13 +134,8 @@ const sevaList: ISevaList[] = [
   },
   {
     href: "/seva/post",
-    Icon: (
-      <Icon
-        className="w-10 h-10"
-        containerClass="w-10 h-7"
-        src="/assets/icons/Postal-Book-Delivery-Seva.png"
-      />
-    ),
+    Icon: <Mail />,
+    theme: "rose",
     title: "seva.title.post_order_seva",
     subtitle: "seva.subtitle.post_order_seva",
     permission: "post_order_seva",
@@ -137,7 +145,8 @@ const sevaList: ISevaList[] = [
   //TODO: Replace icon and add new permission to handle/manage channels
   {
     href: "/seva/channels",
-    Icon: <Icon src="/assets/icons/calling.png" />,
+    Icon: <Tv />,
+    theme: "sky",
     title: "seva.title.channels_seva",
     subtitle: "seva.subtitle.channels_seva",
     permission: "add_satsang_channel",
@@ -146,7 +155,8 @@ const sevaList: ISevaList[] = [
   },
   {
     href: "/users/disciplelist",
-    Icon: <Icon src="/assets/icons/Download Order list.png" />,
+    Icon: <Download />,
+    theme: "emerald",
     title: "seva.title.export_disciples",
     subtitle: "seva.subtitle.export_disciples",
     permission: "export_disciples",
@@ -155,7 +165,8 @@ const sevaList: ISevaList[] = [
   },
   {
     href: "/admin/books",
-    Icon: <ImBooks className="text-orange-500 w-6 h-6" />,
+    Icon: <BookOpen />,
+    theme: "amber",
     title: "seva.title.manage_books",
     permission: "add_book",
     setPermission: true,
@@ -163,7 +174,8 @@ const sevaList: ISevaList[] = [
   },
   {
     href: "/admin/languages",
-    Icon: <IoLanguageSharp className="text-blue-500 w-6 h-6" />,
+    Icon: <Languages />,
+    theme: "sky",
     title: "seva.title.book_language",
     permission: "add_language",
     setPermission: true,
@@ -171,7 +183,8 @@ const sevaList: ISevaList[] = [
   },
   {
     href: "/admin/pincode/set",
-    Icon: <MdLocationOn className="text-cyan-500 w-6 h-6" />,
+    Icon: <MapPin />,
+    theme: "emerald",
     title: "seva.title.set_pincode",
     permission: "add_pincode",
     setPermission: true,
@@ -179,21 +192,26 @@ const sevaList: ISevaList[] = [
   },
   {
     href: "/admin/sangat_list/list",
-    Icon: (
-      <Icon
-        className="w-10 h-10"
-        containerClass="w-10 h-7"
-        src="/assets/icons/allotRoles.png"
-      />
-    ),
+    Icon: <Users />,
+    theme: "fuchsia",
     title: "seva.title.sangat_list",
     permission: "sangat_list",
     setPermission: true,
     checkPermission: true,
   },
   {
+    href: "/disciple/list",
+    Icon: <UserPen />,
+    theme: "violet",
+    title: "seva.title.edit_disciple",
+    permission: "edit_disciple",
+    setPermission: true,
+    checkPermission: true,
+  },
+  {
     href: "/seva/complain",
-    Icon: <Icon src="/assets/icons/Book Order complaint.png" />,
+    Icon: <MessageSquareWarning />,
+    theme: "amber",
     title: "seva.title.book_order_complain_seva",
     subtitle: "seva.subtitle.book_order_complain_seva",
     permission: "book_complain_seva",
@@ -202,7 +220,8 @@ const sevaList: ISevaList[] = [
   },
   {
     href: "/seva/ramaini",
-    Icon: <Icon src="/assets/icons/Book Order complaint.png" />,
+    Icon: <ScrollText />,
+    theme: "amber",
     title: "seva.title.ramaini_seva",
     subtitle: "seva.subtitle.ramaini_seva",
     permission: "ramaini_seva",
@@ -211,17 +230,38 @@ const sevaList: ISevaList[] = [
   },
   {
     href: "/register",
-    Icon: <Icon src="/assets/icons/allotUser.png" />,
+    Icon: <UserPlus />,
+    theme: "fuchsia",
     title: "seva.title.register_user",
     permission: "add_disciple",
     setPermission: true,
     checkPermission: true,
   },
   {
+    href: "/seva-transfer",
+    Icon: <Repeat />,
+    theme: "emerald",
+    title: "seva.title.seva_transfer",
+    permission: "seva_transfer",
+    setPermission: true,
+    checkPermission: false,
+  },
+  {
     href: "/other-login",
-    Icon: <Icon src="/assets/icons/userTransfer.png" />,
+    Icon: <LogIn />,
+    theme: "sky",
     title: "seva.title.other_login",
     permission: "direct_login",
+    setPermission: true,
+    checkPermission: false,
+  },
+  {
+    href: "/pradarshani_seva",
+    Icon: <Presentation />,
+    theme: "rose",
+    title: "seva.title.pradarshani_seva",
+    subtitle: "seva.subtitle.pradarshani_seva",
+    permission: "pradarshani_seva",
     setPermission: true,
     checkPermission: false,
   },
@@ -236,7 +276,19 @@ const Home: NextApplicationPage = () => {
   const dispatch = useAppDispatch();
 
   useAuthSync();
+  const [permissionsFetchedAt, setPermissionsFetchedAt] = useLocalstorage(
+    "permissions_fetched_at",
+    0,
+  );
+
   useEffect(() => {
+    const ONE_MINUTE = 60 * 1000;
+    if (
+      permissionsFetchedAt &&
+      Date.now() - permissionsFetchedAt < ONE_MINUTE
+    ) {
+      return;
+    }
     (async () => {
       try {
         const { data } = await apiClient.get(
@@ -249,11 +301,12 @@ const Home: NextApplicationPage = () => {
             roles: all_permission.roles,
           }),
         );
+        setPermissionsFetchedAt(Date.now());
       } catch (error) {
         console.log(error);
       }
     })();
-  }, []);
+  }, [permissionsFetchedAt]);
 
   useEffect(() => {
     const updateList = () => {
@@ -298,14 +351,10 @@ const Home: NextApplicationPage = () => {
   }, []);
 
   return (
-    <Layout>
-      <div
-        className="min-h-full bg-[#fffaf0] p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 content-start gap-4"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 100% 0%, rgba(253,186,116,0.35), transparent 45%), radial-gradient(circle at 0% 100%, rgba(253,230,138,0.35), transparent 45%)",
-        }}
-      >
+    <Layout headerProps={{ variant: "new" }}>
+      <div className="fixed inset-0 -z-10 bg-app-gradient" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-32 rounded-b-[50%_48px] bg-linear-to-br from-blue-200/70 via-violet-200/60 to-pink-200/70" />
+      <div className="relative p-4 pt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {list.map((item) => {
           let title = item.title;
           let subtitle = item.subtitle;
@@ -320,6 +369,8 @@ const Home: NextApplicationPage = () => {
           return item.regions && item.regions.length > 1 ? (
             <SevaCardWithMenu
               key={item.href}
+              variant="new"
+              theme={item.theme}
               href={item.href}
               Icon={item.Icon}
               title={t(title)!}
@@ -331,6 +382,8 @@ const Home: NextApplicationPage = () => {
           ) : (
             <SevaCard
               key={item.href}
+              variant="new"
+              theme={item.theme}
               href={item.href}
               Icon={item.Icon}
               title={t(title)!}

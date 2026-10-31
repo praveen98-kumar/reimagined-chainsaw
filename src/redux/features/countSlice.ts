@@ -20,6 +20,7 @@ interface IState {
   postOrderCounts: ICount;
   socialMediaCounts: ICount;
   ramainiCounts: ICount;
+  pradarshaniCounts: ICount;
 }
 
 export type TCount = keyof IState;
@@ -87,6 +88,9 @@ const initialState: IState = {
     // first_reject: 0,
     // second_reject: 0,
   },
+  pradarshaniCounts: {
+    total_count: 0,
+  },
 };
 
 export const getCounts =
@@ -98,7 +102,7 @@ export const getCounts =
         setCounts({
           type: stateType,
           counts,
-        })
+        }),
       );
     } catch (error) {
       console.log(error);
@@ -106,7 +110,7 @@ export const getCounts =
         setCounts({
           type: stateType,
           counts: initialState[stateType],
-        })
+        }),
       );
     }
   };
@@ -146,7 +150,7 @@ const countSlice = createSlice({
     },
     resetCounts: (
       state: IState,
-      action: { payload: { type: keyof IState }; type: string }
+      action: { payload: { type: keyof IState }; type: string },
     ) => {
       const { type } = action.payload;
       state[type] = initialState[type];

@@ -1,5 +1,6 @@
 "use client";
 import {
+  getCenters,
   getCountries,
   getDistricts,
   getDivisions,
@@ -60,6 +61,18 @@ export const useTehsils = (
   return useQuery({
     queryKey: ["tehsils", districtId],
     queryFn: () => (districtId ? getTehsils(districtId) : []),
+    staleTime: 1 * 60 * 1000,
+    ...options,
+  });
+};
+
+export const useCenters = (
+  districtId?: number | string,
+  options?: Record<string, unknown>,
+) => {
+  return useQuery({
+    queryKey: ["namdan_centers", districtId],
+    queryFn: () => (districtId ? getCenters(districtId) : []),
     staleTime: 1 * 60 * 1000,
     ...options,
   });

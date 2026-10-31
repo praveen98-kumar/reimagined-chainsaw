@@ -16,7 +16,7 @@ const platformGradientMap: Record<string, string> = {
 export function PlatformList() {
   const { platforms, total_sevadar } = useSMPlatformReport();
   return (
-    <div className="flex flex-col gap-0.5 text-[#7c2d12]">
+    <div className="flex flex-col">
       {platforms.map((item) => {
         const percentage =
           total_sevadar > 0 && item.count > 0
@@ -39,7 +39,7 @@ export function PlatformList() {
               </p>
             </div>
             <div className="flex w-[70%] gap-0.5 items-center">
-              <div className="relative h-2.5 w-full flex-1 border-b border-[#e7d5c4]">
+              <div className="flex-1 h-2.5 border-b w-full">
                 <div
                   className={cn(
                     "h-full",
@@ -48,7 +48,7 @@ export function PlatformList() {
                   style={{ width: `${percentage}%` }}
                 />
               </div>
-              <span className="w-6 text-right font-semibold">{item.count}</span>
+              <span>{item.count}</span>
             </div>
           </div>
         );

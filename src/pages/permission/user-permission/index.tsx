@@ -93,12 +93,12 @@ const UserPermission = () => {
             </Form>
           )}
         </Formik>
-        <div>
+        <div className="flex flex-col gap-2">
           {users.map((u) => (
             <Link
               href={`/permission/user-permission/${u.id}`}
               key={u.id}
-              onClick={() => setDisciple(u)}
+              onClick={() => setDisciple({ ...u, ...u.disciple })}
             >
               <UserCard user={{ ...u, ...u.disciple }} />
             </Link>

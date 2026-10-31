@@ -1,5 +1,6 @@
 {
   "search": "Search",
+  "ashram": "Ashram",
   "country": "Country",
   "state": "State",
   "division": "Division",
@@ -11,6 +12,7 @@
   "pin": "Pincode",
   "name": "Name",
   "satsang_channel": "Satsang Channel",
+  "select_ashram": "Select Ashram",
   "select_country": "Select Country",
   "select_state": "Select State",
   "select_division": "Select Division",

@@ -6,15 +6,9 @@ interface Props extends PageHeaderProps {
 
 export function AppShell({ children, ...props }: Props) {
   return (
-    <div
-      className="relative flex flex-col h-full bg-[#fffaf0] overflow-y-auto"
-      style={{
-        backgroundImage:
-          "radial-gradient(circle at 100% 0%, rgba(253,186,116,0.35), transparent 45%), radial-gradient(circle at 0% 100%, rgba(253,230,138,0.35), transparent 45%)",
-      }}
-    >
+    <div className="relative flex flex-col h-full bg-white/60 backdrop-blur-sm overflow-y-auto">
       <PageHeader {...props} />
-      <div className="flex-1 pb-24 sm:pb-0">{children}</div>
+      <div className="flex-1 pb-16 sm:pb-0">{children}</div>
     </div>
   );
 }

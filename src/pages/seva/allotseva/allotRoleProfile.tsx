@@ -1,11 +1,9 @@
-import Avatar from "@/components/Avatar";
 import Button from "@/components/Button";
 import Select from "@/components/input/Select";
 import Layout from "@/components/Layout";
 import apiClient from "@/http/index";
 import {
   getStates,
-  handleCountryChange,
   handleDistrictChange,
   handleStateChange,
   handleStateChangeForDivisions,
@@ -85,6 +83,7 @@ const AllotRoleProfile = () => {
   const [show, setShow] = useState<boolean>(false);
   const [allroles, setAllroles] = useState<any[]>([]);
   const [countries] = useState<Option[]>(defaultCountries);
+  const [allStates, setAllStates] = useState<Option[]>([]);
   const [states, setStates] = useState<Option[]>([]);
   const [districts, setDistricts] = useState<Option[]>([]);
   const [divisions, setDivisions] = useState<Option[]>([]);
@@ -96,94 +95,29 @@ const AllotRoleProfile = () => {
   const [existingRoles, setExistingRoles] = useState<any[]>([]);
   const [userExist, setUserExist] = useState<boolean>(false);
   const [selectedRole, setSelectedRole] = useState<any>(null);
-  const { user: currentUser } = useAppSelector((state) => state.auth);
+  const { active_permission, active_region_index } = useAppSelector(
+    (state) => state.auth,
+  );
+  const userRegionHirarchyIndex = regionHirarchy.findIndex(
+    (r) => r === (active_permission?.role_region ?? "country"),
+  );
 
-  const userMobileNo = "+919990200008";
-  const userMobileNo1 = "+917508659633";
-  const userMobileNo2 = "+918625816602";
-  const userMobileNo3 = "+918684999299";
-  const userMobileNo4 = "+919990200008";
-  const allowedRoles = [
-    "Book Delivery State Sevadar",
-    "Book Calling State Sevadar",
-    "Jyada Ruchi State Sevadar",
-    "Book Delivery Division Sevadar",
-    "Book Calling Division Sevadar",
-    "Jyada Ruchi Division Sevadar",
-    "Book Calling District Sevadar",
-    "Jyada Ruchi District Sevadar",
-    "Book Delivery Sevadar",
-    "Namdan Calling Country Sevadar",
-    "Namdan Calling State Sevadar",
-    "Namdan Calling Division Sevadar",
-    "Namdan Calling District Sevadar",
-    "Namdan Calling Sevadar",
-    "Book Calling Sevadar",
-    "Jyada Ruchi Sevadar",
-    "Book Delivery District Sevadar",
-    "Book Delivery Tehsil Sevadar",
-    "Book Distributor District Sevadar",
-  ];
+  // Roles (and their allowed states) come from the user's role creation permissions
+  const filterStatesForRole = (stateOptions: Option[], roleId: number) => {
+    const stateIds: number[] | null | undefined = allroles.find(
+      (r) => r.id == roleId,
+    )?.state_ids;
+    return stateIds
+      ? stateOptions.filter((s) => stateIds.includes(Number(s.value)))
+      : stateOptions;
+  };
 
-  const allowedRoles1 = [
-    "Book Order District Sevadar",
-    "Social Media District Sevadar",
-  ];
-
-  const allowedRoles2 = [
-    "Social Media Division Sevadar",
-    "Social Media District Sevadar",
-    "Social Media Team Leader",
-    "Social Media Sevadar",
-  ];
-
-  const allowedRoles3 = [
-    "Social Media State Sevadar",
-    "Social Media Division Sevadar",
-    "Social Media District Sevadar",
-    "Social Media Team Leader",
-    "Social Media Sevadar",
-  ];
-  const allowedRoles4 = [
-    "Book Delivery State Sevadar",
-    "Book Calling State Sevadar",
-    "Jyada Ruchi State Sevadar",
-    "Book Delivery Division Sevadar",
-    "Book Calling Division Sevadar",
-    "Jyada Ruchi Division Sevadar",
-    "Book Calling District Sevadar",
-    "Jyada Ruchi District Sevadar",
-    "Book Delivery Sevadar",
-    "Namdan Calling State Sevadar",
-    "Namdan Calling Division Sevadar",
-    "Namdan Calling District Sevadar",
-    "Namdan Calling Sevadar",
-    "Book Calling Sevadar",
-    "Jyada Ruchi Sevadar",
-    "Book Delivery District Sevadar",
-    "Book Delivery Tehsil Sevadar",
-    "Book Distributor District Sevadar",
-  ];
   const getRoles = useCallback(async () => {
     try {
-      const { data } = await apiClient.get("roles");
-      // let temp = [...data.data].filter((t) => validRegion.includes(t.region));
+      const { data } = await apiClient.get("roles", {
+        params: { for_add: 1 },
+      });
       let temp = getOptionArray(data.data, "name", "id");
-      if (currentUser?.mobile_no == userMobileNo) {
-        temp = temp.filter((t) => allowedRoles.includes(t.label));
-      }
-      if (currentUser?.mobile_no == userMobileNo1) {
-        temp = temp.filter((t) => allowedRoles1.includes(t.label));
-      }
-      if (currentUser?.mobile_no == userMobileNo2) {
-        temp = temp.filter((t) => allowedRoles2.includes(t.label));
-      }
-      if (currentUser?.mobile_no == userMobileNo3) {
-        temp = temp.filter((t) => allowedRoles3.includes(t.label));
-      }
-      if (currentUser?.mobile_no == userMobileNo4) {
-        temp = temp.filter((t) => allowedRoles4.includes(t.label));
-      }
       temp = temp.map(({ label, value }) => ({
         value,
         label: capitalizeWords(label.replace(/_/g, " ")),
@@ -200,45 +134,13 @@ const AllotRoleProfile = () => {
       const { data } = await apiClient.get(
         `user/${router.query?.userId ?? 0}`,
         {
-          params: { disciple_id: router.query.profileId },
+          // for_add: only roles the current user is permitted to manage
+          params: { disciple_id: router.query.profileId, for_add: 1 },
         },
       );
       setUser(data.data);
       setUserExist(true);
-      let allotedRoles = data.data.allotted_tehsil;
-      if (currentUser?.mobile_no == userMobileNo) {
-        allotedRoles = allotedRoles.filter((t: any) =>
-          allowedRoles.includes(capitalizeWords(t.role.replace(/_/g, " "))),
-        );
-      }
-
-      if (currentUser?.mobile_no == userMobileNo1) {
-        allotedRoles = allotedRoles.filter((t: any) =>
-          allowedRoles1.includes(capitalizeWords(t.role.replace(/_/g, " "))),
-        );
-      }
-      if (currentUser?.mobile_no == userMobileNo2) {
-        allotedRoles = allotedRoles.filter(
-          (t: any) =>
-            t.created_by === currentUser.id &&
-            allowedRoles2.includes(capitalizeWords(t.role.replace(/_/g, " "))),
-        );
-      }
-      if (currentUser?.mobile_no == userMobileNo3) {
-        allotedRoles = allotedRoles.filter(
-          (t: any) =>
-            t.created_by === currentUser.id &&
-            allowedRoles3.includes(capitalizeWords(t.role.replace(/_/g, " "))),
-        );
-      }
-      if (currentUser?.mobile_no == userMobileNo4) {
-        allotedRoles = allotedRoles.filter(
-          (t: any) =>
-            t.created_by === currentUser.id &&
-            allowedRoles4.includes(capitalizeWords(t.role.replace(/_/g, " "))),
-        );
-      }
-      setExistingRoles(allotedRoles);
+      setExistingRoles(data.data.allotted_tehsil);
     } catch (error) {
       console.log(error);
       setUser(selectedDisciple);
@@ -299,6 +201,7 @@ const AllotRoleProfile = () => {
       try {
         await getRoles();
         const tempStates = await getStates(defaultCountries[0].value);
+        setAllStates(tempStates);
         setStates(tempStates);
       } catch (error) {
         console.log(error);
@@ -354,7 +257,8 @@ const AllotRoleProfile = () => {
             region_level: 0,
             role_id: 0,
             country_id: defaultCountries[0].value,
-            state_id: 0,
+            state_id:
+              active_permission?.region?.[active_region_index]?.state_id ?? 0,
             division_id: 0,
             district_id: 0,
             tehsil_id: 0,
@@ -382,93 +286,121 @@ const AllotRoleProfile = () => {
                     (item) => item == temp.region,
                   );
                   setFieldValue("region_level", index);
+                  const roleStates = filterStatesForRole(allStates, e.value);
+                  setStates(roleStates);
+                  if (
+                    userRegionHirarchyIndex < 2 &&
+                    !roleStates.some((s) => s.value == values.state_id)
+                  ) {
+                    setFieldValue("state_id", 0);
+                  }
                   if (index == 0) {
                     const temp = countries.find(
                       (c) => c.value == values.country_id,
                     )?.label;
                     setFieldValue("title", temp);
                   }
-                  if (userMobileNo2 == currentUser?.mobile_no) {
-                    setFieldValue("state_id", 27);
+                  if (
+                    userRegionHirarchyIndex == 2 &&
+                    active_permission?.region?.[active_region_index]?.state_id
+                  ) {
                     if (index == 3) {
-                      handleStateChangeForDivisions(27, setDivisions);
-                    } else if (index == 4 || index == 5) {
-                      handleStateChange(27, setDistricts);
+                      handleStateChangeForDivisions(
+                        active_permission?.region?.[active_region_index]
+                          ?.state_id,
+                        setDivisions,
+                      );
+                    } else {
+                      handleStateChange(
+                        active_permission?.region?.[active_region_index]
+                          ?.state_id,
+                        setDistricts,
+                      );
                     }
                   }
                 }}
               />
               {values.role_id !== 0 && (
                 <>
-                  {currentUser?.mobile_no != userMobileNo2 && (
-                    <Select
-                      fieldClass={values.region_level >= 1 ? "" : "hidden"}
-                      label="Country"
-                      placeholder={"Select Country/देश चुनें"}
-                      options={countries}
-                      value={
-                        countries.find((r) => r.value == values.country_id) ??
-                        null
+                  <Select
+                    fieldClass={
+                      values.region_level >= 1 && userRegionHirarchyIndex < 1
+                        ? ""
+                        : "hidden"
+                    }
+                    label="Country"
+                    placeholder={"Select Country/देश चुनें"}
+                    options={countries}
+                    value={
+                      countries.find((r) => r.value == values.country_id) ??
+                      null
+                    }
+                    name={"country_id"}
+                    onChange={(e: any) => {
+                      setFieldValue("country_id", e.value);
+                      if (values.region_level > 1) {
+                        getStates(e.value).then((countryStates) => {
+                          setAllStates(countryStates);
+                          setStates(
+                            filterStatesForRole(countryStates, values.role_id),
+                          );
+                        });
                       }
-                      name={"country_id"}
-                      onChange={(e: any) => {
-                        setFieldValue("country_id", e.value);
-                        if (values.region_level > 1) {
-                          handleCountryChange(e.value, setStates);
-                        }
-                        if (values.region_level == 1) {
-                          const temp = countries.find(
-                            (c) => c.value == e.value,
-                          )?.label;
-                          setFieldValue("title", temp);
-                        }
-                      }}
-                      isOptionDisabled={(option: any) =>
-                        values?.region_level === 1
-                          ? [...existingRoles, ...allottedRoles].some(
-                              (role) =>
-                                role?.country_id === option.value &&
-                                role?.id === values.role_id,
-                            )
-                          : false
+                      if (values.region_level == 1) {
+                        const temp = countries.find(
+                          (c) => c.value == e.value,
+                        )?.label;
+                        setFieldValue("title", temp);
                       }
-                    />
-                  )}
-                  {currentUser?.mobile_no != userMobileNo2 && (
-                    <Select
-                      fieldClass={values.region_level >= 2 ? "" : "hidden"}
-                      label="State"
-                      options={states}
-                      placeholder={"Select State/राज्य चुनें"}
-                      value={
-                        states.find((r) => r.value == values.state_id) ?? null
+                    }}
+                    isOptionDisabled={(option: any) =>
+                      values?.region_level === 1
+                        ? [...existingRoles, ...allottedRoles].some(
+                            (role) =>
+                              role?.country_id === option.value &&
+                              role?.id === values.role_id,
+                          )
+                        : false
+                    }
+                  />
+                  <Select
+                    fieldClass={
+                      values.region_level >= 2 && userRegionHirarchyIndex < 2
+                        ? ""
+                        : "hidden"
+                    }
+                    label="State"
+                    options={states}
+                    placeholder={"Select State/राज्य चुनें"}
+                    value={
+                      states.find((r) => r.value == values.state_id) ?? null
+                    }
+                    name={"state_id"}
+                    onChange={(e: any) => {
+                      setFieldValue("state_id", e.value);
+                      if (values.region_level == 3) {
+                        handleStateChangeForDivisions(e.value, setDivisions);
+                      } else if (values.region_level > 3) {
+                        handleStateChange(e.value, setDistricts);
                       }
-                      name={"state_id"}
-                      onChange={(e: any) => {
-                        setFieldValue("state_id", e.value);
-                        if (values.region_level == 3) {
-                          handleStateChangeForDivisions(e.value, setDivisions);
-                        } else if (values.region_level > 3) {
-                          handleStateChange(e.value, setDistricts);
-                        }
-                        if (values.region_level == 2) {
-                          const temp = states.find(
-                            (c) => c.value == e.value,
-                          )?.label;
-                          setFieldValue("title", temp);
-                        }
-                      }}
-                      isOptionDisabled={(option: any) =>
-                        values?.region_level === 2
-                          ? [...existingRoles, ...allottedRoles].some(
-                              (role) =>
-                                role?.state_id === option.value &&
-                                role?.id === values.role_id,
-                            )
-                          : false
+                      if (values.region_level == 2) {
+                        const temp = states.find(
+                          (c) => c.value == e.value,
+                        )?.label;
+                        setFieldValue("title", temp);
                       }
-                    />
-                  )}
+                    }}
+                    isOptionDisabled={(option: any) =>
+                      values?.region_level === 2
+                        ? [...existingRoles, ...allottedRoles].some(
+                            (role) =>
+                              role?.state_id === option.value &&
+                              role?.id === values.role_id,
+                          )
+                        : false
+                    }
+                  />
+
                   <Select
                     fieldClass={values.region_level == 3 ? "" : "hidden"}
                     label="Division"

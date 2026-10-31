@@ -2,7 +2,6 @@ import { type UseMutationOptions, useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import apiClient from "@/http";
 import type { Response } from "../queries/social-media-seva";
-import { getQueryClient } from "@/utils/get-query-client";
 
 type Input = {
   answers: {
@@ -27,15 +26,11 @@ async function queueSocialAnswers(
 
 export function useSocialMediaSevaMutation(
   options?: UseMutationOptions<Response, Error, Input>,
-  headers: Record<string, unknown> = {},
+  headers = {},
 ) {
   return useMutation({
     mutationFn: (values) => queueSocialAnswers(values, headers),
     onSuccess: (data) => {
-      const queryClient = getQueryClient();
-      queryClient.invalidateQueries({
-        queryKey: ["social_media_seva", headers?.user_role_id],
-      });
       toast.success(data.message);
     },
     ...options,

@@ -1,6 +1,7 @@
 import { ApiResponse } from "@/shared/interfaces/api";
 import apiClient from ".";
 import { useQuery } from "@tanstack/react-query";
+import { getStates } from "@/shared/functions/location";
 
 export interface Role {
   id: number;
@@ -39,6 +40,7 @@ export interface RoleCreatePermission {
   creator_user_id: any;
   target_role_id: number;
   all_state: boolean;
+  state_ids: number[] | null;
   active: boolean;
   created_by: number;
   created_at: string;
@@ -77,3 +79,19 @@ export const useRoleCreatePermissions = (
     ...options,
   });
 };
+
+export const useGetStateOptions = (countryId: number) => {
+  return useQuery({
+    queryKey: ["states", countryId],
+    queryFn: () => getStates(countryId),
+  });
+};
+
+// export const createRoleCreatePermission = async (payload: any) => {
+//     try {
+//         const { data } = await apiClient.post('role_creation_permission', payload)
+//     } catch (error) {
+//         console.error(error)
+//         throw error
+//     }
+// }

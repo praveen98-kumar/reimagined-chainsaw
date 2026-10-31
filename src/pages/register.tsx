@@ -2,6 +2,7 @@ import { AxiosError } from "axios";
 import type { FormikProps, FormikValues } from "formik";
 import { Form, Formik } from "formik";
 import type { GetStaticProps } from "next";
+import Link from "next/link";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
@@ -55,7 +56,8 @@ const schema = Yup.object({
     .nullable()
     .required("Tehsil is required.")
     .test("test-tehsil-min", "Tehsil is required", (v) => v != null && v > 0),
-  occupation: Yup.string().nullable().required("Occupation is required."),
+  occupation_id: Yup.string().nullable().required("Occupation is required."),
+  other_occupation: Yup.string().nullable(),
   mantra: Yup.string().required("Mantra is required."),
 });
 
@@ -70,8 +72,11 @@ const mantrs: Array<Option> = [
   { label: "Sarnam", value: "sarnam" },
 ];
 
+const cardClass =
+  "rounded-[28px] border border-white bg-white/90 p-5 shadow-[0_20px_40px_-20px_rgba(76,29,149,0.35)]";
+
 interface Occupation {
-  value: string;
+  value: number;
   label: string;
 }
 
@@ -147,14 +152,12 @@ function RegistrationForm({
       const occupations1 = response.data.data.map(
         (occ: { id: number; name: string }) => {
           return {
-            value: occ.name,
+            value: occ.id,
             label: occ.name,
           };
         },
       );
-      setOccupation(
-        occupations1.concat([{ value: "Other", label: "Other/ अन्य" }]),
-      );
+      setOccupation(occupations1.concat([{ value: 0, label: "Other/ अन्य" }]));
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
         toast.error(error?.response?.data?.error);
@@ -195,7 +198,7 @@ function RegistrationForm({
         validateOnBlur={false}
       >
         {({ values, setFieldValue }) => (
-          <Form className="w-full space-y-3 rounded-[22px] border border-orange-200 bg-white p-4 shadow-[0_10px_26px_rgba(154,52,18,0.14)]">
+          <Form className="space-y-3 w-full">
             {/* Name */}
             <TextInput
               name="name"
@@ -229,7 +232,7 @@ function RegistrationForm({
             <TextInput
               appendEle={
                 <p
-                  className="absolute bg-orange-100 rounded-lg p-2 px-2 font-semibold text-[#9a3412] -translate-y-1/2 pointer-events-none top-1/2 left-0"
+                  className="absolute bg-gray-200 rounded p-2 px-2 font-semibold text-gray-800 -translate-y-1/2 pointer-events-none top-1/2 left-0"
                   style={{
                     marginLeft: "1px",
                   }}
@@ -258,8 +261,7 @@ function RegistrationForm({
             {isValidUser("add_disciple") && (
               <Button
                 type="button"
-                variant="primary-reverse"
-                className="ml-auto rounded-xl border-orange-500 bg-white text-[#9a3412] hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="ml-auto"
                 onClick={() => getDuplicateDisciples()}
                 loading={loading}
                 disabled={
@@ -277,7 +279,12 @@ function RegistrationForm({
               type={"number"}
               required
             />
-
+            <TextInput
+              name="address"
+              label="Address"
+              placeholder="Enter address"
+              required
+            />
             <UserwiseDropdown
               useHirarchy={false}
               conditionalFields={{
@@ -306,17 +313,21 @@ function RegistrationForm({
               options={occupations}
               label="Occupation"
               required
-              name="occupation"
+              name="occupation_id"
               placeholder={"Select Occupation"}
               value={occupations.find((s) => s.value === values.occupation)}
               onChange={(e: any) => {
-                setFieldValue("occupation", e.value);
+                setFieldValue("occupation_id", e.value);
+                setFieldValue(
+                  "other_occupation",
+                  e.value == 0 ? "Other/ अन्य" : "",
+                );
               }}
             />
             <Button
-              variant="primary"
+              variant="gradient"
               type="submit"
-              className="mx-auto w-full rounded-xl !bg-gradient-to-r !from-[#c2410c] !to-[#9a3412] py-3 shadow-[0_6px_16px_rgba(154,52,18,0.35)] disabled:!opacity-60"
+              className="mx-auto w-full"
               disabled={loading}
               loading={loading}
             >
@@ -359,14 +370,9 @@ const RegisterPage: NextApplicationPage = () => {
   if (user) {
     return (
       <Layout headerProps={{ isBack: true, heading: "Register User" }}>
-        <div
-          className="min-h-full bg-[#fffaf0] px-4 py-4"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 100% 0%, rgba(253,186,116,0.35), transparent 45%), radial-gradient(circle at 0% 100%, rgba(253,230,138,0.35), transparent 45%)",
-          }}
-        >
-          <div className="mx-auto w-full max-w-xl space-y-4">
+        <div className="fixed inset-0 -z-10 bg-app-gradient" />
+        <div className="p-4 mx-auto w-full max-w-xl">
+          <div className={cardClass}>
             <RegistrationForm requireConfirmation />
           </div>
         </div>
@@ -374,16 +380,25 @@ const RegisterPage: NextApplicationPage = () => {
     );
   }
   return (
-    <div className="relative min-h-screen w-full items-center justify-center bg-[#fffaf0] px-4 pb-8">
-      <div className="mx-auto mt-5 w-full h-full max-w-md flex flex-col items-center justify-center">
-        <div className="w-full space-y-3">
-          <div className="w-full">
-            <h1 className="mb-3 text-center text-2xl font-bold text-[#431407]">
-              Register
-            </h1>
-            <RegistrationForm />
-          </div>
+    <div className="min-h-screen bg-app-gradient">
+      <div className="mx-auto w-full max-w-md px-4 pb-10">
+        <div className="-mx-4 mb-6 pt-8 pb-10 text-center rounded-b-[50%_48px] bg-linear-to-br from-blue-200/70 via-violet-200/60 to-pink-200/80">
+          <p className="font-serif text-3xl font-bold text-brand-title">
+            Satlok Ashram
+          </p>
+          <h1 className="mt-1 text-xl font-semibold text-brand-ink">
+            Register
+          </h1>
         </div>
+        <div className={cardClass}>
+          <RegistrationForm />
+        </div>
+        <p className="mt-6 text-center font-semibold text-blue-900">
+          Already registered?{" "}
+          <Link href="/login" className="hover:underline">
+            Login
+          </Link>
+        </p>
       </div>
     </div>
   );

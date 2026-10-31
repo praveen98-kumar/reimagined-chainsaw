@@ -44,7 +44,7 @@ export const getDistrictsUnderDivision = async (division: number | string) => {
 export const getTehsils = async (districtId: number | string) => {
   try {
     const { data } = await apiClient.get(
-      `tehsil_list?district_id=${districtId}`
+      `tehsil_list?district_id=${districtId}`,
     );
     return getOptionArray(data.data, "name", "id");
   } catch (error) {
@@ -66,7 +66,7 @@ export const getDivisions = async (stateId: number | string) => {
 export const getCenters = async (district_id: number | string) => {
   try {
     const { data } = await apiClient.get(
-      `namdan_center_list?district_id=${district_id}`
+      `namdan_center_list?district_id=${district_id}`,
     );
     return getOptionArray(data.data.namdan_center, "name", "id");
   } catch (error) {
@@ -75,9 +75,19 @@ export const getCenters = async (district_id: number | string) => {
   }
 };
 
+export const getAshrams = async () => {
+  try {
+    const { data } = await apiClient.get("namdan_center_list?is_ashram=1&limit=0");
+    return getOptionArray(data.data.namdan_center, "name", "id", true);
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+};
+
 export const handleDistrictChange = async (
   value: string | number,
-  cb: (data?: any) => void
+  cb: (data?: any) => void,
 ) => {
   if (value) {
     const tehsils = await getTehsils(value);
@@ -87,17 +97,22 @@ export const handleDistrictChange = async (
 
 export const handleCountryChange = async (
   value: string | number,
-  cb: (data?: any) => void
+  cb: (data?: any) => void,
+  stateIds: number[] = [],
 ) => {
   if (value) {
     const states = await getStates(value);
-    cb(states);
+    if (states.length > 0) {
+      cb(states.filter((s) => stateIds.includes(Number(s.value))));
+    } else {
+      cb(states);
+    }
   }
 };
 
 export const handleStateChange = async (
   value: string | number,
-  cb: (data?: any) => void
+  cb: (data?: any) => void,
 ) => {
   if (value) {
     const districts = await getDistricts(value);
@@ -107,7 +122,7 @@ export const handleStateChange = async (
 
 export const handleStateChangeForDivisions = async (
   value: string | number,
-  cb: (data?: any) => void
+  cb: (data?: any) => void,
 ) => {
   if (value) {
     const divisions = await getDivisions(value);
@@ -117,7 +132,7 @@ export const handleStateChangeForDivisions = async (
 
 export const handleDivisionChange = async (
   value: string | number,
-  cb: (data?: any) => void
+  cb: (data?: any) => void,
 ) => {
   if (value) {
     const divisions = await getDistrictsUnderDivision(value);
@@ -128,7 +143,7 @@ export const handleDivisionChange = async (
 export const getRegionValue = (
   active_permission: any,
   active_region_index: number = 0,
-  prefix: string = ""
+  prefix: string = "",
 ) => {
   if (active_permission && active_permission?.region?.length > 0) {
     const key = `${active_permission?.role_region}_id`;

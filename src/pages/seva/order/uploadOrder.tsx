@@ -38,7 +38,7 @@ const Upload: NextApplicationPage = () => {
   }, [router.isReady]);
   const downloadPreviousFile = async () => {
     try {
-      const seva_type = showRegular ? "regular_order" : "emergency_order";
+      const seva_type = showRegular ? "sm_order" : "sm_emergency_order";
       downloadFile({
         endPoint: "download_statistics",
         params: { seva_type: seva_type },
@@ -53,7 +53,7 @@ const Upload: NextApplicationPage = () => {
     try {
       const seva_type = showRegular ? "sm_order" : "sm_emergency_order";
       const { data } = await apiClient.get(
-        `upload_statistics?seva_type=${seva_type}`
+        `upload_statistics?seva_type=${seva_type}`,
       );
       let resp = bettterResponse(data.data);
       setResponse(data.data);
@@ -102,18 +102,22 @@ const Upload: NextApplicationPage = () => {
           validationSchema={schema}
           onSubmit={async (
             values,
-            { resetForm, setFieldValue, setFieldTouched }
+            { resetForm, setFieldValue, setFieldTouched },
           ) => {
-            let formData = new FormData();
-            // @ts-ignore
-            formData.append("order_file", values?.file);
+            const formData = new FormData();
+            if (values?.file) {
+              formData.append("order_file", values?.file);
+            }
             try {
               const { data } = await apiClient.post(
                 "order_import_sm_office",
                 formData,
                 {
                   params: !showRegular ? { emergency: "1" } : {},
-                }
+                  headers: {
+                    "Content-Type": "multipart/form-data",
+                  },
+                },
               );
               toast.success(data.message);
               resetForm();

@@ -46,7 +46,7 @@ export const DeliveryListItem: React.FC<ListItemProp> = ({
   ) : null;
 };
 
-const ListItem: React.FC<ListItemProp> = ({ item }) => {
+const ListItem: React.FC<ListItemProp> = ({ item, t: localt }) => {
   const { t } = useTranslation("calling");
   const { locale } = useRouter();
   const hasPermission = useValidUser(item.permission);
@@ -57,10 +57,11 @@ const ListItem: React.FC<ListItemProp> = ({ item }) => {
 
         <div className="flex-1 px-4">
           <p className="font-bold text-primary text-xl uppercase leading-snug">
-            {item.title && t(item.title)}
+            {item.title && (localt ? localt(item.title) : t(item.title))}
           </p>
           <p className="font-normal text-gray-400 text-xs">
-            {item.subtitle && t(item.subtitle)}
+            {item.subtitle &&
+              (localt ? localt(item.subtitle) : t(item.subtitle))}
           </p>
         </div>
       </div>

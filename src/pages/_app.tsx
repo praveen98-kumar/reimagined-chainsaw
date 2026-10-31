@@ -95,7 +95,7 @@ const MyApp = (props: AppProps) => {
   ) : null;
 };
 
-const AuthProvider = ({ children }: { children: JSX.Element }) => {
+const AuthProvider = ({ children }: { children: any }) => {
   const { user } = useAppSelector((state) => state.auth);
   const dispatch = useDispatch();
   const router = useRouter();

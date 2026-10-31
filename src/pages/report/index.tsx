@@ -27,6 +27,7 @@ import { OnFieldChange } from "@/components/UserwiseDropdown";
 import apiClient from "@/http/index";
 import { useAppSelector } from "@/redux/store";
 import { getDateDiff } from "@/shared/functions/date";
+import { exportToExcel, getTableExportData } from "@/shared/functions/excel";
 import {
   capitalizeWords,
   cn,
@@ -36,6 +37,12 @@ import {
 import type { Option } from "@/shared/interfaces/option";
 import type { Region } from "@/shared/interfaces/user";
 import { ReportColor } from "../../constants/report-color";
+import { DropdownMenu } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/DropdownMenu";
 
 export const dayFilterOptions: Array<Option> = [
   { label: "Today", value: "today" },
@@ -193,6 +200,7 @@ const ReportComponent = ({ url, lang }: { url: string; lang: string }) => {
   const [headers, setHeaders] = useState<TReport>([]);
   const [backTrace, setBackTrace] = useState<BackTraceItem[]>([]);
   const formRef = useRef<FormikProps<Payload>>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [downloading, setDownloading] = useState<boolean>(false);
   const [canDownload, setCanDownload] = useState<boolean>(false);
@@ -206,6 +214,7 @@ const ReportComponent = ({ url, lang }: { url: string; lang: string }) => {
     url: apiUrl,
     downloadUrl,
     permission,
+    excelExportPermission,
   } = reportTableParam[url];
   const [tableHeaders, setTableHeaders] = useState<
     { header: string; icon?: string }[]
@@ -371,7 +380,18 @@ const ReportComponent = ({ url, lang }: { url: string; lang: string }) => {
 
       try {
         const response: ApiResponse = await apiClient.get(apiUrl, { params });
-        const reportData = response.data.data;
+        let reportData = response.data.data;
+        // TODO : we can change this later
+        // if (
+        //   apiUrl === "social_media_pending_report_region_wise" &&
+        //   params?.district &&
+        //   params?.report_type == "sevadar" &&
+        //   reportData?.report
+        // ) {
+        //   reportData.report = reportData?.report.filter(
+        //     (r: any) => r.total_sum == 0,
+        //   );
+        // }
         let finalReport: TReport = [];
 
         // Filter by country if needed
@@ -428,6 +448,10 @@ const ReportComponent = ({ url, lang }: { url: string; lang: string }) => {
           const updatedReport = (reportData.report || []).map((item: any) => ({
             ...item,
             pending: item.total_sevadar - item.total_sum,
+            percentage:
+              item.total_sevadar > 0
+                ? Math.round((item.total_sum / item.total_sevadar) * 100)
+                : 0,
           }));
           setDayDiff(getDateDiff(new Date(params.start), new Date(params.end)));
           setHeaders(reportData.headers || []);
@@ -506,7 +530,7 @@ const ReportComponent = ({ url, lang }: { url: string; lang: string }) => {
         newReport = { regions, questions, seva_count };
         newDownloadUrl = "download_social_media_seva_report_all";
       } else {
-        newReport = report.filter((r) => r.active);
+        newReport = sortedReport.filter((r) => r.active);
       }
       if (
         [
@@ -645,6 +669,46 @@ const ReportComponent = ({ url, lang }: { url: string; lang: string }) => {
       setLoading(false);
     }
   };
+
+  const exportExcel = () => {
+    const table = tableRef.current;
+    if (!canDownload || loading || !table) return;
+
+    try {
+      // The rendered table is the single source of truth: headings are already
+      // translated and hidden columns/rows are not rendered at all.
+      const data = getTableExportData(table);
+      if (!data) return;
+
+      const { start, end } = buildDateParams();
+      const dateLabel =
+        start && end
+          ? `${dayjs(start).format("DD-MM-YYYY")}_To_${dayjs(end).format(
+              "DD-MM-YYYY",
+            )}`
+          : dayjs().format("DD-MM-YYYY");
+      const fileName = `${url
+        .split("_")
+        .map((part) => capitalizeWords(part))
+        .join("_")}_${dateLabel}`;
+
+      exportToExcel({
+        fileName,
+        sheetName: capitalizeWords(url.replaceAll("_", " ")),
+        ...data,
+      });
+    } catch (error) {
+      handleError(error, "exportExcel");
+    }
+  };
+  const isPdfDownloadAllowed =
+    downloadUrl &&
+    permission &&
+    active_permission?.permissions.includes(permission);
+  const isExcelDownloadAllowed =
+    excelExportPermission &&
+    active_permission?.permissions.includes(excelExportPermission);
+  const isDownloadAllowed = isPdfDownloadAllowed || isExcelDownloadAllowed;
   return (
     <Layout
       headerProps={{
@@ -780,19 +844,32 @@ const ReportComponent = ({ url, lang }: { url: string; lang: string }) => {
                   >
                     Search
                   </Button>
-                  {downloadUrl &&
-                    permission &&
-                    active_permission?.permissions.includes(permission) && (
-                      <Button
-                        loading={downloading}
-                        disabled={downloading || loading || !canDownload}
-                        type="button"
-                        onClick={downloadReport}
-                        className="mx-auto mt-4 w-1/2"
-                      >
-                        Download
-                      </Button>
-                    )}
+                  {isDownloadAllowed && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          loading={downloading}
+                          disabled={downloading || loading || !canDownload}
+                          type="button"
+                          className="mx-auto mt-4 w-1/2"
+                        >
+                          Download
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-24" align="end">
+                        {isPdfDownloadAllowed && (
+                          <DropdownMenuItem onClick={downloadReport}>
+                            PDF
+                          </DropdownMenuItem>
+                        )}
+                        {isExcelDownloadAllowed && (
+                          <DropdownMenuItem onClick={exportExcel}>
+                            Excel
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
               </Form>
             );
@@ -821,7 +898,7 @@ const ReportComponent = ({ url, lang }: { url: string; lang: string }) => {
           )}
         </div>
         <div className="w-full max-h-screen overflow-x-scroll">
-          <table className="w-full">
+          <table ref={tableRef} className="w-full">
             <thead
               style={{ zIndex: 1 }}
               className="w-full sticky top-0 bg-black text-white"
@@ -866,13 +943,21 @@ const ReportComponent = ({ url, lang }: { url: string; lang: string }) => {
                   if (
                     url == "social_media_report" &&
                     firstHeader() === "Sevadar" &&
-                    ["total", "pending"].includes(h.toLowerCase())
+                    ["total", "pending", "percentage"].includes(h.toLowerCase())
+                  ) {
+                    return null;
+                  }
+                  if (
+                    url == "social_media_report" &&
+                    formRef?.current?.values?.dayFilter !== "today" &&
+                    formRef?.current?.values?.dayFilter !== "yesterday" &&
+                    ["percentage"].includes(h.toLowerCase())
                   ) {
                     return null;
                   }
                   return (
                     <TableHead
-                      key={h}
+                      key={`${h}-${i}`}
                       title={h}
                       subtitle={
                         h === "Report Submitted" && dayDiff > 1
@@ -899,6 +984,7 @@ const ReportComponent = ({ url, lang }: { url: string; lang: string }) => {
                   {sortedReport.map((row, i) => (
                     <tr
                       key={i}
+                      data-active={row?.active == false ? "false" : "true"}
                       className={cn(
                         "border-b border-blue-300 p-1",
                         row?.active == false
@@ -1075,7 +1161,11 @@ const ReportComponent = ({ url, lang }: { url: string; lang: string }) => {
                             if (
                               url == "social_media_report" &&
                               firstHeader() === "Sevadar" &&
-                              ["total_sevadar", "pending"].includes(b)
+                              [
+                                "total_sevadar",
+                                "pending",
+                                "percentage",
+                              ].includes(b)
                             ) {
                               return null;
                             }
@@ -1086,6 +1176,29 @@ const ReportComponent = ({ url, lang }: { url: string; lang: string }) => {
                               dayDiff > 1
                             ) {
                               return null;
+                            }
+                            if (
+                              url == "social_media_report" &&
+                              formRef?.current?.values?.dayFilter !== "today" &&
+                              formRef?.current?.values?.dayFilter !==
+                                "yesterday" &&
+                              ["percentage"].includes(b)
+                            ) {
+                              return null;
+                            }
+                            if (
+                              url == "social_media_report" &&
+                              (formRef?.current?.values?.dayFilter ===
+                                "today" ||
+                                formRef?.current?.values?.dayFilter ===
+                                  "yesterday") &&
+                              ["percentage"].includes(b)
+                            ) {
+                              return (
+                                <td key={j} className={"text-center"}>
+                                  {row[b]}
+                                </td>
+                              );
                             }
                             if (
                               url == "social_media_report" &&

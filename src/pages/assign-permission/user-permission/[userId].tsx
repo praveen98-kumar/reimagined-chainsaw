@@ -11,8 +11,12 @@ import Layout from "@/components/Layout";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import apiClient from "@/http/index";
 import { useGetPermissionGroup } from "@/http/permission";
-import { useGetRoles, useRoleCreatePermissions } from "@/http/role";
-import { useAppSelector } from "@/redux/store";
+import {
+  useGetRoles,
+  useGetStateOptions,
+  useRoleCreatePermissions,
+} from "@/http/role";
+import { defaultCountries } from "@/constants/app";
 import { capitalizeWords, cn } from "@/shared/functions/utils";
 import type { Option } from "@/shared/interfaces/option";
 import { useMutation } from "@tanstack/react-query";
@@ -27,6 +31,7 @@ export interface Root {
 export interface Role {
   target_role_id: number;
   all_state: boolean;
+  state_ids: number[] | null;
 }
 
 const RestrictedGroups = [
@@ -40,11 +45,11 @@ type MAP = {
   [k: number]: {
     all_state: boolean;
     own_state: boolean;
+    state_ids: number[];
   };
 };
 
 const UserPermissionById = () => {
-  const { active_permission } = useAppSelector((s) => s.auth);
   const [permissionMap, setPermissionMap] = useState<MAP>({});
   const [group, setGroup] = useState<string>("");
   const { t } = useTranslation("home");
@@ -52,13 +57,17 @@ const UserPermissionById = () => {
 
   const { data: groups, isLoading: _isloading } = useGetPermissionGroup();
   const { data: roles } = useGetRoles();
-  const { data: roleCreatPermissions } = useRoleCreatePermissions(
+  const { data: stateOptions } = useGetStateOptions(
+    Number(defaultCountries[0].value),
+  );
+  // Permissions granted to the selected user
+  const { data: roleCreatPermissions, refetch } = useRoleCreatePermissions(
     {
       group: group,
-      creator_role_id: active_permission?.role_id,
+      creator_user_id: disciple?.["id"],
     },
     {
-      enabled: group !== "",
+      enabled: group !== "" && Boolean(disciple?.["id"]),
     },
   );
 
@@ -77,9 +86,11 @@ const UserPermissionById = () => {
 
   useEffect(() => {
     const tempMap = roleCreatPermissions?.reduce((a: MAP, c) => {
+      const stateIds = c.state_ids ?? [];
       a[c.target_role_id] = {
-        all_state: c.all_state,
-        own_state: !c.all_state,
+        all_state: c.all_state && !stateIds.length,
+        own_state: !c.all_state && !stateIds.length,
+        state_ids: stateIds,
       };
       return a;
     }, {});
@@ -95,29 +106,25 @@ const UserPermissionById = () => {
     },
     onSuccess: () => {
       toast.success("Permissions updated successfully");
+      refetch();
     },
   });
 
   const handleSubmit = () => {
-    // Filter out roles where both checkboxes are unchecked
-    const payloadRoles: { target_role_id: number; all_state: boolean }[] = [];
+    // Filter out roles where nothing is selected; an empty list revokes all roles of the group
+    const payloadRoles: Role[] = [];
 
     if (permissionMap) {
       Object.entries(permissionMap).forEach(([key, value]) => {
-        // Only include if at least one checkbox is checked
-        if (value.all_state || value.own_state) {
+        // Only include if a checkbox is checked or states are selected
+        if (value.all_state || value.own_state || value.state_ids.length) {
           payloadRoles.push({
             target_role_id: parseInt(key),
             all_state: value.all_state, // true if "All State" is checked, false if "Own State" is checked
+            state_ids: value.state_ids.length ? value.state_ids : null, // only these states
           });
         }
       });
-    }
-
-    // Validate that at least one role is selected
-    if (payloadRoles.length === 0) {
-      toast.error("Please select at least one permission");
-      return;
     }
 
     // Validate that group is selected
@@ -153,15 +160,17 @@ const UserPermissionById = () => {
       const currentState = prev?.[roleId] || {
         all_state: false,
         own_state: false,
+        state_ids: [],
       };
 
-      // If checking a checkbox, uncheck the other one in the same row
+      // If checking a checkbox, uncheck the other one and clear states in the same row
       if (isChecked) {
         return {
           ...prev,
           [roleId]: {
             all_state: key === "all_state",
             own_state: key === "own_state",
+            state_ids: [],
           },
         };
       } else {
@@ -176,6 +185,18 @@ const UserPermissionById = () => {
         };
       }
     });
+  }
+
+  // Selecting specific states replaces "All State" / "Own State" for the row
+  function handleStatesChange(roleId: number, options: readonly Option[]) {
+    setPermissionMap((prev) => ({
+      ...prev,
+      [roleId]: {
+        all_state: false,
+        own_state: false,
+        state_ids: options.map((o) => Number(o.value)),
+      },
+    }));
   }
 
   return (
@@ -227,9 +248,10 @@ const UserPermissionById = () => {
                   className="w-full sticky top-0 bg-black text-white font-semibold text-md p-2"
                 >
                   <tr>
-                    <th className="w-3/4 px-2 sticky left-0 bg-black">Roles</th>
+                    <th className="w-1/2 px-2 sticky left-0 bg-black">Roles</th>
                     <th className="px-2">All State</th>
                     <th className="px-2">Own State</th>
+                    <th className="px-2">Only States</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -273,6 +295,26 @@ const UserPermissionById = () => {
                           onChange={(e) =>
                             handleToggleCheckbox(e, role.id, "own_state")
                           }
+                        />
+                      </td>
+                      <td className="px-2 py-1 min-w-[200px]">
+                        <ReactSelect
+                          isMulti
+                          name={`${role.name}state_ids`}
+                          placeholder="Select states"
+                          options={stateOptions ?? []}
+                          value={(stateOptions ?? []).filter((s) =>
+                            permissionMap?.[role.id]?.state_ids?.includes(
+                              Number(s.value),
+                            ),
+                          )}
+                          menuPortalTarget={
+                            typeof window !== "undefined" ? document.body : null
+                          }
+                          styles={{
+                            menuPortal: (base) => ({ ...base, zIndex: 99 }),
+                          }}
+                          onChange={(opts) => handleStatesChange(role.id, opts)}
                         />
                       </td>
                     </tr>

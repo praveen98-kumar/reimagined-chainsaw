@@ -123,7 +123,7 @@ const DynamicQuestionForm: React.FC = () => {
         p.is_common === q.is_common ? 0 : q.is_common ? 1 : -1
       );
       const addedQuestion = sortedQuestion
-        .filter((q) => q.added || q.priority)
+        .filter((q) => q.added)
         .map(
           (q) =>
             ({
@@ -255,7 +255,7 @@ const DynamicQuestionForm: React.FC = () => {
                                     {question.topic}
                                   </h3>
                                   <span className="text-sm capitalize text-gray-500">
-                                    ({question.question})
+                                    {question.question} ({question.question_type})
                                   </span>
                                 </div>
                               </div>

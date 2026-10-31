@@ -47,6 +47,8 @@ export interface Region {
   tehsil_name: string;
   city_id: number;
   city_name: string;
+  namdan_center_id: number;
+  namdan_center_name: string;
 }
 
 export interface UserListParamsType {
@@ -69,9 +71,14 @@ export interface Disciple {
   satnam_date: string | null;
   status: string;
   created_at?: string;
+  country_id?: number;
+  state_id?: number;
+  district_id?: number;
+  tehsil_id?: number;
   district?: { name?: string };
   tehsil?: { name?: string };
   state?: { name?: string };
   country?: { name?: string };
+  address?: string;
   [k: string]: unknown;
 }

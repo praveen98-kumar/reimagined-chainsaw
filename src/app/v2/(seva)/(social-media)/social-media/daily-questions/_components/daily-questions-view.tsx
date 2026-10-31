@@ -4,17 +4,12 @@ import { useCallback, useMemo, useState } from "react";
 import type { Question } from "../../manage-questions/_types/manage-questions.types";
 import { DraftsToolbar } from "../../manage-questions/_components/drafts-toolbar";
 import { QuestionListCard } from "../../manage-questions/_components/question-list-card";
-import { useSocialMediaDailyQuestion } from "../../_query-options/queries/get-daily-questions";
 
 interface DailyQuestionsViewProps {
   questions: Question[];
 }
 
 export function DailyQuestionsView({ questions }: DailyQuestionsViewProps) {
-  const { data } = useSocialMediaDailyQuestion({
-    state_id: 27
-  })
-
   const [term, setTerm] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>(() =>
     questions.map((question) => question.id),

@@ -14,12 +14,7 @@ import { getApiCounts } from "@/shared/functions/api";
 import type { Region } from "@/shared/interfaces/user";
 
 type RoleRegion =
-  | "country"
-  | "state"
-  | "division"
-  | "district"
-  | "tehsil"
-  | "city";
+  "country" | "state" | "division" | "district" | "tehsil" | "city";
 
 type RegionIdKey =
   | "country_id"
@@ -118,8 +113,7 @@ export function useCountFetch(options: UseCountFetchOptions) {
     const currentRoleRegion = roleRegion ?? active_permission?.role_region;
 
     return (currentRoleRegion === "ashram" ? "country" : currentRoleRegion) as
-      | RoleRegion
-      | undefined;
+      RoleRegion | undefined;
   }, [active_permission?.role_region, roleRegion]);
 
   const locationID = useMemo(

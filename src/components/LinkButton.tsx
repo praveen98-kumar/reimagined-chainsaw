@@ -11,6 +11,7 @@ interface Props {
   iconSrc: string;
   params?: Record<string, string>;
   iconContainerClass?: string;
+  className?: string;
 }
 
 export const LinkButtonContainer = ({
@@ -34,6 +35,7 @@ const LinkButton = ({
   iconSrc,
   params = {},
   iconContainerClass,
+  className,
 }: Props) => {
   const router = useRouter();
   const hasPermission = useValidUser(permission);
@@ -46,9 +48,11 @@ const LinkButton = ({
   return (
     <button
       onClick={onClick}
-      className={
-        "space-x-2 cursor-pointer text-white bg-black font-bold px-2 h-14 rounded-lg flex items-center justify-center"
-      }
+      type="button"
+      className={cn(
+        "space-x-2 cursor-pointer text-white bg-black font-bold px-2 h-14 rounded-lg flex items-center justify-center",
+        className,
+      )}
     >
       <Icon src={iconSrc} containerClass={containerClass} />
       <span>{title}</span>

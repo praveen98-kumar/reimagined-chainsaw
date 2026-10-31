@@ -121,6 +121,21 @@ body {
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+@theme {
+  --color-brand-900: #2b0f6e;
+  --color-brand-700: #4c0e63;
+  --color-brand-title: #4a1a5c;
+  --color-brand-ink: #1b1b4f;
+}
+
+/* Soft pastel page background used by the new UI screens */
+@utility bg-app-gradient {
+  background:
+    radial-gradient(ellipse at 0% 100%, rgb(253 230 138 / 0.55), transparent 55%),
+    radial-gradient(ellipse at 100% 65%, rgb(251 207 232 / 0.6), transparent 50%),
+    linear-gradient(165deg, #c7dafe 0%, #ddd6fe 22%, #f5f3ff 50%, #fdf2f8 100%);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

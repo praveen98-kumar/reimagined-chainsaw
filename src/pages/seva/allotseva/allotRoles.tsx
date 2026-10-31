@@ -20,6 +20,7 @@ import { useTranslation } from "react-i18next";
 import { useInView } from "react-intersection-observer";
 import { useAppSelector } from "@/redux/store";
 import DiscipleCard from "@/components/card/DiscipleCard";
+import toast from "react-hot-toast";
 
 interface Tab {
   label: string;
@@ -63,7 +64,7 @@ const AllotRoles = () => {
   const fetchData = useCallback(
     async (
       page_no: number = page,
-      params: Record<string, string | number | boolean>
+      params: Record<string, string | number | boolean>,
     ) => {
       if (!loading) {
         setLoading(true);
@@ -95,21 +96,22 @@ const AllotRoles = () => {
           setHasMore(temphasMore);
           if (activeIndex == 0) {
             setDisciples((prev) =>
-              page_no == 1 ? data.data.result : [...prev, ...data.data.result]
+              page_no == 1 ? data.data.result : [...prev, ...data.data.result],
             );
           } else {
             setUsers((prev) =>
-              page_no == 1 ? data.data.result : [...prev, ...data.data.result]
+              page_no == 1 ? data.data.result : [...prev, ...data.data.result],
             );
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error(error);
+          toast.error(error?.response?.data?.error);
         } finally {
           setLoading(false);
         }
       }
     },
-    [activeIndex, loading]
+    [activeIndex, loading],
   );
   const onTabClick = useCallback(
     (index: number) => {
@@ -117,13 +119,13 @@ const AllotRoles = () => {
       let lastpage = page;
       let currPage = tabs[index].page;
       const temp = [...tabs].map((t, i) =>
-        i == previousIndex ? { ...t, page: lastpage } : t
+        i == previousIndex ? { ...t, page: lastpage } : t,
       );
       setPage(currPage);
       setTabs(temp);
       setActiveIndex(index);
     },
-    [page, activeIndex]
+    [page, activeIndex],
   );
 
   const onDiscipleCardClick = (disciple: any, id: number, userId?: number) => {

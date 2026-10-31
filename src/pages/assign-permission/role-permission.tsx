@@ -10,7 +10,12 @@ import Layout from "@/components/Layout";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import apiClient from "@/http/index";
 import { useGetPermissionGroup } from "@/http/permission";
-import { useGetRoles, useRoleCreatePermissions } from "@/http/role";
+import {
+  useGetRoles,
+  useGetStateOptions,
+  useRoleCreatePermissions,
+} from "@/http/role";
+import { defaultCountries } from "@/constants/app";
 import { capitalizeWords, cn, getOptionArray } from "@/shared/functions/utils";
 import type { Option } from "@/shared/interfaces/option";
 import { useMutation } from "@tanstack/react-query";
@@ -25,12 +30,14 @@ export interface Root {
 export interface Role {
   target_role_id: number;
   all_state: boolean;
+  state_ids: number[] | null;
 }
 
 type MAP = {
   [k: number]: {
     all_state: boolean;
     own_state: boolean;
+    state_ids: number[];
   };
 };
 
@@ -48,6 +55,9 @@ const RolePermissionn = () => {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const { data: groups, isLoading: _isloading } = useGetPermissionGroup();
   const { data: roles } = useGetRoles();
+  const { data: stateOptions } = useGetStateOptions(
+    Number(defaultCountries[0].value),
+  );
   const { data: roleCreatPermissions } = useRoleCreatePermissions(
     {
       group: group,
@@ -83,9 +93,11 @@ const RolePermissionn = () => {
 
   useEffect(() => {
     const tempMap = roleCreatPermissions?.reduce((a: MAP, c) => {
+      const stateIds = c.state_ids ?? [];
       a[c.target_role_id] = {
-        all_state: c.all_state,
-        own_state: !c.all_state,
+        all_state: c.all_state && !stateIds.length,
+        own_state: !c.all_state && !stateIds.length,
+        state_ids: stateIds,
       };
       return a;
     }, {});
@@ -118,15 +130,16 @@ const RolePermissionn = () => {
 
   const handleSubmit = () => {
     // Filter out roles where both checkboxes are unchecked
-    const payloadRoles: { target_role_id: number; all_state: boolean }[] = [];
+    const payloadRoles: Role[] = [];
 
     if (permissionMap) {
       Object.entries(permissionMap).forEach(([key, value]) => {
-        // Only include if at least one checkbox is checked
-        if (value.all_state || value.own_state) {
+        // Only include if a checkbox is checked or states are selected
+        if (value.all_state || value.own_state || value.state_ids.length) {
           payloadRoles.push({
             target_role_id: parseInt(key),
             all_state: value.all_state, // true if "All State" is checked, false if "Own State" is checked
+            state_ids: value.state_ids.length ? value.state_ids : null, // only these states
           });
         }
       });
@@ -158,15 +171,17 @@ const RolePermissionn = () => {
       const currentState = prev?.[roleId] || {
         all_state: false,
         own_state: false,
+        state_ids: [],
       };
 
-      // If checking a checkbox, uncheck the other one in the same row
+      // If checking a checkbox, uncheck the other one and clear states in the same row
       if (isChecked) {
         return {
           ...prev,
           [roleId]: {
             all_state: key === "all_state",
             own_state: key === "own_state",
+            state_ids: [],
           },
         };
       } else {
@@ -182,6 +197,19 @@ const RolePermissionn = () => {
       }
     });
   }
+
+  // Selecting specific states replaces "All State" / "Own State" for the row
+  function handleStatesChange(roleId: number, options: readonly Option[]) {
+    setPermissionMap((prev) => ({
+      ...prev,
+      [roleId]: {
+        all_state: false,
+        own_state: false,
+        state_ids: options.map((o) => Number(o.value)),
+      },
+    }));
+  }
+
   return (
     <Layout
       headerProps={{
@@ -254,9 +282,10 @@ const RolePermissionn = () => {
                   className="w-full sticky top-0 bg-black text-white font-semibold text-md p-2"
                 >
                   <tr>
-                    <th className="w-3/4 px-2 sticky left-0 bg-black">Roles</th>
+                    <th className="w-1/2 px-2 sticky left-0 bg-black">Roles</th>
                     <th className="px-2">All State</th>
                     <th className="px-2">Own State</th>
+                    <th className="px-2">Only States</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -300,6 +329,26 @@ const RolePermissionn = () => {
                           onChange={(e) =>
                             handleToggleCheckbox(e, role.id, "own_state")
                           }
+                        />
+                      </td>
+                      <td className="px-2 py-1 min-w-[200px]">
+                        <ReactSelect
+                          isMulti
+                          name={`${role.name}state_ids`}
+                          placeholder="Select states"
+                          options={stateOptions ?? []}
+                          value={(stateOptions ?? []).filter((s) =>
+                            permissionMap?.[role.id]?.state_ids?.includes(
+                              Number(s.value),
+                            ),
+                          )}
+                          menuPortalTarget={
+                            typeof window !== "undefined" ? document.body : null
+                          }
+                          styles={{
+                            menuPortal: (base) => ({ ...base, zIndex: 99 }),
+                          }}
+                          onChange={(opts) => handleStatesChange(role.id, opts)}
                         />
                       </td>
                     </tr>

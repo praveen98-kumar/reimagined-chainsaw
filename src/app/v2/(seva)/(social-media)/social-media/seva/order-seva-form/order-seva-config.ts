@@ -1,7 +1,5 @@
 export type OrderSevaKey =
-  | "national_regular"
-  | "national_emergency"
-  | "international_regular";
+  "national_regular" | "national_emergency" | "international_regular";
 
 export type OrderSevaConfig = {
   pageTitle: string;

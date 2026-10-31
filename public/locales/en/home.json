@@ -23,7 +23,10 @@
       "social_media_inner": "SM Seva Update",
       "ramaini_seva": "Ramaini Seva",
       "register_user": "Register Sevadar",
-      "other_login": "Other Login"
+      "other_login": "Other Login",
+      "edit_disciple": "Edit Disciple",
+      "seva_transfer": "Seva Transfer",
+      "pradarshani_seva": "Pradarshani Seva"
     },
     "subtitle": {
       "book_order_seva": "Find Book Order Seva Details here",
@@ -43,7 +46,10 @@
       "social_media": "SM Seva",
       "social_media_inner": "SM Seva Update",
       "ramaini_seva": "Ramaini Seva",
-      "register_user": "Register Sevadar"
+      "register_user": "Register Sevadar",
+      "edit_disciple": "Edit Disciple",
+      "seva_transfer": "Seva Transfer",
+      "pradarshani_seva": "Feedback, count & report for exhibition seva"
     }
   }
 }

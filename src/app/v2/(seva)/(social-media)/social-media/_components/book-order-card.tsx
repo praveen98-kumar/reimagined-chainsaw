@@ -80,12 +80,7 @@ export function BookOrderCard({
 
         <div className="relative w-24 h-32 rounded-xl flex items-center justify-center overflow-hidden">
           <div className="relative w-25 h-30">
-            <Image
-              src={imgSrc}
-              alt="Book"
-              fill
-              className="object-contain"
-            />
+            <Image src={imgSrc} alt="Book" fill className="object-contain" />
           </div>
         </div>
       </div>

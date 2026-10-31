@@ -6,10 +6,7 @@ type FormLabelProps = LabelHTMLAttributes<HTMLLabelElement> & {
 };
 const FormLabel: React.FC<FormLabelProps> = ({ label, required, htmlFor }) => {
   return (
-    <label
-      className="mb-1 block text-md font-semibold text-[#7c2d12]"
-      htmlFor={htmlFor}
-    >
+    <label className="block text-primary font-normal text-md" htmlFor={htmlFor}>
       {label}
       {required && <span className="ml-1 text-red-600">{"*"}</span>}
     </label>

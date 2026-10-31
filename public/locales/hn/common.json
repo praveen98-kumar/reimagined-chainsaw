@@ -1,5 +1,6 @@
 {
   "search": "खोजें",
+  "ashram": "आश्रम",
   "country": "देश",
   "state": "राज्य",
   "division": "विभाजन",
@@ -11,6 +12,7 @@
   "pin": "पिन कोड",
   "name": "नाम",
   "satsang_channel": "सत्संग चैनल",
+  "select_ashram": "आश्रम चुनें",
   "select_country": "देश चुनें",
   "select_state": "राज्य चुनें",
   "select_division": "विभाजन चुनें",

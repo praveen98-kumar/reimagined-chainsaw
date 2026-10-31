@@ -5,7 +5,7 @@ import { useFormik } from "formik";
 import Button from "@/components/Button";
 import {
   ChangeEvent,
-  FormEvent,
+  FocusEvent,
   KeyboardEvent,
   useCallback,
   useEffect,
@@ -129,14 +129,20 @@ const UpdateSocial: NextApplicationPage = () => {
     }
   }, []);
 
-  const onInputSubmit = (e: FormEvent, index: number) => {
-    e.preventDefault();
-    const nextField = questions[index + 1];
-    if (nextField) {
-      const nextInput = inputRefs.current[nextField.id.toString()];
-      nextInput?.focus();
-    }
+  const onInputFocus = (e: FocusEvent<HTMLInputElement>) => {
+    const id = parseInt(e.target.name);
+    setQuestions((pre) =>
+      pre.map((q) => {
+        if (q.id !== id || q.question_type !== "numeric") return q;
+        // Clear the default "0" so the field is blank for typing
+        return q.answer === 0 || q.answer === "0" ? { ...q, answer: "" } : q;
+      }),
+    );
   };
+
+  const normalizeAnswer = (v: unknown) =>
+    v === "" || v == null ? "0" : String(v);
+
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>, index: number) => {
     if (e.key === "Enter" && e.shiftKey) {
       e.preventDefault();
@@ -213,7 +219,7 @@ const UpdateSocial: NextApplicationPage = () => {
               <form onSubmit={handleSubmit}>
                 {questions.map(
                   (
-                    { question_type, icon, id, topic, answer: value },
+                    { question, question_type, icon, id, topic, answer: value },
                     index,
                   ) => {
                     const isNumberInput = question_type === "numeric";
@@ -243,26 +249,30 @@ const UpdateSocial: NextApplicationPage = () => {
                             "border border-gray-300 h-8 w-20 rounded text-center text-md p-0 m-0":
                               isNumberInput,
                             "border-2 bg-green-100 border-green-600 text-green-600":
-                              loadedQuestion[id] != value,
+                              normalizeAnswer(loadedQuestion[String(id)]) !==
+                              normalizeAnswer(value),
                           })}
                           ref={(el) => {
                             inputRefs.current[id.toString()] = el;
                           }}
-                          checked={isCheckbox ? Boolean(value) : undefined}
-                          // @ts-ignore
-                          value={value}
+                          {...(isCheckbox
+                            ? { checked: Boolean(value) }
+                            : {
+                                value:
+                                  isNumberInput &&
+                                  (value === 0 || value === "0")
+                                    ? ""
+                                    : String(value ?? ""),
+                              })}
                           inputMode={isNumberInput ? "numeric" : "text"}
+                          pattern={isNumberInput ? "[0-9]*" : undefined}
+                          placeholder={isNumberInput ? "0" : undefined}
                           name={id.toString()}
                           id={id.toString()}
+                          aria-label={question}
                           onKeyDown={(e) => onKeyDown(e, index)}
-                          onSubmit={(e) => onInputSubmit(e, index)}
-                          type={
-                            isCheckbox
-                              ? "checkbox"
-                              : isNumberInput
-                                ? "number"
-                                : "text"
-                          }
+                          onFocus={onInputFocus}
+                          type={isCheckbox ? "checkbox" : "text"}
                           onChange={onInputChange}
                         />
                       </div>

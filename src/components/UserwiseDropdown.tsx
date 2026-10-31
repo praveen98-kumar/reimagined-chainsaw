@@ -73,7 +73,7 @@ export const OnFieldChange = memo(
       } else didMount.current = true;
     }, [...fields.map((field) => getFieldMeta(field).value)]);
     return null;
-  }
+  },
 );
 
 const UserwiseDropdown = ({
@@ -89,9 +89,11 @@ const UserwiseDropdown = ({
 }: Props) => {
   const { t } = useTranslation("common");
   const [fieldsToShow] = useState<T>(conditionalFields);
-  const { active_permission, active_region_index } = useAppSelector(
-    (state) => state.auth
-  );
+  const {
+    active_permission,
+    active_region_index,
+    user: currentUser,
+  } = useAppSelector((state) => state.auth);
   const regionLength = (active_permission?.region as Region[])?.length ?? 0;
   const role_region = active_permission?.role_region ?? "ashram";
   const [countries, setCountries] = useState<Option[]>([]);
@@ -170,27 +172,39 @@ const UserwiseDropdown = ({
             const tempRegion = active_permission?.region[
               active_region_index
             ] as Region;
-
             if (index == 0) {
               // Show india only
-              locationArr = defaultCountries;
+              if (currentUser?.mobile_no == "+919812056767") {
+                locationArr = defaultCountries.filter((c) => c.value == 2);
+              } else {
+                locationArr = defaultCountries;
+              }
             } else {
               const newIndex =
                 index == 2 ? (showDivision ? index + 1 : index + 2) : index + 1;
               locationArr = await regionHirarcy[newIndex].fn(
-                tempRegion[regionHirarcy[index].valueVar]
+                tempRegion[regionHirarcy[index].valueVar],
               );
             }
+
             setFieldValue(
               regionHirarcy[index].valueVar,
-              tempRegion[regionHirarcy[index].valueVar]
+              tempRegion[regionHirarcy[index].valueVar],
             );
             if (index < regionHirarcy.length - 1) {
               if (index == 0) {
                 const locationArr2 = await getStates(
-                  tempRegion[regionHirarcy[1].valueVar]
+                  tempRegion[regionHirarcy[1].valueVar],
                 );
-                regionHirarcy[2].cb(locationArr2);
+                if (currentUser?.mobile_no == "+919812056767") {
+                  regionHirarcy[2].cb(
+                    locationArr2.filter((s) =>
+                      [5, 9, 22, 24].includes(Number(s.value)),
+                    ),
+                  );
+                } else {
+                  regionHirarcy[2].cb(locationArr2);
+                }
               } else {
                 const newIndex =
                   index == 2
@@ -210,10 +224,20 @@ const UserwiseDropdown = ({
       (async () => {
         // Show india only
         if (router.query.url !== "download_international_orders") {
-          setCountries(defaultCountries);
+          if (currentUser?.mobile_no == "+919812056767") {
+            setCountries(defaultCountries.filter((c) => c.value == 2));
+          } else {
+            setCountries(defaultCountries);
+          }
           setFieldValue("country_id", defaultCountries[0].value as string);
           const states = await getStates(defaultCountries[0].value as string);
-          setStates(states);
+          if (currentUser?.mobile_no == "+919812056767") {
+            setStates(
+              states.filter((s) => [5, 9, 22, 24].includes(Number(s.value))),
+            );
+          } else {
+            setStates(states);
+          }
         }
       })();
     }
@@ -228,7 +252,7 @@ const UserwiseDropdown = ({
         division_id: true,
         district_id: true,
         tehsil_id: true,
-      }
+      },
     );
   }, [fieldsToShow]);
 
@@ -277,7 +301,11 @@ const UserwiseDropdown = ({
             onChange={(opt: any) => {
               setFieldValue("country_id", opt?.value);
               if (visible.state_id) {
-                handleCountryChange(opt?.value, setStates);
+                if (currentUser?.mobile_no == "+919812056767") {
+                  handleCountryChange(opt?.value, setStates, [5, 9, 22, 24]);
+                } else {
+                  handleCountryChange(opt?.value, setStates);
+                }
               }
               onChange?.country_id?.(opt);
             }}

@@ -1,12 +1,27 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { cva, type VariantProps } from "class-variance-authority";
-import { forwardRef, type HTMLAttributes, type ReactNode } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useState,
+  type HTMLAttributes,
+  type ReactNode,
+} from "react";
 import { FiRefreshCw } from "react-icons/fi";
-import { useCountFetch } from "@/hooks/useCountFetch";
-import type { ICount, TCount } from "@/redux/features/countSlice";
-import { useAppSelector } from "@/redux/store";
+import {
+  resetCounts,
+  setCounts,
+  type ICount,
+  type TCount,
+} from "@/redux/features/countSlice";
+import { useAppDispatch, useAppSelector } from "@/redux/store";
 import { cn } from "@/shared/functions/utils";
 import Button from "./Button";
+import { CountState, CountStatus, useCount } from "@/hooks/useCount";
+import { regionToRegioIDLable } from "@/constants/app";
+import { getApiCounts } from "@/shared/functions/api";
+import dayjs from "dayjs";
 
 interface StatusCardProps extends Omit<
   HTMLAttributes<HTMLDivElement>,
@@ -16,8 +31,7 @@ interface StatusCardProps extends Omit<
   type: TCount;
   sevadar_type: string;
   children?:
-    | ReactNode
-    | ((props: { values: ICount; isLoading?: boolean }) => ReactNode);
+    ReactNode | ((props: { values: ICount; isLoading?: boolean }) => ReactNode);
   refreshButtonFullWidth?: boolean;
 }
 
@@ -34,17 +48,145 @@ const StatusCard = forwardRef<HTMLDivElement, StatusCardProps>(
     },
     ref,
   ) => {
+    const { data: countData, add, upsert } = useCount();
     const queryClient = useQueryClient();
-    const { active_permission } = useAppSelector((state) => state.auth);
+    const dispatch = useAppDispatch();
+    const [isLoading, setIsLoading] = useState(false);
+    const { active_permission, active_region_index } = useAppSelector(
+      (state) => state.auth,
+    );
     const values = useAppSelector((state) => state.counts[type]);
 
     const activeRole = active_permission?.role;
-    const { isLoading, getCountsForSevadars } = useCountFetch({
-      activeRole,
-      path,
-      type,
-      sevadar_type,
-    });
+    const activeRegion = active_permission?.region[active_region_index];
+    const activeRoleRegion = active_permission?.role_region as
+      keyof typeof regionToRegioIDLable | undefined;
+
+    const getLocalCounts = () => {
+      const raw = localStorage.getItem("count-store");
+      if (raw) {
+        const jsonValue = JSON.parse(raw) as {
+          state: { data: CountState["data"] };
+        };
+        const localCounts = jsonValue.state.data?.[type];
+        const locationID = regionToRegioIDLable[activeRoleRegion!];
+        if (localCounts && localCounts?.length > 0) {
+          const found = localCounts?.find(
+            (t) =>
+              t[locationID] === activeRegion?.[locationID] &&
+              t?.role == activeRole,
+          );
+          return found ?? ({} as CountStatus);
+        }
+        return {} as CountStatus;
+      }
+
+      return {} as CountStatus;
+    };
+
+    const getAndSetCountsFromStore = () => {
+      if (activeRegion && activeRoleRegion) {
+        const currentRegionCount = getLocalCounts();
+        if (currentRegionCount) {
+          const { counts } = currentRegionCount;
+          dispatch(setCounts({ type, counts }));
+        } else {
+          dispatch(resetCounts({ type }));
+        }
+      }
+    };
+
+    const updateLocalCount = (counts: ICount) => {
+      if (!activeRegion || !activeRoleRegion) return;
+      const currentDate = dayjs().format("DD-MM-YYYY");
+      const locationID = regionToRegioIDLable[activeRoleRegion];
+      const currentRegionCount = countData?.[type]?.find(
+        (item) =>
+          item?.[locationID] == activeRegion?.[locationID] &&
+          item?.role == activeRole,
+      );
+      const { first_order_id, first_accepted_order_date, ...rest } = counts;
+
+      if (Object.keys(counts).length > 0) {
+        if (currentRegionCount) {
+          upsert(type, locationID, {
+            [locationID]: activeRegion?.[locationID],
+            counts: rest as Record<string, number>,
+            role: activeRole,
+            ...(first_order_id && first_accepted_order_date
+              ? {
+                  first_order_id: first_order_id as number,
+                  first_accepted_order_date:
+                    first_accepted_order_date as string,
+                }
+              : {}),
+          });
+        } else {
+          add(type, {
+            [locationID]: activeRegion?.[locationID],
+            date: currentDate,
+            role: activeRole!,
+            counts: rest as Record<string, number>,
+            ...(first_order_id && first_accepted_order_date
+              ? {
+                  first_order_id: first_order_id as number,
+                  first_accepted_order_date:
+                    first_accepted_order_date as string,
+                }
+              : {}),
+          });
+        }
+        dispatch(setCounts({ type, counts: rest }));
+      }
+    };
+
+    const getPerDayCountsHandler = useCallback(async () => {
+      try {
+        if (activeRegion && activeRoleRegion) {
+          const currentDate = dayjs().format("DD-MM-YYYY");
+          const currentRegionCount = getLocalCounts();
+          if (currentRegionCount && currentDate == currentRegionCount?.date) {
+            const { counts } = currentRegionCount;
+            dispatch(setCounts({ type, counts }));
+          } else {
+            setIsLoading(true);
+            const counts = (await getApiCounts(path).finally(() =>
+              setIsLoading(false),
+            )) as {
+              [k: string]: number;
+            };
+            updateLocalCount(counts);
+          }
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }, [dispatch, setCounts, type, updateLocalCount, activeRegion]);
+
+    const getCountsForSevadars = async () => {
+      setIsLoading(true);
+      try {
+        if (activeRoleRegion && activeRegion) {
+          const counts = await getApiCounts(path, {
+            [activeRoleRegion]: activeRegion[`${activeRoleRegion}_id`],
+          });
+          updateLocalCount(counts);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    useEffect(() => {
+      if (!sevadar_type || !activeRole) return;
+      if (activeRole === sevadar_type) {
+        getPerDayCountsHandler();
+      } else {
+        getAndSetCountsFromStore();
+      }
+    }, [sevadar_type, activeRole]);
 
     return (
       <div

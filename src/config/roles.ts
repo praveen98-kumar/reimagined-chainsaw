@@ -1,11 +1,5 @@
 export type RegionLevel =
-  | "ashram"
-  | "country"
-  | "state"
-  | "division"
-  | "district"
-  | "tehsil"
-  | "city";
+  "ashram" | "country" | "state" | "division" | "district" | "tehsil" | "city";
 
 export type SevaType = "social_media" | "book_order" | "trend_seva";
 

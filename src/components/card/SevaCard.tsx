@@ -9,8 +9,44 @@ import {
 } from "@/redux/features/authSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/store";
 import { getRegionIndex, isSameRegion } from "@/shared/functions/seva-region";
+import { cn } from "@/shared/functions/utils";
 import type { Region } from "@/shared/interfaces/user";
 import useValidUser from "../../hooks/useValidUser";
+
+export const sevaCardThemes = {
+  violet: {
+    card: "from-indigo-50 to-violet-100/80",
+    tile: "from-indigo-500 to-purple-500 shadow-violet-300",
+    blob: "bg-violet-200/50",
+  },
+  rose: {
+    card: "from-rose-50 to-orange-50",
+    tile: "from-pink-500 to-orange-500 shadow-rose-300",
+    blob: "bg-orange-200/50",
+  },
+  emerald: {
+    card: "from-emerald-50 to-teal-50",
+    tile: "from-emerald-500 to-teal-600 shadow-emerald-300",
+    blob: "bg-emerald-200/50",
+  },
+  sky: {
+    card: "from-sky-50 to-cyan-50",
+    tile: "from-blue-500 to-cyan-500 shadow-sky-300",
+    blob: "bg-sky-200/60",
+  },
+  amber: {
+    card: "from-orange-50 to-rose-50",
+    tile: "from-amber-500 to-orange-600 shadow-orange-300",
+    blob: "bg-orange-200/50",
+  },
+  fuchsia: {
+    card: "from-purple-50 to-fuchsia-50",
+    tile: "from-purple-500 to-fuchsia-500 shadow-fuchsia-300",
+    blob: "bg-fuchsia-200/50",
+  },
+};
+
+export type SevaCardTheme = keyof typeof sevaCardThemes;
 
 export interface SevaCardProps {
   Icon: React.ReactNode;
@@ -22,6 +58,8 @@ export interface SevaCardProps {
   changePermission?: boolean;
   regions?: Array<Region>;
   onClick?: () => void;
+  variant?: "classic" | "new";
+  theme?: SevaCardTheme;
 }
 
 const SevaCard: React.FC<SevaCardProps> = React.forwardRef(
@@ -36,6 +74,8 @@ const SevaCard: React.FC<SevaCardProps> = React.forwardRef(
       changePermission = false,
       regions,
       onClick,
+      variant = "classic",
+      theme = "violet",
     },
     ref: React.ForwardedRef<HTMLDivElement>,
   ) => {
@@ -47,45 +87,82 @@ const SevaCard: React.FC<SevaCardProps> = React.forwardRef(
       return null;
     }
     // const { t } = useTranslation("home");
+    const handleClick = onClick
+      ? () => onClick()
+      : () => {
+          if (changePermission && user && !regions) {
+            const item = user.permission.filter((p) => {
+              if (Array.isArray(permission)) {
+                return (
+                  all_permission.roles.includes(p.role_id) &&
+                  p.permissions.some((p1) => permission.includes(p1))
+                );
+              } else {
+                return (
+                  all_permission.roles.includes(p.role_id) &&
+                  p.permissions.includes(permission)
+                );
+              }
+            });
+            const activePermission = item[0] ?? null;
+            dispatch(setActiveRegionIndex(0));
+            dispatch(setActivePermission(activePermission));
+            dispatch(setActiveRegion(activePermission?.region?.[0] ?? null));
+          }
+          href && router.push(href, undefined, { locale: router.locale });
+        };
+
+    if (variant === "new") {
+      const colors = sevaCardThemes[theme];
+      return (
+        <div
+          ref={ref}
+          onClick={handleClick}
+          className={cn(
+            "relative flex min-h-44 cursor-pointer flex-col overflow-hidden rounded-[28px] border-2 border-white/80 bg-linear-to-br p-4 shadow-[0_12px_30px_-18px_rgba(76,29,149,0.45)] transition-transform active:scale-[0.98]",
+            colors.card,
+          )}
+        >
+          <span
+            className={cn(
+              "absolute -top-8 -right-8 size-28 rounded-full",
+              colors.blob,
+            )}
+          />
+          <span
+            className={cn(
+              "relative flex size-12 items-center justify-center rounded-2xl bg-linear-to-br text-white shadow-lg [&_svg]:size-6",
+              colors.tile,
+            )}
+          >
+            {Icon}
+          </span>
+          <div className="relative mt-auto pt-6">
+            <p className="text-lg font-bold leading-tight text-brand-ink">
+              {title}
+            </p>
+            {showSubTitle && subtitle && (
+              <p className="mt-1 text-sm leading-snug text-slate-500">
+                {subtitle}
+              </p>
+            )}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div
         ref={ref}
-        className="flex cursor-pointer flex-col items-center justify-start space-y-1 rounded-2xl border border-orange-200 bg-white px-2 py-3 shadow-[0_8px_22px_rgba(154,52,18,0.14)] transition-colors hover:bg-orange-50"
-        onClick={
-          onClick
-            ? () => onClick()
-            : () => {
-                if (changePermission && user && !regions) {
-                  const item = user.permission.filter((p) => {
-                    if (Array.isArray(permission)) {
-                      return (
-                        all_permission.roles.includes(p.role_id) &&
-                        p.permissions.some((p1) => permission.includes(p1))
-                      );
-                    } else {
-                      return (
-                        all_permission.roles.includes(p.role_id) &&
-                        p.permissions.includes(permission)
-                      );
-                    }
-                  });
-                  const activePermission = item[0] ?? null;
-                  dispatch(setActiveRegionIndex(0));
-                  dispatch(setActivePermission(activePermission));
-                  dispatch(
-                    setActiveRegion(activePermission?.region?.[0] ?? null),
-                  );
-                }
-                href && router.push(href, undefined, { locale: router.locale });
-              }
-        }
+        className="bg-white flex flex-col items-center justify-start space-y-1 rounded-lg border border-gray-400 drop-shadow-lg cursor-pointer px-2 py-3"
+        onClick={handleClick}
       >
         {Icon}
-        <p className="text-md text-center font-semibold leading-snug text-[#9a3412]">
+        <p className="text-center leading-snug text-primary font-medium text-md">
           {title}
         </p>
         <p
-          className={`text-center text-sm leading-snug font-medium text-[#7c2d12]/80 ${
+          className={`text-center text-sm leading-snug font-medium text-gray-500 ${
             showSubTitle ? "" : "hidden"
           }`}
         >

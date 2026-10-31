@@ -85,12 +85,12 @@ export function BookOrderSevaStatusCard({
   };
   if (!isMounted) return null;
   return (
-    <Card className="relative gap-0 overflow-hidden rounded-2xl border border-orange-200 bg-white p-0 pb-2 shadow-[0_8px_22px_rgba(154,52,18,0.14)]">
+    <Card className="rounded-xl overflow-hidden shadow-md p-0 pb-2 relative gap-0">
       {/* HEADER */}
       <CardHeader
         className={cn(
-          "relative flex items-center justify-center py-2 text-white",
-          "bg-[#c2410c]",
+          "relative flex items-center justify-center py-1.5 text-white",
+          "bg-linear-to-r from-[#2C0033] to-[#5B036C]",
         )}
       >
         <Image
@@ -142,14 +142,14 @@ export function BookOrderSevaStatusCard({
                       {
                         name: "Submitted",
                         value: Number(values?.seva_complete) || 0,
-                        fill: "#c2410c",
+                        fill: "#2F0036",
                       },
                       {
                         name: "Pending",
                         value:
                           Number(values?.total_sevadar) -
                             Number(values?.seva_complete) || 0,
-                        fill: "#fb923c",
+                        fill: "#8800A2",
                       },
                     ],
                   },
@@ -159,17 +159,17 @@ export function BookOrderSevaStatusCard({
             </div>
             <div className="flex-1 flex gap-1 items-start py-4 justify-end text-xs">
               <div>
-                <p className="flex-1 text-right text-[#15803d]">
+                <p className="flex-1 text-right text-[#10b981]">
                   {Number(values?.seva_complete) || 0}
                 </p>
-                <p className="flex-1 text-right text-[#b91c1c]">
+                <p className="flex-1 text-right text-[#ef4444]">
                   {Number(values?.total_sevadar) -
                     Number(values?.seva_complete) || 0}
                 </p>
               </div>
               <div>
-                <p className="text-[#7c2d12] text-left flex-1">Submitted</p>
-                <p className="text-[#7c2d12] text-left flex-1">Pending</p>
+                <p className="text-slate-800 text-left flex-1">Submitted</p>
+                <p className="text-slate-800 text-left flex-1">Pending</p>
               </div>
             </div>
           </div>
@@ -178,16 +178,16 @@ export function BookOrderSevaStatusCard({
       <CardFooter className="pt-2 border-t-0 grid grid-cols-2 gap-2">
         {/*Left*/}
         <div>
-          <h3 className="font-semibold text-[#431407]">National Orders</h3>
+          <h3 className="font-semibold text-gray-800">National Orders</h3>
           <div className="flex">
             <div>
               <p>Today</p>
-              <p className="text-[#7c2d12] text-xl leading-5 font-medium">
+              <p className="text-[#DA98D7] text-xl leading-5 font-light">
                 {values?.tnc || 0}
               </p>
 
               <p>This Month</p>
-              <p className="text-[#7c2d12] text-xl leading-5 font-medium">
+              <p className="text-[#81457E] text-xl leading-5 font-light">
                 {values?.mnc || 0}
               </p>
             </div>
@@ -198,12 +198,12 @@ export function BookOrderSevaStatusCard({
                     {
                       name: "Completed",
                       value: Number(values?.tnc || 0),
-                      fill: "#fb923c",
+                      fill: "#DA98D7",
                     },
                     {
                       name: "Pending",
                       value: Number(values?.mnc || 0),
-                      fill: "#c2410c",
+                      fill: "#81457E",
                     },
                   ],
                 },
@@ -214,7 +214,7 @@ export function BookOrderSevaStatusCard({
         </div>
         {/*Right*/}
         <div>
-          <h3 className="font-semibold text-[#431407] text-right">
+          <h3 className="font-semibold text-gray-800 text-right">
             International Orders
           </h3>
           <div className="flex">
@@ -225,12 +225,12 @@ export function BookOrderSevaStatusCard({
                     {
                       name: "Completed",
                       value: Number(values?.tic || 0),
-                      fill: "#fb923c",
+                      fill: "#B49CD6",
                     },
                     {
                       name: "Pending",
                       value: Number(values?.mic || 0),
-                      fill: "#c2410c",
+                      fill: "#443657",
                     },
                   ],
                 },
@@ -240,12 +240,12 @@ export function BookOrderSevaStatusCard({
 
             <div className="text-right">
               <p>Today</p>
-              <p className="text-[#7c2d12] text-xl leading-5 font-medium">
+              <p className="text-[#B49CD6] text-xl leading-5 font-light">
                 {values?.tic || 0}
               </p>
 
               <p>This Month</p>
-              <p className="text-[#7c2d12] text-xl leading-5 font-medium">
+              <p className="text-[#443657] text-xl leading-5 font-light">
                 {values?.mic || 0}
               </p>
             </div>

@@ -6,13 +6,7 @@ import { regionHirarchy } from "@/constants/app";
 import { Form, Formik, FormikValues } from "formik";
 import useLocalstorage from "@/hooks/useLocalstorage";
 import { useRouter } from "next/router";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import * as Yup from "yup";
 import Modal from "@/components/modal/Modal";
@@ -25,8 +19,9 @@ import { RoleCard } from "@/components/card/UserCard";
 import { useTranslation } from "react-i18next";
 import { useAppSelector } from "@/redux/store";
 import { NextApplicationPage } from "@/shared/interfaces/app";
+import { AxiosResponse } from "axios";
 
-interface AllotedTehsil {
+export interface AllotedTehsil {
   id: number;
   tehsil_id: string;
   district_id: string;
@@ -142,6 +137,9 @@ const Sevadar: NextApplicationPage = () => {
       if (seva_type === "social_media") {
         return "remove_social_media_sevadar";
       }
+      if (seva_type === "pradarshani_seva") {
+        return "remove_pradarshani_sevadar";
+      }
       return seva_type
         .toString()
         .replace("book_", "")
@@ -156,9 +154,17 @@ const Sevadar: NextApplicationPage = () => {
     try {
       if (!selectedTehsil?.local) {
         if (selectedTehsil?.role_id) {
-          const response = await apiClient.delete(
-            `set_remove_user_in_queue/${selectedTehsil?.id}`,
-          );
+          let response: AxiosResponse;
+
+          if (seva_type === "social_media") {
+            response = await apiClient.post("remove_sm_sevadar", {
+              user_role_id: selectedTehsil.id,
+            });
+          } else {
+            response = await apiClient.delete(
+              `set_remove_user_in_queue/${selectedTehsil?.id}`,
+            );
+          }
           toast.success(response.data?.message);
         }
       }
@@ -382,9 +388,7 @@ const Sevadar: NextApplicationPage = () => {
                 key={i}
                 className="flex items-center capitalize justify-between px-2"
               >
-                <p>{`${role_type.toString().replace(/_/g, " ")} (${
-                  el.title
-                })`}</p>
+                <p>{`${role_type.toString().replace(/_/g, " ")} (${el.title})`}</p>
                 {!(el.role_id == 27 && active_permission?.role_id == 19) && // Book Calling
                   !(el.role_id == 28 && active_permission?.role_id == 20) && // Jyada Ruchi
                   !(el.role_id == 48 && active_permission?.role_id == 47) && // Old Calling

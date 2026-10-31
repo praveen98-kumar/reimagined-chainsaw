@@ -170,6 +170,7 @@ export const reportTableParam: Record<
     url: string;
     downloadUrl?: string;
     permission?: string;
+    excelExportPermission?: string;
   }
 > = {
   book_calling_report: {
@@ -296,6 +297,7 @@ export const reportTableParam: Record<
     downloadUrl: "download_order_report",
     body: ["national", "international"],
     permission: "order_seva_reports_export_pdf",
+    excelExportPermission: "order_seva_reports_export_excel",
   },
   book_order_delivery_report: {
     header: [
@@ -319,11 +321,12 @@ export const reportTableParam: Record<
     permission: "book_delivery_reports_pdf",
   },
   social_media_report: {
-    header: ["Contact", "Total", "Pending", "Done"],
+    header: ["Contact", "Total", "Pending", "Done", "Percentage"],
     url: "social_media_pending_report_region_wise",
     downloadUrl: "download_social_media_seva_report",
-    body: ["contact", "total_sevadar", "pending", "total_sum"],
+    body: ["contact", "total_sevadar", "pending", "total_sum", "percentage"],
     permission: "social_media_seva_reports_pdf",
+    excelExportPermission: "social_media_seva_reports_excel",
   },
   ramaini_seva_report: {
     header: [

@@ -27,7 +27,13 @@ function groupByRegion(rows: SevadarRow[]) {
   return groups;
 }
 
-function ProgressPill({ submitted, total }: { submitted: number; total: number }) {
+function ProgressPill({
+  submitted,
+  total,
+}: {
+  submitted: number;
+  total: number;
+}) {
   const pct = total > 0 ? Math.round((submitted / total) * 100) : 0;
   return (
     <div className="flex items-center gap-2 flex-shrink-0">
@@ -35,7 +41,11 @@ function ProgressPill({ submitted, total }: { submitted: number; total: number }
         <div
           className={cn(
             "h-full rounded-full transition-all",
-            pct === 100 ? "bg-green-500" : pct > 0 ? "bg-amber-400" : "bg-rose-300",
+            pct === 100
+              ? "bg-green-500"
+              : pct > 0
+                ? "bg-amber-400"
+                : "bg-rose-300",
           )}
           style={{ width: `${pct}%` }}
         />
@@ -69,8 +79,12 @@ export function SevadarList({ rows }: { rows: SevadarRow[] }) {
       {/* Summary header */}
       <div className="px-4 pt-3 pb-2.5 border-b border-border">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-semibold text-foreground">{total} Sevadars</span>
-          <span className="text-xs font-medium text-muted-foreground">{pct}% done</span>
+          <span className="text-sm font-semibold text-foreground">
+            {total} Sevadars
+          </span>
+          <span className="text-xs font-medium text-muted-foreground">
+            {pct}% done
+          </span>
         </div>
         <div className="h-2 bg-muted rounded-full overflow-hidden">
           <div
@@ -79,8 +93,12 @@ export function SevadarList({ rows }: { rows: SevadarRow[] }) {
           />
         </div>
         <div className="flex justify-between mt-1.5">
-          <span className="text-[11px] text-green-600 font-medium">{submitted} submitted</span>
-          <span className="text-[11px] text-rose-500 font-medium">{pending} pending</span>
+          <span className="text-[11px] text-green-600 font-medium">
+            {submitted} submitted
+          </span>
+          <span className="text-[11px] text-rose-500 font-medium">
+            {pending} pending
+          </span>
         </div>
       </div>
 
@@ -105,10 +123,12 @@ export function SevadarList({ rows }: { rows: SevadarRow[] }) {
                     </Badge>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className={cn(
-                      "text-[13px] font-semibold leading-tight truncate",
-                      row.submitted > 0 ? "text-green-700" : "text-rose-600",
-                    )}>
+                    <p
+                      className={cn(
+                        "text-[13px] font-semibold leading-tight truncate",
+                        row.submitted > 0 ? "text-green-700" : "text-rose-600",
+                      )}
+                    >
                       {row.name}
                     </p>
                     {row.guardian_name && (
@@ -129,11 +149,15 @@ export function SevadarList({ rows }: { rows: SevadarRow[] }) {
       {rows.some((r) => r.badgeType === "T") && (
         <div className="flex gap-4 px-4 py-2.5 border-t border-border bg-muted/20">
           <span className="text-[10px] text-muted-foreground flex items-center gap-1.5">
-            <Badge variant="sevadar" className="font-bold text-[9px]">S</Badge>
+            <Badge variant="sevadar" className="font-bold text-[9px]">
+              S
+            </Badge>
             Sevadar
           </span>
           <span className="text-[10px] text-muted-foreground flex items-center gap-1.5">
-            <Badge variant="teamLeader" className="font-bold text-[9px]">T</Badge>
+            <Badge variant="teamLeader" className="font-bold text-[9px]">
+              T
+            </Badge>
             Team Leader
           </span>
         </div>

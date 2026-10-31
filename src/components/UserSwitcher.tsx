@@ -1,11 +1,9 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { LogIn, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { FaCheck, FaChevronDown, FaUsers } from "react-icons/fa";
-import { MdLogin } from "react-icons/md";
 
 import { removeUser, switchUser, updateRole } from "@/redux/features/authSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/store";
@@ -16,18 +14,13 @@ import {
   MAX_USERS,
   type StoredUser,
 } from "@/utils/multi-user-storage";
+import { cn } from "@/shared/functions/utils";
 import { RoleLevel } from "@/shared/interfaces/user";
-import {
-  countBadge,
-  dashedAction,
-  iconChip,
-  menuRowClosed,
-  menuRowOpen,
-  rowLabel,
-  subItem,
-  subItemActive,
-  subPanel,
-} from "./sidebarTheme";
+
+import SidebarSection, {
+  ActiveCheck,
+  sidebarOptionClass,
+} from "./SidebarSection";
 
 const UserSwitcher = ({
   setShow,
@@ -131,63 +124,45 @@ const UserSwitcher = ({
   }
 
   return (
-    <div>
-      <button
-        type="button"
-        aria-expanded={open}
-        onClick={() => users.length > 0 && setOpen((pre) => !pre)}
-        className={open ? menuRowOpen : menuRowClosed}
-      >
-        <span className={iconChip}>
-          <FaUsers className="size-4" />
+    <SidebarSection
+      Icon={Users}
+      title="Switch User"
+      open={open}
+      onToggle={() => users.length > 0 && setOpen((pre) => !pre)}
+      contentClassName="max-h-96 overflow-y-auto"
+      badge={
+        <span className="flex size-7 items-center justify-center rounded-full bg-brand-900 text-sm font-bold text-white">
+          {usersCount}
         </span>
-        <span className={rowLabel}>Switch User</span>
-        <span className={countBadge}>{usersCount}</span>
-        <FaChevronDown
-          className={`size-3.5 text-[#9a3412] transition-transform ${
-            open ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-      <AnimatePresence initial={false}>
-        {open && users.length > 0 && (
-          <motion.div
-            className={`${subPanel} max-h-96 overflow-y-auto`}
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
+      }
+    >
+      {users.map((storedUser) => {
+        const isActive = storedUser.disciple_id === activeUserId;
+        return (
+          <button
+            type="button"
+            key={storedUser.disciple_id}
+            onClick={() => handleSwitchUser(storedUser.disciple_id)}
+            className={sidebarOptionClass(isActive)}
           >
-            {users.map((storedUser) => {
-              const isActive = storedUser.disciple_id === activeUserId;
-              return (
-                <button
-                  type="button"
-                  key={storedUser.disciple_id}
-                  onClick={() => handleSwitchUser(storedUser.disciple_id)}
-                  className={isActive ? subItemActive : subItem}
-                >
-                  <span className="flex-1 min-w-0 truncate">
-                    {storedUser.name || storedUser.mobile_no}
-                  </span>
-                  {isActive && <FaCheck className="size-3.5 text-green-700" />}
-                </button>
-              );
-            })}
-            {users.length < MAX_USERS && canDoMultiLogin && (
-              <Link
-                href={"/login"}
-                onClick={() => setShow(false)}
-                className={dashedAction}
-              >
-                <MdLogin className="size-5" />
-                <span>Login Another Account</span>
-              </Link>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+            <span className="flex-1 min-w-0 truncate">
+              {storedUser.name || storedUser.mobile_no}
+            </span>
+            {isActive && <ActiveCheck />}
+          </button>
+        );
+      })}
+      {users.length < MAX_USERS && canDoMultiLogin && (
+        <Link
+          href={"/login"}
+          onClick={() => setShow(false)}
+          className={cn(sidebarOptionClass(false), "justify-start gap-3")}
+        >
+          <LogIn className="size-5" />
+          Login Another Account
+        </Link>
+      )}
+    </SidebarSection>
   );
 };
 

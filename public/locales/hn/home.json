@@ -20,7 +20,10 @@
       "sangat_list": "संगत लिस्ट",
       "social_media": "सोशल मीडिया सेवा",
       "register_user": "सेवादार जोड़ें",
-      "other_login": "Other Login"
+      "other_login": "Other Login",
+      "edit_disciple": "Edit Disciple",
+      "seva_transfer": "Seva Transfer",
+      "pradarshani_seva": "प्रदर्शनी सेवा"
     },
     "subtitle": {
       "book_order_seva": "बुक ऑर्डर सेवा विवरण यहां पाएं",
@@ -35,7 +38,10 @@
       "user_permission": "सेवादार अनुमति नियुक्त करें",
       "post_order_seva": "पोस्टल ऑर्डर सेवा विवरण यहां पाएं",
       "channels_seva": "टीवी चैनल प्रबंधित करें",
-      "social_media": "सोशल मीडिया सेवा"
+      "social_media": "सोशल मीडिया सेवा",
+      "edit_disciple": "Edit Disciple",
+      "seva_transfer": "Seva Transfer",
+      "pradarshani_seva": "प्रदर्शनी सेवा फीडबैक, गिनती और रिपोर्ट"
     }
   }
 }

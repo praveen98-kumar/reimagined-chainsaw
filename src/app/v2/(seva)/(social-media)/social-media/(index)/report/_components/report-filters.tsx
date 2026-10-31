@@ -33,12 +33,7 @@ import type { DateRange } from "react-day-picker";
 const TEAM_LEADER_ROLE_ID = 60;
 
 type LocationField =
-  | "country"
-  | "state"
-  | "division"
-  | "district"
-  | "tehsil"
-  | "team-leader";
+  "country" | "state" | "division" | "district" | "tehsil" | "team-leader";
 
 const LOCATION_FIELD_LEVEL: Record<LocationField, number> = {
   country: 1,
