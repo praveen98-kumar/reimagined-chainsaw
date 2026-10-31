@@ -287,7 +287,7 @@ export function ReportResults() {
           const repsonsePlatformRows = (
             data?.data?.report?.questions ?? []
           ).map(
-            (q) =>
+            (q: any) =>
               ({
                 question: q.question as string,
                 icon: q.icon as string,
