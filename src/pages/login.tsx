@@ -1,9 +1,10 @@
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
+import { motion } from "framer-motion";
 import { Form, Formik, type FormikValues } from "formik";
 import { Phone } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import * as Yup from "yup";
 import Button from "@/components/Button";
@@ -23,6 +24,7 @@ import {
   MAX_USERS,
   userExists,
 } from "@/utils/multi-user-storage";
+import { useKeyboardInset } from "@/hooks/useKeyboardInset";
 
 export const schema = Yup.object({
   username: Yup.string()
@@ -47,25 +49,153 @@ const cardClass =
 // Portrait is cropped out of the existing login artwork.
 const PORTRAIT_SRC = "/assets/images/loginScreen.jpg";
 
-const BrandHero = () => (
-  <>
-    <div className="w-full flex justify-center pt-10 pb-12 rounded-b-[50%_60px] bg-linear-to-br from-blue-200/70 via-violet-200/60 to-pink-200/80">
-      <div className="size-56 rounded-full p-1.5 bg-linear-to-b from-brand-900 to-brand-700 shadow-[0_20px_40px_-12px_rgba(76,29,149,0.5)]">
-        <div
-          className="size-full rounded-full bg-white bg-no-repeat"
-          style={{
-            backgroundImage: `url(${PORTRAIT_SRC})`,
-            backgroundSize: "200%",
-            backgroundPosition: "86% 54%",
-          }}
-        />
-      </div>
-    </div>
-    <h1 className="my-6 font-serif text-4xl font-bold text-brand-title">
-      Satlok Ashram
-    </h1>
-  </>
-);
+// Keyboard height is ignored below this (a small dip is just the browser
+// chrome, e.g. the mobile URL bar, not the on-screen keyboard).
+const KEYBOARD_MIN_INSET = 120;
+// Inset at which the banner reaches its fully collapsed state.
+const KEYBOARD_MAX_INSET = 320;
+
+// Banner geometry. The banner shrinks towards these values while the keyboard
+// is open so the form stays above it. The top edge stays pinned and only the
+// bottoms move up, so the banner shrinks from bottom to top.
+const PORTRAIT_SIZE = 224; // size-56
+const PORTRAIT_COLLAPSED_SIZE = 80;
+const BANNER_PADDING_BOTTOM = 48; // pb-12
+const BANNER_PADDING_COLLAPSED = 8;
+const TITLE_MARGIN = 24; // my-6
+const TITLE_MARGIN_COLLAPSED = 10;
+const TITLE_COLLAPSE_RATIO = 0.6; // 0.6 => 40% of the title size remains
+
+/**
+ * Tracks the on-screen keyboard through the VisualViewport API.
+ *
+ * Returns `collapse` (0..1, how far the banner should shrink) plus the current
+ * visual viewport `height`, which the page uses to size itself so the browser
+ * never has to scroll the page up when the keyboard opens.
+ */
+const useKeyboardViewport = () => {
+  const [state, setState] = useState({ collapse: 0, height: 0 });
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    // On touch devices the keyboard shrinks the viewport, so track its full
+    // height over time to measure the inset. On desktop a window resize shrinks
+    // everything together, so only a real keyboard inset counts.
+    const isTouch = window.matchMedia("(pointer: coarse)").matches;
+    let fullHeight = vv ? vv.height : window.innerHeight;
+    let frame = 0;
+
+    const measure = () => {
+      const current = vv ? vv.height : window.innerHeight;
+      // Pinch-zoom shrinks the visual viewport too; ignore it.
+      if (vv && vv.scale > 1.01) {
+        setState({ collapse: 0, height: fullHeight });
+        return;
+      }
+      if (current > fullHeight) {
+        fullHeight = current;
+      }
+      const inset = isTouch
+        ? fullHeight - current
+        : window.innerHeight - current;
+      setState({
+        collapse:
+          inset > KEYBOARD_MIN_INSET
+            ? Math.min(inset / KEYBOARD_MAX_INSET, 1)
+            : 0,
+        height: current,
+      });
+    };
+
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(measure);
+    };
+
+    measure();
+    vv?.addEventListener("resize", schedule);
+    vv?.addEventListener("scroll", schedule);
+    window.addEventListener("resize", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      vv?.removeEventListener("resize", schedule);
+      vv?.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+    };
+  }, []);
+
+  return state;
+};
+
+const heroSpring = { type: "spring", stiffness: 260, damping: 30 } as const;
+
+const lerp = (from: number, to: number, progress: number) =>
+  from + (to - from) * progress;
+
+const BrandHero = ({ collapse }: { collapse: number }) => {
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const [titleHeight, setTitleHeight] = useState(0);
+
+  // Measured once: `height` is animated below, so re-measuring on resize would
+  // read the already-shrunk value.
+  useEffect(() => {
+    setTitleHeight(titleRef.current?.offsetHeight ?? 0);
+  }, []);
+
+  const titleScale = 1 - TITLE_COLLAPSE_RATIO * collapse;
+  const portraitSize = lerp(PORTRAIT_SIZE, PORTRAIT_COLLAPSED_SIZE, collapse);
+
+  return (
+    <>
+      <motion.div
+        className="w-full flex justify-center pt-10 pb-12 rounded-b-[50%_60px] bg-linear-to-br from-blue-200/70 via-violet-200/60 to-pink-200/80"
+        initial={false}
+        animate={{
+          paddingBottom: lerp(
+            BANNER_PADDING_BOTTOM,
+            BANNER_PADDING_COLLAPSED,
+            collapse,
+          ),
+        }}
+        transition={heroSpring}
+      >
+        <motion.div
+          className="size-56 rounded-full p-1.5 bg-linear-to-b from-brand-900 to-brand-700 shadow-[0_20px_40px_-12px_rgba(76,29,149,0.5)]"
+          initial={false}
+          animate={{ width: portraitSize, height: portraitSize }}
+          transition={heroSpring}
+        >
+          <div
+            className="size-full rounded-full bg-white bg-no-repeat"
+            style={{
+              backgroundImage: `url(${PORTRAIT_SRC})`,
+              backgroundSize: "200%",
+              backgroundPosition: "86% 54%",
+            }}
+          />
+        </motion.div>
+      </motion.div>
+      <motion.h1
+        ref={titleRef}
+        className="my-6 font-serif text-4xl font-bold text-brand-title"
+        initial={false}
+        animate={{
+          height: titleHeight ? titleHeight * titleScale : "auto",
+          scale: titleScale,
+          marginBottom: lerp(
+            TITLE_MARGIN,
+            TITLE_MARGIN_COLLAPSED,
+            collapse,
+          ),
+        }}
+        style={{ transformOrigin: "top center" }}
+        transition={heroSpring}
+      >
+        Satlok Ashram
+      </motion.h1>
+    </>
+  );
+};
 
 const LoginForm: NextApplicationPage = () => {
   const dispatch = useAppDispatch();
@@ -82,6 +212,8 @@ const LoginForm: NextApplicationPage = () => {
   const [forgotPinFlow, setForgotPinFlow] = useState<boolean>(false);
   const [forgotPinShow, setForgotPinShow] = useState<boolean>(true);
   const [username, setUsername] = useState<string>("");
+  const { collapse: keyboardCollapse, height: viewportHeight } =
+    useKeyboardViewport();
 
   const getBrowserFingerPrint = useCallback(async () => {
     const fpPromise = FingerprintJS.load();
@@ -94,6 +226,7 @@ const LoginForm: NextApplicationPage = () => {
     getBrowserFingerPrint().then();
   }, [getBrowserFingerPrint]);
 
+  useKeyboardInset();
   const onSubmit = async (values: FormikValues) => {
     values.device_id = deviceId;
     const method = detectLoginMethod(values.username);
@@ -281,9 +414,11 @@ const LoginForm: NextApplicationPage = () => {
   }, [router.isReady]);
 
   return (
-    <div className="min-h-screen bg-app-gradient">
-      <div className="mx-auto w-full max-w-md flex flex-col items-center pb-10">
-        <BrandHero />
+      <div
+        className="fixed inset-x-0 top-0 mx-auto flex  h-(--app-height) overflow-hidden w-full max-w-md flex-col items-center overflow-clip bg-app-gradient"
+        // style={viewportHeight ? { height: viewportHeight } : undefined}
+      >
+        <BrandHero collapse={keyboardCollapse} />
 
         {loginWithOtp && (
           <Formik
@@ -467,7 +602,6 @@ const LoginForm: NextApplicationPage = () => {
           </Formik>
         )}
       </div>
-    </div>
   );
 };
 
