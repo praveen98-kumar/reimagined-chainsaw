@@ -22,6 +22,7 @@ import {
   buildPlatformWiseMsg,
   splitLongMessage,
 } from "../_utils/message-templates";
+import { all_seva_message_template } from "@/utils/social_whatsapp_msg.utils";
 
 function resolveName(r: any): string {
   return (
@@ -145,7 +146,7 @@ export function ReportResults() {
   const searchTrigger = useSearchTrigger();
   const selectedPlatformId = useSelectedPlatformId();
   const { setFilterCollapsed } = useFilterActions();
-  const { active_permission, active_region_index } = useAppSelector(
+  const { active_permission, active_region_index, user } = useAppSelector(
     (s) => s.auth,
   );
   const activeLocation = useActiveLocationContext();
@@ -276,15 +277,20 @@ export function ReportResults() {
             },
           );
           setRawDebug(data);
-          const questionIdToCountMap = new Map(
-            (data?.data?.report?.seva_count ?? []).map((q: any) => [
-              q.question_id,
-              q.seva_count,
-            ]),
+          const report = data?.data?.report ?? {};
+          const regions: any[] = report?.regions ?? [];
+          const sevaCounts: any[] = report?.seva_count ?? [];
+          const questionIdToCountMap = sevaCounts.reduce(
+            (acc: Map<number, number>, item: any) => {
+              acc.set(
+                item?.question_id,
+                (acc.get(item?.question_id) ?? 0) + (item?.seva_count ?? 0),
+              );
+              return acc;
+            },
+            new Map<number, number>(),
           );
-          const repsonsePlatformRows = (
-            data?.data?.report?.questions ?? []
-          ).map(
+          const repsonsePlatformRows = (report?.questions ?? []).map(
             (q: any) =>
               ({
                 question: q.question as string,
@@ -293,17 +299,47 @@ export function ReportResults() {
               }) as PlatformRow,
           );
           setPlatformRows(repsonsePlatformRows);
-          // const rows = transformSevadarWiseResult(data?.data);
-          // setSevadarRows(rows);
-          // const msg = buildSevadarPendingMsg({
-          //   location: locationName,
-          //   date: dateLabel,
-          //   rows: rows.map((r) => ({
-          //     name: r.name,
-          //     tehsil_name: r.region ?? "",
-          //   })),
-          // });
-          // setMessages(splitLongMessage(msg));
+
+          const activeRegions = regions.filter((r: any) => r.active !== false);
+          const entityKey =
+            Object.keys(activeRegions[0] ?? {}).find((key) =>
+              key.endsWith("_id"),
+            ) ??
+            Object.keys(sevaCounts[0] ?? {}).find(
+              (key) => key.endsWith("_id") && key !== "question_id",
+            );
+          const activeRegionIds = new Set(
+            activeRegions
+              .map((r: any) => (entityKey ? r?.[entityKey] : undefined))
+              .filter((id) => id !== undefined && id !== null),
+          );
+          const submittedRegionIds = new Set(
+            sevaCounts
+              .filter((item: any) => {
+                if ((item?.seva_count ?? 0) <= 0) return false;
+                if (!entityKey || activeRegionIds.size === 0) return true;
+                return activeRegionIds.has(item?.[entityKey]);
+              })
+              .map((item: any) => (entityKey ? item?.[entityKey] : undefined))
+              .filter((id) => id !== undefined && id !== null),
+          );
+
+          const msg = all_seva_message_template({
+            region: (active_permission?.role_region as string) ?? "",
+            location: `${user?.disciple.name}, ${locationName}`,
+            date: dateLabel,
+            inputs: {
+              reports: repsonsePlatformRows,
+              total_sevadar: 0, // data?.data?.total_sevadar ?? activeRegions.length,
+              total_submissions:
+                data?.data?.total_submissions ?? submittedRegionIds.size,
+            },
+          });
+          if (repsonsePlatformRows.length) {
+            setMessages(
+              splitLongMessage(`${msg.header}${msg.body}${msg.footer}`),
+            );
+          }
         }
       } else if (topTab === "book-order") {
         const { data } = await apiClient.get("order_reports", {

@@ -2,7 +2,7 @@
 
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useLayoutEffect } from "react";
-import { Toaster } from "react-hot-toast";
+import AppToaster from "@/components/AppToaster";
 import { Provider } from "react-redux";
 import { hydrateAuth, loadStoredAuth } from "@/redux/features/authSlice";
 import { store } from "@/redux/store";
@@ -29,26 +29,7 @@ export default function Providers({
     <QueryClientProvider client={queryClient}>
       <Provider store={store}>{children}</Provider>
 
-      <Toaster
-        position="top-right"
-        containerClassName="mt-16"
-        toastOptions={{
-          success: {
-            style: {
-              fontWeight: "bold",
-              color: "white",
-              background: "green",
-            },
-          },
-          error: {
-            style: {
-              fontWeight: "bold",
-              color: "white",
-              background: "red",
-            },
-          },
-        }}
-      />
+      <AppToaster />
     </QueryClientProvider>
   );
 }

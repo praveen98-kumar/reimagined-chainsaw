@@ -66,7 +66,7 @@ const formatter = new Intl.DateTimeFormat("en-US", {
 });
 
 export const toDateString = (
-  date: Date | string | number = new Date()
+  date: Date | string | number = new Date(),
 ): string => {
   const parsedDate = date instanceof Date ? date : new Date(date);
   return formatter.format(parsedDate);
@@ -97,13 +97,13 @@ const CopyShareActionButtons: React.FC<CopyShareActionButtonsProps> = ({
   return (
     <div className={cn("flex gap-4 items-center", className)} {...props}>
       <Button
-        className="text-sm py-1 px-2 min-w-[60px] bg-blue-200 focus:bg-blue-400 text-black"
+        className="text-sm py-1 px-2 min-w-15 bg-blue-200 focus:bg-blue-400 text-black"
         onClick={onCopy}
       >
         {copyTitle ?? "Copy"}
       </Button>
       <Button
-        className="text-sm py-1 px-2 min-w-[60px] bg-indigo-200 focus:bg-indigo-400 text-black"
+        className="text-sm py-1 px-2 min-w-15 bg-indigo-200 focus:bg-indigo-400 text-black"
         onClick={onShare}
       >
         {shareTitle ?? "Share"}
@@ -121,14 +121,14 @@ const SocialSevaWhatsAppReport: NextApplicationPage = () => {
   const [loaded, setLoaded] = useState<string[]>([]);
   const formRef = useRef<any>(null);
   const { active_permission, active_region_index } = useAppSelector(
-    (s) => s.auth
+    (s) => s.auth,
   );
   const [chunkStates, setChunkStates] = useState<Record<string, ChunkState>>(
-    {}
+    {},
   );
   const roleRegion = active_permission?.role_region as string;
   const [roleStatusOptions] = useState<Option[]>(
-    statusOptions[roleRegion] ?? []
+    statusOptions[roleRegion] ?? [],
   );
   const dateString = useMemo(() => {
     const date = new Date();
@@ -228,12 +228,12 @@ const SocialSevaWhatsAppReport: NextApplicationPage = () => {
       });
       const { header, body, footer } = transformReportDataIntoText(
         data.data,
-        status
+        status,
       );
       const chunks = splitLongMessage(body);
       const chunksWithHeaderFooter = chunks.map(
         (chunk, idx) =>
-          `Part ${idx + 1} of ${chunks.length}\n\n${header}${chunk}${footer}`
+          `Part ${idx + 1} of ${chunks.length}\n\n${header}${chunk}${footer}`,
       );
       const reportKey = getReportKey(status, dayFilter);
       const newChunkState: ChunkState = {
@@ -246,7 +246,7 @@ const SocialSevaWhatsAppReport: NextApplicationPage = () => {
       setLoaded((prev) =>
         prev.includes(`${status}_${dayFilter}`)
           ? prev
-          : [...prev, `${status}_${dayFilter}`]
+          : [...prev, `${status}_${dayFilter}`],
       );
     } catch (error) {
       console.error(error);
@@ -269,7 +269,7 @@ const SocialSevaWhatsAppReport: NextApplicationPage = () => {
           ({
             label: capitalizeWords(item.question),
             value: item.id,
-          } as Option)
+          }) as Option,
       );
       setSocialSevaOptions(options);
     } catch (error) {
@@ -350,7 +350,7 @@ const SocialSevaWhatsAppReport: NextApplicationPage = () => {
                   key={i.toString()}
                   className={cn(
                     "leading-4 flex py-1 justify-between mb-3 border-b border-gray-500",
-                    hasMultipleChunks ? "items-start" : "items-center"
+                    hasMultipleChunks ? "items-start" : "items-center",
                   )}
                 >
                   <p className="font-semibold text-lg">{tr(label)}</p>
@@ -382,7 +382,7 @@ const SocialSevaWhatsAppReport: NextApplicationPage = () => {
                           loading || loaded.includes(`${value}_${dayFilter}`)
                         }
                         onClick={() => getReport(value.toString(), dayFilter)}
-                        className="text-sm py-1 px-2 min-w-[60px]"
+                        className="text-sm py-1 px-2 min-w-15"
                       >
                         Get Report
                       </Button>
@@ -437,16 +437,16 @@ const SevaWiseReportModal = (
     options: Option[];
     params: any;
     msgParams: any;
-  }
+  },
 ) => {
   const [isLoading, setIsLoading] = useState(false);
   const formRef = useRef<any>(null);
   const [chunkStates, setChunkStates] = useState<Record<string, ChunkState>>(
-    {}
+    {},
   );
   const makeMsgTemplate = (
     inputs: SevaWiseReportDateType[] = [],
-    question: SocialMediaQuestion | undefined
+    question: SocialMediaQuestion | undefined,
   ) => {
     return sevawise_report_template({
       region: props.msgParams.region,
@@ -469,10 +469,10 @@ const SevaWiseReportModal = (
 
       const { header, body, footer } = makeMsgTemplate(
         data?.data?.[0]?.report,
-        data?.data?.[0]?.question ?? undefined
+        data?.data?.[0]?.question ?? undefined,
       );
       const chunks = splitLongMessage(body).map(
-        (c) => `${header}${c}${footer}`
+        (c) => `${header}${c}${footer}`,
       );
       const newChunkState: ChunkState = {
         chunks,

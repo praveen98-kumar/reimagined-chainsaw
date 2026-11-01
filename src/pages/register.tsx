@@ -367,6 +367,17 @@ function RegistrationForm({
 const RegisterPage: NextApplicationPage = () => {
   const { user } = useAppSelector((s) => s.auth);
 
+  // No elastic over-scroll on this page: pulling past the top would drag the
+  // sticky header down and open a gap above it.
+  useEffect(() => {
+    const root = document.documentElement;
+    const previous = root.style.overscrollBehaviorY;
+    root.style.overscrollBehaviorY = "none";
+    return () => {
+      root.style.overscrollBehaviorY = previous;
+    };
+  }, []);
+
   if (user) {
     return (
       <Layout headerProps={{ isBack: true, heading: "Register User" }}>
@@ -380,9 +391,16 @@ const RegisterPage: NextApplicationPage = () => {
     );
   }
   return (
-    <div className="min-h-screen bg-app-gradient">
-      <div className="mx-auto w-full max-w-md px-4 pb-10">
-        <div className="-mx-4 mb-6 pt-8 pb-10 text-center rounded-b-[50%_48px] bg-linear-to-br from-blue-200/70 via-violet-200/60 to-pink-200/80">
+    <div className="relative min-h-dvh">
+      {/* Fixed so the gradient also fills the viewport while the page
+          bounces past its top/bottom edge (otherwise the white body shows). */}
+      <div aria-hidden className="fixed inset-0 -z-10 bg-app-gradient" />
+      <div className="mx-auto w-full max-w-md px-4">
+        {/* Sticky, so it stays on top while the form scrolls. The gradient is
+            opaque (same as the login banner) so the form doesn't show
+            through it; `before:` extends its top colour upwards so pulling
+            the page down never reveals a gap above it. */}
+        <div className="sticky top-0 z-20 -mx-4 mb-6 pt-8 pb-7 text-center rounded-b-[50%_48px] bg-[linear-gradient(160deg,#c1dafe_0%,#d3d7fe_30%,#dfd5fc_50%,#ead2f4_70%,#f4d0ed_90%,#f7cfeb_100%)] shadow-[0_12px_24px_-18px_rgba(76,29,149,0.45)] before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-screen before:bg-linear-to-r before:from-[#c1dafe] before:to-[#d6d6fe] before:content-['']">
           <p className="font-serif text-3xl font-bold text-brand-title">
             Satlok Ashram
           </p>

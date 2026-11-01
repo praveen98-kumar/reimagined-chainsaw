@@ -50,23 +50,35 @@ const detectLoginMethod = (input: string) => {
   return isMobile ? "mobile" : "username";
 };
 
+// Measurements below are taken from the design (public/new_ui/login.png,
+// a 2x mock-up of a 390px wide screen).
 const cardClass =
-  "mx-4 w-[calc(100%-2rem)] space-y-5 rounded-[28px] border border-white bg-white/90 p-5 shadow-[0_20px_40px_-20px_rgba(76,29,149,0.35)]";
+  "mx-6 w-[calc(100%-3rem)] rounded-[28px] border border-white bg-[linear-gradient(to_bottom,#fff_90%,#f0f2f6)] px-4 pt-5 pb-3.5 shadow-[0_20px_44px_-20px_rgba(76,29,149,0.35)]";
+const cardHeadingClass = "mb-4 text-center text-lg font-bold text-brand-ink";
+const fieldClass =
+  "flex h-14 w-full items-center gap-3 rounded-full bg-[#f7f6f9] px-[19px] shadow-[inset_0_2px_5px_rgba(15,23,42,0.08),0_1px_0_rgba(255,255,255,0.9)] focus-within:ring-2 focus-within:ring-violet-300";
+const passwordFieldClass =
+  "h-14 rounded-full border-0 bg-[#f7f6f9] px-5 text-[17px] shadow-[inset_0_2px_5px_rgba(15,23,42,0.08)] focus-visible:ring-2 focus-visible:ring-violet-300";
+// Fixed 184x54 pill as in the design (not a % of the card), horizontal
+// #2b0f6a -> #480d5e with a light top rim and a slightly darker bottom.
+const submitClass =
+  "mx-auto mt-4 h-[54px] w-46 max-w-full px-0 py-0 text-xl bg-[linear-gradient(180deg,transparent_65%,rgba(0,0,0,0.14)),linear-gradient(90deg,#2b0f6a,#480d5e)] shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12),0_14px_26px_-10px_rgba(43,15,106,0.65)]";
 
-// Portrait is cropped out of the existing login artwork.
-const PORTRAIT_SRC = "/assets/images/loginScreen.jpg";
+const PORTRAIT_SRC = "/assets/images/login-portrait.webp";
 
 // Hero geometry, expanded -> collapsed. While the keyboard is open the hero
 // shrinks from the bottom up so the form sits above the keyboard.
-const PORTRAIT_SIZE = 224; // size-56
+const PORTRAIT_SIZE = 234; // incl. the 7px ring
 const PORTRAIT_COLLAPSED_SIZE = 84;
-const BANNER_PADDING_TOP = 40; // pt-10
+const BANNER_PADDING_TOP = 40;
 const BANNER_PADDING_TOP_COLLAPSED = 16;
-const BANNER_PADDING_BOTTOM = 48; // pb-12
+const BANNER_PADDING_BOTTOM = 39; // banner is 313px tall at the centre
 const BANNER_PADDING_BOTTOM_COLLAPSED = 12;
-const TITLE_MARGIN = 24; // my-6
-const TITLE_MARGIN_COLLAPSED = 12;
-const TITLE_COLLAPSED_SCALE = 0.55;
+const TITLE_MARGIN_TOP = 8;
+const TITLE_MARGIN_TOP_COLLAPSED = 8;
+const TITLE_MARGIN_BOTTOM = 18;
+const TITLE_MARGIN_BOTTOM_COLLAPSED = 12;
+const TITLE_COLLAPSED_SCALE = 0.6;
 
 // Critically damped (no overshoot), roughly the length of the mobile keyboard
 // slide. Springs also carry velocity when retargeted, so a quick open/close
@@ -125,46 +137,46 @@ const BrandHero = ({ collapsed }: { collapsed: boolean }) => {
   const titleMarginTop = useTransform(
     progress,
     [0, 1],
-    [TITLE_MARGIN, TITLE_MARGIN_COLLAPSED],
+    [TITLE_MARGIN_TOP, TITLE_MARGIN_TOP_COLLAPSED],
   );
   const titleMarginBottom = useTransform(
     progress,
     (p) =>
-      TITLE_MARGIN +
-      (TITLE_MARGIN_COLLAPSED - TITLE_MARGIN) * p -
+      TITLE_MARGIN_BOTTOM +
+      (TITLE_MARGIN_BOTTOM_COLLAPSED - TITLE_MARGIN_BOTTOM) * p -
       titleHeight.current * (1 - TITLE_COLLAPSED_SCALE) * p,
   );
 
   return (
     <>
       <motion.div
-        className="flex w-full shrink-0 justify-center rounded-b-[50%_60px] bg-linear-to-br from-blue-200/70 via-violet-200/60 to-pink-200/80"
+        className="flex w-full shrink-0 justify-center rounded-b-[50%_40px] bg-[linear-gradient(160deg,#c1dafe_0%,#d3d7fe_30%,#dfd5fc_50%,#ead2f4_70%,#f4d0ed_90%,#f7cfeb_100%)]"
         style={{
           paddingTop: bannerPaddingTop,
           paddingBottom: bannerPaddingBottom,
         }}
       >
         <motion.div
-          className="size-56 shrink-0 rounded-full bg-linear-to-b from-brand-900 to-brand-700 p-1.5 shadow-[0_20px_40px_-12px_rgba(76,29,149,0.5)] will-change-transform"
+          className="size-[234px] shrink-0 rounded-full bg-linear-to-b from-brand-900 to-brand-700 p-[7px] shadow-[0_12px_32px_0_rgba(170,90,100,0.4)] will-change-transform"
           style={{
             scale: portraitScale,
             originY: 0,
             marginBottom: portraitMarginBottom,
           }}
         >
-          <div
-            className="size-full rounded-full bg-white bg-no-repeat"
-            style={{
-              backgroundImage: `url(${PORTRAIT_SRC})`,
-              backgroundSize: "200%",
-              backgroundPosition: "86% 54%",
-            }}
+          <img
+            src={PORTRAIT_SRC}
+            alt="Sant Rampal Ji Maharaj"
+            width={220}
+            height={220}
+            draggable={false}
+            className="size-full rounded-full bg-white object-cover"
           />
         </motion.div>
       </motion.div>
       <motion.h1
         ref={titleRef}
-        className="shrink-0 font-serif text-4xl font-bold text-brand-title will-change-transform"
+        className="shrink-0 font-serif text-[30px] leading-9 font-bold text-brand-title will-change-transform"
         style={{
           scale: titleScale,
           originY: 0,
@@ -177,6 +189,8 @@ const BrandHero = ({ collapsed }: { collapsed: boolean }) => {
     </>
   );
 };
+
+const FALLBACK_ERROR = "Something went wrong. Please try again.";
 
 const LoginForm: NextApplicationPage = () => {
   const dispatch = useAppDispatch();
@@ -194,6 +208,7 @@ const LoginForm: NextApplicationPage = () => {
   const [forgotPinShow, setForgotPinShow] = useState<boolean>(true);
   const [username, setUsername] = useState<string>("");
   const keyboardOpen = useKeyboardOpen();
+  const showError = (text?: string) => toast.error(text || FALLBACK_ERROR);
 
   const getBrowserFingerPrint = useCallback(async () => {
     const fpPromise = FingerprintJS.load();
@@ -232,7 +247,7 @@ const LoginForm: NextApplicationPage = () => {
       setLoading(true);
       const response = await apiClient.post("login", data);
       if (response.data?.message == "Invalid Pin") {
-        toast.success(response.data?.message);
+        showError(response.data?.message);
       } else if (response.data?.message == "Enter pin.") {
         setLoginWithOtp(false);
         setIsPinSet(true);
@@ -268,25 +283,21 @@ const LoginForm: NextApplicationPage = () => {
           response.data.data[0].disciple?.name ||
           response.data.data[0].mobile_no;
 
+        const removedOldestUser =
+          !userAlreadyExists &&
+          usersCountBefore >= MAX_USERS &&
+          usersCountAfter < usersCountBefore;
+        // One id so a repeated login replaces the toast instead of stacking.
         const loginToastId = "login-success";
         toast.dismiss(loginToastId);
-        if (userAlreadyExists) {
-          toast.success(`Welcome back, ${userName}!`, { id: loginToastId });
-        } else {
-          if (
-            usersCountBefore >= MAX_USERS &&
-            usersCountAfter < usersCountBefore
-          ) {
-            toast.success(
-              `${userName} added. Maximum ${MAX_USERS} users reached. Oldest user removed.`,
-              { duration: 3000, id: loginToastId },
-            );
-          } else {
-            toast.success(`${userName} logged in successfully!`, {
-              id: loginToastId,
-            });
-          }
-        }
+        toast.success(
+          userAlreadyExists
+            ? `Welcome back, ${userName}!`
+            : removedOldestUser
+              ? `${userName} added. Maximum ${MAX_USERS} users reached. Oldest user removed.`
+              : `${userName} logged in successfully!`,
+          { id: loginToastId, duration: removedOldestUser ? 5000 : 3000 },
+        );
 
         const firstUserDiscipleId = response?.data?.data[0]?.disciple_id;
 
@@ -317,7 +328,7 @@ const LoginForm: NextApplicationPage = () => {
         }
       }
     } catch (e: any) {
-      toast.error(e?.response?.data?.error);
+      showError(e?.response?.data?.error);
     } finally {
       setLoading(false);
       if (forgotPinFlow) {
@@ -357,7 +368,7 @@ const LoginForm: NextApplicationPage = () => {
       // new PIN. router.push("/") would bounce back to /login anyway
       // because there is no full session token yet.
     } catch (e: any) {
-      toast.error(e?.response?.data?.error);
+      showError(e?.response?.data?.error);
     } finally {
       setLoading(false);
     }
@@ -409,7 +420,7 @@ const LoginForm: NextApplicationPage = () => {
           initialValues={{ username: "", login_otp: "", device_id: "local" }}
           onSubmit={(values, { setSubmitting }) => {
             if (otpRequired && values.login_otp.length != 6) {
-              toast.error("Enter OTP");
+              showError("Please enter the 6 digit OTP.");
               setSubmitting(false);
             } else {
               onSubmit(values);
@@ -421,43 +432,50 @@ const LoginForm: NextApplicationPage = () => {
           {({ values, setFieldValue }) => (
             <Form className={cardClass}>
               {otpRequired ? (
-                <OtpInput
-                  value={values.login_otp}
-                  onChange={(e) => setFieldValue("login_otp", e)}
-                  autoFocus
-                  secure
-                  numInput={6}
-                />
+                <>
+                  <p className={cardHeadingClass}>Enter OTP</p>
+                  <OtpInput
+                    value={values.login_otp}
+                    onChange={(e) => setFieldValue("login_otp", e)}
+                    autoFocus
+                    secure
+                    numInput={6}
+                  />
+                </>
               ) : (
-                <label className="flex items-center gap-3 rounded-full bg-slate-50 px-5 py-3.5 shadow-[inset_0_2px_6px_rgba(15,23,42,0.08)] focus-within:ring-2 focus-within:ring-violet-300">
-                  <Phone className="size-5 shrink-0 text-brand-900" />
+                <label className={fieldClass}>
+                  <Phone
+                    className="size-[18px] shrink-0 text-brand-900"
+                    strokeWidth={1.75}
+                  />
                   <input
                     name="username"
                     required
                     autoFocus
                     inputMode="text"
+                    autoComplete="username"
                     value={values.username}
                     placeholder="Enter your mobile number"
-                    className="w-full bg-transparent text-lg text-gray-700 placeholder-gray-500 outline-none"
-                    onChange={(e) =>
+                    className="w-full min-w-0 bg-transparent text-[17px] text-gray-800 placeholder:text-gray-500 outline-none"
+                    onChange={(e) => {
                       setFieldValue(
                         "username",
                         String(e.target.value).replaceAll(/\s+/g, ""),
-                      )
-                    }
+                      );
+                    }}
                   />
                 </label>
               )}
               <Button
                 variant="gradient"
                 type="submit"
-                className="mx-auto w-2/3"
+                className={submitClass}
                 disabled={loading}
                 loading={loading}
               >
                 {forgotPinShow || otpRequired ? "Login" : "Get OTP"}
               </Button>
-              <div className="flex w-full px-1 justify-between items-center font-semibold text-blue-900">
+              <div className="mt-[18px] flex w-full items-center justify-between px-0.5 text-base font-bold text-blue-900">
                 {forgotPinShow ? (
                   <button
                     type="button"
@@ -483,7 +501,7 @@ const LoginForm: NextApplicationPage = () => {
           initialValues={{ pin: "" }}
           onSubmit={(values, { setSubmitting }) => {
             if (authMethod === "mobile" && values.pin.length != 4) {
-              toast.error("Enter pin");
+              showError("Please enter your 4 digit PIN.");
               setSubmitting(false);
             } else {
               setPin(values);
@@ -492,7 +510,7 @@ const LoginForm: NextApplicationPage = () => {
         >
           {({ values, setFieldValue }) => (
             <Form className={cardClass}>
-              <p className="text-lg font-bold text-center text-brand-ink">
+              <p className={cardHeadingClass}>
                 Set {authMethod === "username" ? "Password" : "Pin"}
               </p>
 
@@ -504,7 +522,7 @@ const LoginForm: NextApplicationPage = () => {
                   autoFocus
                   placeholder="Enter password..."
                   required={authMethod === "username"}
-                  className="h-12 rounded-full bg-slate-50 px-5"
+                  className={passwordFieldClass}
                   onChange={(e) => setFieldValue("pin", e.target.value)}
                 />
               ) : (
@@ -520,7 +538,7 @@ const LoginForm: NextApplicationPage = () => {
               <Button
                 variant="gradient"
                 type="submit"
-                className="mx-auto w-2/3"
+                className={submitClass}
                 disabled={loading}
                 loading={loading}
               >
@@ -540,7 +558,7 @@ const LoginForm: NextApplicationPage = () => {
           }}
           onSubmit={(values, { setSubmitting }) => {
             if (authMethod === "mobile" && values.pin.length != 4) {
-              toast.error("Enter pin");
+              showError("Please enter your 4 digit PIN.");
               setSubmitting(false);
             } else {
               onSubmit(values);
@@ -549,7 +567,7 @@ const LoginForm: NextApplicationPage = () => {
         >
           {({ values, setFieldValue }) => (
             <Form className={cardClass}>
-              <p className="text-lg font-bold text-center text-brand-ink">
+              <p className={cardHeadingClass}>
                 Enter {authMethod === "username" ? "Password" : "Pin"}
               </p>
 
@@ -561,7 +579,7 @@ const LoginForm: NextApplicationPage = () => {
                   autoFocus
                   placeholder="Enter password..."
                   required={authMethod === "username"}
-                  className="h-12 rounded-full bg-slate-50 px-5"
+                  className={passwordFieldClass}
                   onChange={(e) => setFieldValue("pin", e.target.value)}
                 />
               ) : (
@@ -577,7 +595,7 @@ const LoginForm: NextApplicationPage = () => {
               <Button
                 variant="gradient"
                 type="submit"
-                className="mx-auto w-2/3"
+                className={submitClass}
                 disabled={loading}
                 loading={loading}
               >

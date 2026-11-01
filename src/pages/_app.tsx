@@ -5,7 +5,7 @@ import type { AppProps } from "next/app";
 import { useRouter } from "next/router";
 import { appWithTranslation } from "next-i18next";
 import { JSX, useEffect, useState } from "react";
-import { Toaster } from "react-hot-toast";
+import AppToaster from "@/components/AppToaster";
 import { Provider, useDispatch } from "react-redux";
 import {
   hydrateAuth,
@@ -66,26 +66,7 @@ const MyApp = (props: AppProps) => {
         <link rel="apple-touch-icon" href="/apple-icon.png"></link>
         <meta name="theme-color" content="#000000" />
       </Head>
-      <Toaster
-        position="top-right"
-        containerClassName="mt-16"
-        toastOptions={{
-          success: {
-            style: {
-              fontWeight: "bold",
-              color: "white",
-              background: "green",
-            },
-          },
-          error: {
-            style: {
-              fontWeight: "bold",
-              color: "white",
-              background: "red",
-            },
-          },
-        }}
-      />
+      <AppToaster />
       <QueryClientProvider client={queryClient}>
         <Provider store={store}>
           {Component.requireAuth ? (

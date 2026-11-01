@@ -180,7 +180,7 @@ export const downloadFile = async ({
         if (showToast) toast.success(jsonResponse.message);
         return jsonResponse;
       } else {
-        if (showToast) toast.custom("No data found");
+        if (showToast) toast("No data found");
         return jsonResponse;
       }
     }

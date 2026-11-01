@@ -35,18 +35,16 @@ export function CopyBar({ messages }: CopyBarProps) {
         height={32}
         className="shrink-0 object-contain mr-auto"
       />
-      {Array(3)
-        .fill("")
-        .map((msg, i) => (
-          <Button
-            key={i}
-            variant="outline"
-            className="flex-1 text-sm bg-white text-foreground gap-1"
-            onClick={() => shareOrCopy(msg)}
-          >
-            {label} {i + 1}
-          </Button>
-        ))}
+      {messages.map((msg, i) => (
+        <Button
+          key={i}
+          variant="outline"
+          className="min-w-1/4 text-sm bg-white text-foreground gap-1"
+          onClick={() => shareOrCopy(msg)}
+        >
+          {label} {i + 1}
+        </Button>
+      ))}
     </div>
   );
 }

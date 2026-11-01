@@ -81,7 +81,7 @@ const Sidebar = (props: SidebarProps) => {
             transition={{
               duration: 0.2,
             }}
-            className="fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] overflow-hidden rounded-r-[32px] bg-app-gradient shadow-xl"
+            className="fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] overflow-hidden rounded-r-4xl bg-app-gradient shadow-xl"
           >
             <div className="pointer-events-none absolute inset-x-0 top-0 h-44 rounded-b-[50%_40px] bg-linear-to-br from-blue-200/70 via-violet-200/60 to-pink-200/70" />
             <div className="relative h-full w-full flex flex-col px-3 pt-4 pb-3">
