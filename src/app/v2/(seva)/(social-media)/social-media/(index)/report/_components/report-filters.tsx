@@ -11,6 +11,7 @@ import {
   useFilterCollapsed,
 } from "@/store/useFilterStore";
 import { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { canCheck } from "@/components/v2/Can";
 import { format } from "date-fns";
 import apiClient from "@/http/index";
@@ -34,12 +35,7 @@ import { SevaType } from "@/config/roles";
 const TEAM_LEADER_ROLE_ID = 60;
 
 type LocationField =
-  | "country"
-  | "state"
-  | "division"
-  | "district"
-  | "tehsil"
-  | "team-leader";
+  "country" | "state" | "division" | "district" | "tehsil" | "team-leader";
 
 const LOCATION_FIELD_LEVEL: Record<LocationField, number> = {
   country: 1,
@@ -248,7 +244,11 @@ function LocationSelect({
 }
 type RoleRegion = keyof typeof regionHirarchyMap;
 
-export function ReportFilters() {
+export function ReportFilters({
+  showDateRange = false,
+}: {
+  showDateRange?: boolean;
+}) {
   const filters = useFilters();
   const filterCollapsed = useFilterCollapsed();
   const {
@@ -304,9 +304,21 @@ export function ReportFilters() {
   const [teamLeaderId, setTeamLeaderId] = useState<number>();
   const [sevadarId, setSevadarId] = useState<number>();
 
-  const [platformOptions, setPlatformOptions] = useState<
+  // A query (not a mount effect) so the request is deduplicated — effects run
+  // twice in development under React Strict Mode — and cached across visits.
+  const { data: platformOptions = [] } = useQuery<
     { label: string; value: number }[]
-  >([]);
+  >({
+    queryKey: ["social_media_question"],
+    queryFn: async () => {
+      const { data } = await apiClient.get("social_media_question");
+      return (data?.data ?? []).map((q: any) => ({
+        label: q.question,
+        value: q.id,
+      }));
+    },
+    staleTime: 1000 * 60 * 10,
+  });
   const [selectedPlatformId, setLocalPlatformId] = useState<string>("");
 
   const isPlatformTab = PLATFORM_SUB_TABS.includes(subTab);
@@ -394,19 +406,6 @@ export function ReportFilters() {
     setFilters,
     visibleTabs.length,
   ]);
-
-  useEffect(() => {
-    apiClient
-      .get("social_media_question")
-      .then(({ data }) => {
-        const opts = (data?.data ?? []).map((q: any) => ({
-          label: q.question,
-          value: q.id,
-        }));
-        setPlatformOptions(opts);
-      })
-      .catch(console.error);
-  }, []);
 
   const handleTimePeriodChange = (val: string) => {
     setTimePeriod(val);
@@ -646,7 +645,7 @@ export function ReportFilters() {
           </label>
         ))}
       </RadioGroup>
-      {!limitSevadarTimePeriods && (
+      {!limitSevadarTimePeriods && showDateRange && (
         <>
           <SectionLabel label="Or" />
           <DatePickerWithRange
@@ -845,11 +844,11 @@ export function ReportFilters() {
           </>
         )}
 
-        {/* Book Order: a Sevadar only sees the time period and order scope */}
+        {/* Book Order: a Sevadar only sees the time period */}
         {activeTopTab === "book-order" && isSevadarGroup && timePeriodSection}
 
         {/* Book Order scope */}
-        {activeTopTab === "book-order" && (
+        {activeTopTab === "book-order" && !isSevadarGroup && (
           <div>
             <SectionLabel label="Scope" />
             <div className="grid grid-cols-2 gap-2">

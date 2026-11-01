@@ -30,6 +30,33 @@ export type RoleRegion = keyof typeof regionHirarchyMap;
 export const regionHirarchyIndex = (str: string) =>
   regionHirarchy.findIndex((i) => i === str);
 
+interface RoleLike {
+  region: string;
+  level: number;
+  group?: string | null;
+}
+
+/**
+ * True when `role` sits below the current role: either its region is deeper,
+ * or both roles share a region and seva group and `role` has a higher level.
+ * The second case orders roles inside one region, e.g. social media
+ * tehsil team leader > tehsil sevadar > team leader > sevadar.
+ */
+export const isRoleBelow = (
+  role: RoleLike,
+  currentRegion: string | undefined,
+  currentRole?: RoleLike | null,
+) => {
+  const roleIndex = regionHirarchyIndex(role.region);
+  const currentIndex = currentRegion ? regionHirarchyIndex(currentRegion) : -1;
+  if (roleIndex !== currentIndex) return roleIndex > currentIndex;
+  return (
+    !!currentRole?.group &&
+    role.group === currentRole.group &&
+    role.level > currentRole.level
+  );
+};
+
 export const downloadPageParams: Record<
   string,
   {

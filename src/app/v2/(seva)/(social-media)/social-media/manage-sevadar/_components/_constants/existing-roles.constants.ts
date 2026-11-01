@@ -21,6 +21,11 @@ export const TITLE_CONF: Record<
     title: "Tehsil Sevadar | SM Seva",
     color: "bg-pink-200",
   },
+  social_media_tehsil_team_leader: {
+    shortName: "TTL",
+    title: "Tehsil Team Leader | SM Seva",
+    color: "bg-purple-200",
+  },
   social_media_district_sevadar: {
     shortName: "D",
     title: "District Sevadar | SM Seva",

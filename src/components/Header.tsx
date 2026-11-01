@@ -71,10 +71,13 @@ const Header: React.FC<HeaderProps> = ({
 
   if (variant === "new" && !isBack) {
     return (
-      <div className={cn("fixed z-20 h-18.75 flex items-center w-full justify-center px-4 transition-[background-color,box-shadow,border-color] duration-200",
-      scrolled
-          ? "border-b border-black/5 bg-white/80 shadow-sm backdrop-blur-md supports-backdrop-filter:bg-white/70"
-          : "border-b border-transparent bg-transparent")}
+      <div
+        className={cn(
+          "fixed z-20 h-18.75 flex items-center w-full justify-center px-4 transition-[background-color,box-shadow,border-color] duration-200",
+          scrolled
+            ? "border-b border-black/5 bg-white/80 shadow-sm backdrop-blur-md supports-backdrop-filter:bg-white/70"
+            : "border-b border-transparent bg-transparent",
+        )}
       >
         <button
           type="button"

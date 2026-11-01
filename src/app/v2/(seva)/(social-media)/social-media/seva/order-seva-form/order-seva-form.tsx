@@ -1,7 +1,8 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import toast from "react-hot-toast";
@@ -12,7 +13,7 @@ import {
   allLangPincodeRegex,
 } from "@/shared/functions/get-pincode";
 import { getOptionArray } from "@/shared/functions/utils";
-import { getCountries } from "@/shared/functions/location";
+import { useCountriesQuery } from "@/query-options/queries/location";
 import { Option } from "@/shared/interfaces/option";
 import { useCount } from "@/hooks/useCount";
 
@@ -100,12 +101,7 @@ export const OrderSevaForm: React.FC<OrderSevaFormProps> = ({
     title: string;
     message?: string;
   }>({ open: false, mode: "success", title: "", message: undefined });
-  const [books, setBooks] = useState<Option[]>([]);
-  const [bookLanguages, setBookLanguages] = useState<Record<number, Option[]>>(
-    {},
-  );
   const [languages, setLanguages] = useState<Option[]>([]);
-  const [countries, setCountries] = useState<Option[]>([]);
 
   const { active_permission, active_region_index } = useAppSelector(
     (state) => state.auth,
@@ -130,65 +126,67 @@ export const OrderSevaForm: React.FC<OrderSevaFormProps> = ({
   const isInternational = activeType === "International";
   const isEmergency = activeType === "Emergency";
 
-  const fetchBooks = async () => {
-    try {
+  // Queries instead of mount effects: requests are deduplicated (effects run
+  // twice in development under React Strict Mode, and this form remounts when
+  // the user role resolves) and cached across visits.
+  const { data: booksData, isError: booksFailed } = useQuery({
+    queryKey: ["books", "short_list"],
+    queryFn: async () => {
       const { data } = await apiClient.get("books?short_list=1");
-      const bookOptions = getOptionArray(data.data, "title", "id");
+      return (data?.data ?? []) as any[];
+    },
+    staleTime: 1000 * 60 * 10,
+  });
+  const { data: countries = [] } = useCountriesQuery({
+    enabled: isInternational,
+  });
 
-      const bookLangMap = data.data.reduce((acc: any, book: any) => {
-        acc[book.id] = getOptionArray(
-          book.languages,
-          "name",
-          "book_language_id",
-        );
-        return acc;
-      }, {});
-
-      setBooks(bookOptions);
-      setBookLanguages(bookLangMap);
-
-      if (bookOptions.length > 0) {
-        const initialBookId = isEdit
-          ? order?.book_id
-          : bookOptions.find((b) => b.label === "Gyan Ganga")?.value ||
-            bookOptions[0].value;
-        formRef.current?.setFieldValue("book", initialBookId);
-
-        const langOptions = bookLangMap[initialBookId as number] || [];
-        setLanguages(langOptions);
-
-        if (langOptions.length > 0) {
-          const initialLangId = isEdit
-            ? order?.book_language_id
-            : langOptions.find((l: Option) => l.label === "Hindi")?.value ||
-              langOptions[0].value;
-          formRef.current?.setFieldValue("book_language_id", initialLangId);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to fetch books:", error);
-      toast.error("Failed to load books");
-    }
-  };
-
-  const fetchCountries = async () => {
-    try {
-      const countryData = await getCountries();
-      setCountries(countryData);
-    } catch (error) {
-      console.error("Failed to fetch countries:", error);
-    }
-  };
+  const books = useMemo<Option[]>(
+    () => (booksData ? getOptionArray(booksData, "title", "id") : []),
+    [booksData],
+  );
+  const bookLanguages = useMemo<Record<number, Option[]>>(
+    () =>
+      (booksData ?? []).reduce(
+        (acc, book) => {
+          acc[book.id] = getOptionArray(
+            book.languages,
+            "name",
+            "book_language_id",
+          );
+          return acc;
+        },
+        {} as Record<number, Option[]>,
+      ),
+    [booksData],
+  );
 
   useEffect(() => {
-    fetchBooks();
-  }, []);
+    if (booksFailed) toast.error("Failed to load books");
+  }, [booksFailed]);
 
+  // Pre-select the default (or edited) book and language once books load.
   useEffect(() => {
-    if (isInternational) {
-      fetchCountries();
+    if (books.length === 0) return;
+
+    const initialBookId = isEdit
+      ? order?.book_id
+      : books.find((b) => b.label === "Gyan Ganga")?.value || books[0].value;
+    formRef.current?.setFieldValue("book", initialBookId);
+
+    const langOptions = bookLanguages[initialBookId as number] || [];
+    setLanguages(langOptions);
+
+    if (langOptions.length > 0) {
+      const initialLangId = isEdit
+        ? order?.book_language_id
+        : langOptions.find((l) => l.label === "Hindi")?.value ||
+          langOptions[0].value;
+      formRef.current?.setFieldValue("book_language_id", initialLangId);
     }
-  }, [type, isInternational]);
+    // Only when the book list arrives; later picks are the user's.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [books, bookLanguages]);
 
   const handleAddressChange = (
     e: React.ChangeEvent<HTMLTextAreaElement>,

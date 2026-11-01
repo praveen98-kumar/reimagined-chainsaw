@@ -5,15 +5,16 @@ import type { AllotmentPayload } from "@/components/v2/composables/types";
 import { useAssignRole } from "@/components/v2/composables/useAssignRole";
 import { ReactSelect } from "@/components/v2/ReactSelect";
 import { Button } from "@/components/v2/ui/button";
-import apiClient from "@/http";
+import { useUsersWithRole } from "@/hooks/useUsersWithRole";
 import { useAllotRoles } from "@/query-options/mutations/allot-role";
 import type { Option } from "@/shared/interfaces/option";
 import { useQueryClient } from "@tanstack/react-query";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
 const DEFAULT_GROUPS: string[] = ["book_order", "social_media"];
-const TEAM_LEADER_ROLE_ID = 60;
+const SEVADAR_ROLE_ID = 53; // social_media_sevadar
+const TEAM_LEADER_ROLE_ID = 60; // social_media_team_leader
 
 interface AllotSevadarFormProps {
   user: any;
@@ -28,7 +29,6 @@ const AllotSevadarFormInner = ({
 }: AllotSevadarFormProps) => {
   const queryClient = useQueryClient();
 
-  const [teamLeaderOptions, setTeamLeaderOptions] = useState<Option[]>([]);
   const [teamLeaderId, setTeamLeaderId] = useState<number>(0);
   const [allottedRoles, setAllottedRoles] = useState<AllotmentPayload[]>([]);
 
@@ -69,25 +69,30 @@ const AllotSevadarFormInner = ({
     },
   });
 
+  // A social media sevadar can optionally be placed under a team leader of the
+  // same district. Sevadars directly under a tehsil sevadar / district have none.
+  const showTeamLeader =
+    selectedRoleId === SEVADAR_ROLE_ID && !!formValues.district_id;
+  const { data: teamLeaders = [] } = useUsersWithRole(
+    TEAM_LEADER_ROLE_ID,
+    { districtId: formValues.district_id },
+    { enabled: showTeamLeader },
+  );
+  const teamLeaderOptions: Option[] = useMemo(
+    () =>
+      showTeamLeader
+        ? teamLeaders.map((u) => ({
+            label: u.team_leader_code
+              ? `${u.name} (${u.team_leader_code})`
+              : u.name,
+            value: u.id,
+          }))
+        : [],
+    [showTeamLeader, teamLeaders],
+  );
+
   useEffect(() => {
-    if (selectedRoleId === TEAM_LEADER_ROLE_ID && formValues.district_id) {
-      apiClient
-        .get("users_with_role/60", {
-          params: { district_id: formValues.district_id },
-        })
-        .then((res) => {
-          setTeamLeaderOptions(
-            res.data.data?.map((u: any) => ({
-              label: u.name,
-              value: u.id,
-            })) ?? [],
-          );
-        })
-        .catch(() => setTeamLeaderOptions([]));
-    } else {
-      setTeamLeaderOptions([]);
-      setTeamLeaderId(0);
-    }
+    setTeamLeaderId(0);
   }, [selectedRoleId, formValues.district_id]);
 
   const handleSubmit = useCallback(() => {
@@ -143,17 +148,19 @@ const AllotSevadarFormInner = ({
         handleTehsilChange={handleTehsilChange}
       />
 
-      {selectedRoleId === TEAM_LEADER_ROLE_ID && (
+      {showTeamLeader && (
         <ReactSelect
           options={teamLeaderOptions}
           value={
             teamLeaderOptions.find((o) => o.value === teamLeaderId) ?? null
           }
-          onChange={(opt: any) => {
-            if (!opt) return;
-            setTeamLeaderId(opt.value as number);
-          }}
-          placeholder="Select team leader"
+          onChange={(opt: any) => setTeamLeaderId((opt?.value as number) ?? 0)}
+          isClearable
+          placeholder={
+            teamLeaderOptions.length
+              ? "Select team leader (optional)"
+              : "No team leader in this district"
+          }
           isDisabled={isPending || teamLeaderOptions.length === 0}
         />
       )}

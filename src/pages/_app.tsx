@@ -7,7 +7,11 @@ import { appWithTranslation } from "next-i18next";
 import { JSX, useEffect, useState } from "react";
 import { Toaster } from "react-hot-toast";
 import { Provider, useDispatch } from "react-redux";
-import { syncActiveUser } from "@/redux/features/authSlice";
+import {
+  hydrateAuth,
+  loadStoredAuth,
+  syncActiveUser,
+} from "@/redux/features/authSlice";
 import { store, useAppSelector } from "@/redux/store";
 import type { NextApplicationPage } from "@/shared/interfaces/app";
 import { getQueryClient } from "@/utils/get-query-client";
@@ -19,6 +23,12 @@ const MyApp = (props: AppProps) => {
   useEffect(() => {
     if (typeof window === "undefined") {
       migrateOldStorage();
+    }
+    // Load the stored session before the first real render: pages are only
+    // rendered once mounted, and AuthProvider redirects to /login when there
+    // is no user, so the store must already be filled by then.
+    if (!store.getState().auth.hydrated) {
+      store.dispatch(hydrateAuth(loadStoredAuth()));
     }
     setMount(true);
   }, []);

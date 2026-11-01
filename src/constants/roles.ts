@@ -14,7 +14,7 @@ export interface SevaConfig {
 export const SEVA_CONFIG: Record<SevaType, SevaConfig> = {
   social_media: {
     label: "Social Media",
-    roleIds: [49, 50, 51, 52, 53, 60],
+    roleIds: [49, 50, 51, 52, 63, 64, 60, 53],
   },
   book_order: {
     label: "Book Order",

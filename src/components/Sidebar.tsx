@@ -132,7 +132,7 @@ const Sidebar = (props: SidebarProps) => {
                 )}
               </div>
 
-              <div className="flex-1 py-4 overflow-y-auto overflow-x-hidden space-y-3">
+              <div className="flex-1 py-3 overflow-y-auto overflow-x-hidden space-y-2">
                 <UserSwitcher setShow={setShow} />
                 <SwichRoleComponent setShow={setShow} />
                 <LanguageSwitch />
@@ -140,7 +140,7 @@ const Sidebar = (props: SidebarProps) => {
                   href={"/tutorials"}
                   className={cn(
                     sidebarCardClass,
-                    "border-white flex w-full items-center gap-3 p-3",
+                    "border-white flex w-full items-center gap-3 px-3 py-2",
                   )}
                 >
                   <SidebarIcon Icon={Video} />

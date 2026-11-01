@@ -234,8 +234,27 @@ export const ROLES: Record<number, RoleInfo> = {
     region: "state",
     level: 59,
   },
-  60: { id: 60, name: "social_media_team_leader", region: "tehsil", level: 60 },
+  // Inside a tehsil: tehsil_team_leader (52.2) > tehsil_sevadar (52.4) >
+  // team_leader (52.6) > sevadar (53). Mirrors seva_app_roles.level.
+  60: {
+    id: 60,
+    name: "social_media_team_leader",
+    region: "tehsil",
+    level: 52.6,
+  },
   61: { id: 61, name: "ramaini_sevadar", region: "ashram", level: 61 },
+  63: {
+    id: 63,
+    name: "social_media_tehsil_team_leader",
+    region: "tehsil",
+    level: 52.2,
+  },
+  64: {
+    id: 64,
+    name: "social_media_tehsil_sevadar",
+    region: "tehsil",
+    level: 52.4,
+  },
 };
 
 const ALL_REGIONS: RegionLevel[] = [

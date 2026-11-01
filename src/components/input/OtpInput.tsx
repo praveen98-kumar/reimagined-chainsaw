@@ -56,7 +56,7 @@ const OtpInput: React.FC<OtpInputProps> = ({
           placeholder={placeholder}
           focus={activeInput === index}
           onInputFocus={onInputFocus}
-        />
+        />,
       );
     }
     return inputs;
@@ -97,11 +97,16 @@ const SingleInput: React.FC<SingleInputProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const mounted = useRef<boolean>(false);
 
+  // Auto-focus once, on mount. This used to run after *every* render, so any
+  // re-render of the parent (e.g. the login page reacting to the keyboard)
+  // yanked focus back to the active box, away from the one the user tapped.
+  // Moving between boxes is handled by the `focus` effect below.
   useEffect(() => {
     if (autoFocus && focus) {
       inputRef.current?.focus();
     }
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (mounted.current && focus) {

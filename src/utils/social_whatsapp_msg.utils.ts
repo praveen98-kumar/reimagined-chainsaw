@@ -83,15 +83,18 @@ export const all_seva_message_template = ({
       .padStart(maxLength, "0")} - ${icon} ${item.question}`;
   });
 
-  msg_body += `\n\n${inputs.total_sevadar
-    .toString()
-    .padStart(maxLength, "0")} - Total Sevadar\n${inputs.total_submissions
-    .toString()
-    .padStart(maxLength, "0")} - Update Diye Sevadar\n${(
-    inputs.total_sevadar - inputs.total_submissions
-  )
-    .toString()
-    .padStart(maxLength, "0")} - Update Pending Sevadar`;
+  msg_body +=
+    inputs.total_sevadar > 0
+      ? `\n\n${inputs.total_sevadar
+          .toString()
+          .padStart(maxLength, "0")} - Total Sevadar\n${inputs.total_submissions
+          .toString()
+          .padStart(maxLength, "0")} - Update Diye Sevadar\n${(
+          inputs.total_sevadar - inputs.total_submissions
+        )
+          .toString()
+          .padStart(maxLength, "0")} - Update Pending Sevadar`
+      : `\n\n`;
   return { header: msg_header, body: msg_body, footer: msg_footer };
 };
 
@@ -180,7 +183,7 @@ export const update_pending_report_template = ({
       }, "");
       return `${acc}*${location}*\n${nameList}`;
     },
-    ""
+    "",
   );
   return {
     header: msg_header + msg_body,
@@ -219,7 +222,7 @@ export const update_pending_report_upper_template = ({
   const maxSevadarCount =
     inputs.sevadar_list.length > 0
       ? Math.max(
-          ...inputs.sevadar_list.map((item) => item.count.toString().length)
+          ...inputs.sevadar_list.map((item) => item.count.toString().length),
         )
       : 1;
   let maxPerCount = 2;
@@ -243,10 +246,10 @@ export const update_pending_report_upper_template = ({
 
   inputs.regions.forEach((regionItem) => {
     const sevadarItem = inputs.sevadar_list.find(
-      (item) => item.region_id === regionItem.id
+      (item) => item.region_id === regionItem.id,
     );
     const sevaCountItem = inputs.seva_count.find(
-      (item) => item.region_id === regionItem.id
+      (item) => item.region_id === regionItem.id,
     );
     const sevadarCount = sevadarItem ? sevadarItem.count : 0;
     const sevaCount = sevaCountItem ? sevaCountItem.count : 0;
@@ -262,10 +265,10 @@ export const update_pending_report_upper_template = ({
     .padStart(3, " ");
   inputs.regions.forEach((regionItem) => {
     const sevadarItem = inputs.sevadar_list.find(
-      (item) => item.region_id === regionItem.id
+      (item) => item.region_id === regionItem.id,
     );
     const sevaCountItem = inputs.seva_count.find(
-      (item) => item.region_id === regionItem.id
+      (item) => item.region_id === regionItem.id,
     );
 
     const sevadarCount = sevadarItem ? sevadarItem.count : 0;
@@ -289,7 +292,7 @@ export const update_pending_report_upper_template = ({
       .padStart(3, " ");
 
     msg_body += `\n${sevadarCountStr} - ${sevaCountStr} - ${pendingSevaCountStr} - ${percentageStr}% - ${capitalizeWords(
-      regionItem.name
+      regionItem.name,
     )}`;
   });
 

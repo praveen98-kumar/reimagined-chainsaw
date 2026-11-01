@@ -71,6 +71,13 @@ function getLocalCounts(
   }
 }
 
+// Per-day count requests currently in flight. Under React Strict Mode
+// (development) the mount effect runs twice before the first response has
+// been cached, so without this guard the same counts were requested twice.
+// The run that owns the request writes the result to the shared store, which
+// every mounted consumer reads from.
+const pendingCountRequests = new Set<string>();
+
 function getLocationIdKey(
   activeRoleRegion: RoleRegion | undefined,
 ): RegionIdKey | null {
@@ -211,18 +218,32 @@ export function useCountFetch(options: UseCountFetchOptions) {
           setCounts({ type, counts: currentRegionCount.counts as CountRecord }),
         );
       } else {
-        setIsLoading(true);
-        const counts = await getApiCounts(
+        const requestKey = [
           path,
-          {},
-          userRoleId ? { user_role_id: userRoleId } : {},
-        );
-        updateLocalCount(counts as CountRecord);
+          type,
+          activeRole,
+          userRoleId ?? "",
+          locationID,
+          activeRegion[locationID],
+        ].join("|");
+        if (pendingCountRequests.has(requestKey)) return;
+
+        pendingCountRequests.add(requestKey);
+        setIsLoading(true);
+        try {
+          const counts = await getApiCounts(
+            path,
+            {},
+            userRoleId ? { user_role_id: userRoleId } : {},
+          );
+          updateLocalCount(counts as CountRecord);
+        } finally {
+          pendingCountRequests.delete(requestKey);
+          setIsLoading(false);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch per day counts:", error);
-    } finally {
-      setIsLoading(false);
     }
   }, [
     dispatch,

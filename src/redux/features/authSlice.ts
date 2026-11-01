@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type {
   GroupPermission,
   Permission,
@@ -39,7 +39,14 @@ interface IState {
   active_region: Region | null;
   seva_regions: Record<string, Region>;
   group_locations: Record<string, ActiveLocation>;
+  /**
+   * False until the stored session has been loaded into the store (see
+   * `hydrateAuth`). Lets the UI tell "not loaded yet" apart from "logged out".
+   */
+  hydrated: boolean;
 }
+
+export type StoredAuth = Omit<IState, "hydrated">;
 
 interface SetPermissionAction {
   payload: Permission | null;
@@ -51,20 +58,40 @@ interface SetActiveLocationAction {
   type: string;
 }
 
-// Initialize state from active user in multi-user storage
-let user = null;
-let active_permission = null;
-let active_region_index = 0;
-let active_region = null;
-let seva_regions: Record<string, Region> = {};
-let group_locations: Record<string, ActiveLocation> = {};
-let all_permission: GroupPermission = {
+const emptyAllPermission = (): GroupPermission => ({
   group: "",
   permissions: [],
   roles: [],
+});
+
+const readGlobalAllPermission = (): GroupPermission | null => {
+  const allPermissionStr = localStorage.getItem("all_permission");
+  if (!allPermissionStr) return null;
+  try {
+    return JSON.parse(allPermissionStr);
+  } catch {
+    return null;
+  }
 };
 
-if (typeof window !== "undefined") {
+/**
+ * Reads the active user's session from multi-user storage (localStorage).
+ *
+ * Browser-only. It must NOT run while the store is created: the server has no
+ * localStorage, so reading it at module load made the first client render
+ * differ from the server HTML (hydration mismatch). Instead the store starts
+ * empty everywhere and the app dispatches `hydrateAuth(loadStoredAuth())`
+ * once mounted — see `src/app/providers.tsx` and `src/pages/_app.tsx`.
+ */
+export function loadStoredAuth(): StoredAuth {
+  let user: User | null = null;
+  let active_permission: Permission | null = null;
+  let active_region_index = 0;
+  let active_region: Region | null = null;
+  let seva_regions: Record<string, Region> = {};
+  let group_locations: Record<string, ActiveLocation> = {};
+  let all_permission = emptyAllPermission();
+
   const activeUserData = getActiveUser();
   if (activeUserData) {
     user = activeUserData.user;
@@ -73,55 +100,49 @@ if (typeof window !== "undefined") {
     active_region = activeUserData.active_region;
     seva_regions = activeUserData.seva_regions ?? {};
     group_locations = activeUserData.group_locations ?? {};
-    // Get all_permission from active user's stored data
-    if (activeUserData.all_permission) {
-      all_permission = activeUserData.all_permission;
-    } else {
-      // Fallback to global localStorage for backward compatibility
-      const allPermissionStr = localStorage.getItem("all_permission");
-      if (allPermissionStr) {
-        try {
-          all_permission = JSON.parse(allPermissionStr);
-        } catch (e) {
-          // Keep default
-        }
-      }
-    }
-  } else {
-    // Fallback to global localStorage if no active user
-    const allPermissionStr = localStorage.getItem("all_permission");
-    if (allPermissionStr) {
-      try {
-        all_permission = JSON.parse(allPermissionStr);
-      } catch (e) {
-        // Keep default
-      }
-    }
   }
+  // Prefer the active user's copy; fall back to the global key for backward
+  // compatibility.
+  all_permission =
+    activeUserData?.all_permission ??
+    readGlobalAllPermission() ??
+    all_permission;
+
+  seva_regions = migrateSevaRegionsToGroup(
+    seva_regions,
+    all_permission.group,
+    getSevaRegionLevels(user, all_permission),
+  );
+
+  group_locations = seedGroupLocation(
+    group_locations,
+    all_permission.group,
+    all_permission.roles,
+    active_permission,
+    active_region,
+  );
+
+  return {
+    user,
+    active_permission,
+    all_permission,
+    active_region_index,
+    active_region,
+    seva_regions,
+    group_locations,
+  };
 }
 
-seva_regions = migrateSevaRegionsToGroup(
-  seva_regions,
-  all_permission.group,
-  getSevaRegionLevels(user, all_permission),
-);
-
-group_locations = seedGroupLocation(
-  group_locations,
-  all_permission.group,
-  all_permission.roles,
-  active_permission,
-  active_region,
-);
-
+// Identical on the server and the client; filled in by `hydrateAuth`.
 const initialState: IState = {
-  user,
-  active_permission,
-  all_permission,
-  active_region_index,
-  active_region,
-  seva_regions,
-  group_locations,
+  user: null,
+  active_permission: null,
+  all_permission: emptyAllPermission(),
+  active_region_index: 0,
+  active_region: null,
+  seva_regions: {},
+  group_locations: {},
+  hydrated: false,
 };
 
 interface UpdateRoleAction {
@@ -148,6 +169,10 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
+    hydrateAuth: (_state: IState, action: PayloadAction<StoredAuth>) => ({
+      ...action.payload,
+      hydrated: true,
+    }),
     login: (state: IState, action: LoginAction) => {
       // const { user, active_permission } = action.payload;
       const active_region_index = 0;
@@ -282,6 +307,7 @@ const authSlice = createSlice({
     },
     syncActiveUser: (state: IState) => {
       // Sync Redux state with active user from multi-user storage
+      state.hydrated = true;
       const activeUserData = getActiveUser();
       if (activeUserData) {
         state.user = activeUserData.user;
@@ -481,6 +507,7 @@ const authSlice = createSlice({
 });
 
 export const {
+  hydrateAuth,
   login,
   updateAuthState,
   setActivePermission,

@@ -18,7 +18,7 @@ import twitter3d from "../../public/icons/v2/social/twitter.svg";
 import google3d from "../../public/icons/v2/social/google.svg";
 // import koo3d from "../../public/icons/v2/social/Koo.svg";
 import linkedin3d from "../../public/icons/v2/social/linkedin.svg";
-import platforms3d from"../../public/icons/v2/platforms.svg"
+import platforms3d from "../../public/icons/v2/platforms.svg";
 import youtube3d from "../../public/icons/v2/social/youtube.svg";
 import tumblr3d from "../../public/icons/v2/social/tumblr.svg";
 import pinterest3d from "../../public/icons/v2/social/pinterest.svg";

@@ -13,13 +13,16 @@ interface UserWithRole {
   disciple_id: number;
   relation: string;
   team_leader_id: number | null;
+  team_leader_code?: string | null;
   guardian_name: string;
   satnam_date: string | null;
   sarnam_date: string | null;
   sarshabd_date: string | null;
 }
-interface UserWithRoleResponse
-  extends ApiResponse<{ data: UserWithRole[]; total: number }> {}
+interface UserWithRoleResponse extends ApiResponse<{
+  data: UserWithRole[];
+  total: number;
+}> {}
 export const useUsersWithRole = (
   roleId: number,
   locationParams?: {
@@ -28,7 +31,7 @@ export const useUsersWithRole = (
     mobileNo?: string;
     teamLeaderId?: number;
   },
-  options?: Record<string, unknown>
+  options?: Record<string, unknown>,
 ) => {
   if (locationParams?.mobileNo) {
     delete locationParams.districtId;
@@ -73,7 +76,7 @@ export const useUsersWithRole = (
               mobile_no: `+91${locationParams?.mobileNo}`,
             }),
           },
-        }
+        },
       );
       return response.data.data.data;
     },
@@ -96,7 +99,7 @@ export const getDisciples = async ({
         limit: PAGINATION_LIMIT,
         ...rest,
       },
-    }
+    },
   );
   const responseData = data.data.data;
   const hasMorePage = data.data.total > pageParam * PAGINATION_LIMIT;
@@ -108,7 +111,7 @@ export const getDisciples = async ({
 
 export const useUsersWithRoleListQuery = (
   filters: Record<string, unknown>,
-  options?: Record<string, unknown>
+  options?: Record<string, unknown>,
 ) => {
   return useInfiniteQuery({
     initialPageParam: 1,

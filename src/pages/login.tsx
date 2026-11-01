@@ -1,5 +1,11 @@
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
-import { motion } from "framer-motion";
+import {
+  animate,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useTransform,
+} from "framer-motion";
 import { Form, Formik, type FormikValues } from "formik";
 import { Phone } from "lucide-react";
 import Link from "next/link";
@@ -25,6 +31,7 @@ import {
   userExists,
 } from "@/utils/multi-user-storage";
 import { useKeyboardInset } from "@/hooks/useKeyboardInset";
+import { useKeyboardOpen } from "@/hooks/useKeyboardOpen";
 
 export const schema = Yup.object({
   username: Yup.string()
@@ -49,121 +56,101 @@ const cardClass =
 // Portrait is cropped out of the existing login artwork.
 const PORTRAIT_SRC = "/assets/images/loginScreen.jpg";
 
-// Keyboard height is ignored below this (a small dip is just the browser
-// chrome, e.g. the mobile URL bar, not the on-screen keyboard).
-const KEYBOARD_MIN_INSET = 120;
-// Inset at which the banner reaches its fully collapsed state.
-const KEYBOARD_MAX_INSET = 320;
-
-// Banner geometry. The banner shrinks towards these values while the keyboard
-// is open so the form stays above it. The top edge stays pinned and only the
-// bottoms move up, so the banner shrinks from bottom to top.
+// Hero geometry, expanded -> collapsed. While the keyboard is open the hero
+// shrinks from the bottom up so the form sits above the keyboard.
 const PORTRAIT_SIZE = 224; // size-56
-const PORTRAIT_COLLAPSED_SIZE = 80;
+const PORTRAIT_COLLAPSED_SIZE = 84;
+const BANNER_PADDING_TOP = 40; // pt-10
+const BANNER_PADDING_TOP_COLLAPSED = 16;
 const BANNER_PADDING_BOTTOM = 48; // pb-12
-const BANNER_PADDING_COLLAPSED = 8;
+const BANNER_PADDING_BOTTOM_COLLAPSED = 12;
 const TITLE_MARGIN = 24; // my-6
-const TITLE_MARGIN_COLLAPSED = 10;
-const TITLE_COLLAPSE_RATIO = 0.6; // 0.6 => 40% of the title size remains
+const TITLE_MARGIN_COLLAPSED = 12;
+const TITLE_COLLAPSED_SCALE = 0.55;
+
+// Critically damped (no overshoot), roughly the length of the mobile keyboard
+// slide. Springs also carry velocity when retargeted, so a quick open/close
+// reverses smoothly instead of snapping.
+const heroSpring = { type: "spring", visualDuration: 0.32, bounce: 0 } as const;
 
 /**
- * Tracks the on-screen keyboard through the VisualViewport API.
+ * Brand banner + title that collapse while the keyboard is open.
  *
- * Returns `collapse` (0..1, how far the banner should shrink) plus the current
- * visual viewport `height`, which the page uses to size itself so the browser
- * never has to scroll the page up when the keyboard opens.
+ * Everything is driven by a single `progress` value (0 = expanded,
+ * 1 = collapsed) so all parts move in lockstep. Sizes change through
+ * `scale` (GPU-composited) rather than width/height, and negative margins
+ * pull the following content up by the amount each element visually shrank.
  */
-const useKeyboardViewport = () => {
-  const [state, setState] = useState({ collapse: 0, height: 0 });
-
-  useEffect(() => {
-    const vv = window.visualViewport;
-    // On touch devices the keyboard shrinks the viewport, so track its full
-    // height over time to measure the inset. On desktop a window resize shrinks
-    // everything together, so only a real keyboard inset counts.
-    const isTouch = window.matchMedia("(pointer: coarse)").matches;
-    let fullHeight = vv ? vv.height : window.innerHeight;
-    let frame = 0;
-
-    const measure = () => {
-      const current = vv ? vv.height : window.innerHeight;
-      // Pinch-zoom shrinks the visual viewport too; ignore it.
-      if (vv && vv.scale > 1.01) {
-        setState({ collapse: 0, height: fullHeight });
-        return;
-      }
-      if (current > fullHeight) {
-        fullHeight = current;
-      }
-      const inset = isTouch
-        ? fullHeight - current
-        : window.innerHeight - current;
-      setState({
-        collapse:
-          inset > KEYBOARD_MIN_INSET
-            ? Math.min(inset / KEYBOARD_MAX_INSET, 1)
-            : 0,
-        height: current,
-      });
-    };
-
-    const schedule = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(measure);
-    };
-
-    measure();
-    vv?.addEventListener("resize", schedule);
-    vv?.addEventListener("scroll", schedule);
-    window.addEventListener("resize", schedule);
-    return () => {
-      cancelAnimationFrame(frame);
-      vv?.removeEventListener("resize", schedule);
-      vv?.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-    };
-  }, []);
-
-  return state;
-};
-
-const heroSpring = { type: "spring", stiffness: 260, damping: 30 } as const;
-
-const lerp = (from: number, to: number, progress: number) =>
-  from + (to - from) * progress;
-
-const BrandHero = ({ collapse }: { collapse: number }) => {
+const BrandHero = ({ collapsed }: { collapsed: boolean }) => {
+  const reduceMotion = useReducedMotion();
+  const progress = useMotionValue(0);
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const [titleHeight, setTitleHeight] = useState(0);
+  // Layout height is unaffected by `scale`, so one measurement stays valid.
+  const titleHeight = useRef(0);
 
-  // Measured once: `height` is animated below, so re-measuring on resize would
-  // read the already-shrunk value.
   useEffect(() => {
-    setTitleHeight(titleRef.current?.offsetHeight ?? 0);
+    titleHeight.current = titleRef.current?.offsetHeight ?? 0;
   }, []);
 
-  const titleScale = 1 - TITLE_COLLAPSE_RATIO * collapse;
-  const portraitSize = lerp(PORTRAIT_SIZE, PORTRAIT_COLLAPSED_SIZE, collapse);
+  useEffect(() => {
+    const controls = animate(
+      progress,
+      collapsed ? 1 : 0,
+      reduceMotion ? { duration: 0 } : heroSpring,
+    );
+    return () => controls.stop();
+  }, [collapsed, progress, reduceMotion]);
+
+  const bannerPaddingTop = useTransform(
+    progress,
+    [0, 1],
+    [BANNER_PADDING_TOP, BANNER_PADDING_TOP_COLLAPSED],
+  );
+  const bannerPaddingBottom = useTransform(
+    progress,
+    [0, 1],
+    [BANNER_PADDING_BOTTOM, BANNER_PADDING_BOTTOM_COLLAPSED],
+  );
+  const portraitScale = useTransform(
+    progress,
+    [0, 1],
+    [1, PORTRAIT_COLLAPSED_SIZE / PORTRAIT_SIZE],
+  );
+  const portraitMarginBottom = useTransform(
+    progress,
+    [0, 1],
+    [0, PORTRAIT_COLLAPSED_SIZE - PORTRAIT_SIZE],
+  );
+  const titleScale = useTransform(progress, [0, 1], [1, TITLE_COLLAPSED_SCALE]);
+  const titleMarginTop = useTransform(
+    progress,
+    [0, 1],
+    [TITLE_MARGIN, TITLE_MARGIN_COLLAPSED],
+  );
+  const titleMarginBottom = useTransform(
+    progress,
+    (p) =>
+      TITLE_MARGIN +
+      (TITLE_MARGIN_COLLAPSED - TITLE_MARGIN) * p -
+      titleHeight.current * (1 - TITLE_COLLAPSED_SCALE) * p,
+  );
 
   return (
     <>
       <motion.div
-        className="w-full flex justify-center pt-10 pb-12 rounded-b-[50%_60px] bg-linear-to-br from-blue-200/70 via-violet-200/60 to-pink-200/80"
-        initial={false}
-        animate={{
-          paddingBottom: lerp(
-            BANNER_PADDING_BOTTOM,
-            BANNER_PADDING_COLLAPSED,
-            collapse,
-          ),
+        className="flex w-full shrink-0 justify-center rounded-b-[50%_60px] bg-linear-to-br from-blue-200/70 via-violet-200/60 to-pink-200/80"
+        style={{
+          paddingTop: bannerPaddingTop,
+          paddingBottom: bannerPaddingBottom,
         }}
-        transition={heroSpring}
       >
         <motion.div
-          className="size-56 rounded-full p-1.5 bg-linear-to-b from-brand-900 to-brand-700 shadow-[0_20px_40px_-12px_rgba(76,29,149,0.5)]"
-          initial={false}
-          animate={{ width: portraitSize, height: portraitSize }}
-          transition={heroSpring}
+          className="size-56 shrink-0 rounded-full bg-linear-to-b from-brand-900 to-brand-700 p-1.5 shadow-[0_20px_40px_-12px_rgba(76,29,149,0.5)] will-change-transform"
+          style={{
+            scale: portraitScale,
+            originY: 0,
+            marginBottom: portraitMarginBottom,
+          }}
         >
           <div
             className="size-full rounded-full bg-white bg-no-repeat"
@@ -177,19 +164,13 @@ const BrandHero = ({ collapse }: { collapse: number }) => {
       </motion.div>
       <motion.h1
         ref={titleRef}
-        className="my-6 font-serif text-4xl font-bold text-brand-title"
-        initial={false}
-        animate={{
-          height: titleHeight ? titleHeight * titleScale : "auto",
+        className="shrink-0 font-serif text-4xl font-bold text-brand-title will-change-transform"
+        style={{
           scale: titleScale,
-          marginBottom: lerp(
-            TITLE_MARGIN,
-            TITLE_MARGIN_COLLAPSED,
-            collapse,
-          ),
+          originY: 0,
+          marginTop: titleMarginTop,
+          marginBottom: titleMarginBottom,
         }}
-        style={{ transformOrigin: "top center" }}
-        transition={heroSpring}
       >
         Satlok Ashram
       </motion.h1>
@@ -212,8 +193,7 @@ const LoginForm: NextApplicationPage = () => {
   const [forgotPinFlow, setForgotPinFlow] = useState<boolean>(false);
   const [forgotPinShow, setForgotPinShow] = useState<boolean>(true);
   const [username, setUsername] = useState<string>("");
-  const { collapse: keyboardCollapse, height: viewportHeight } =
-    useKeyboardViewport();
+  const keyboardOpen = useKeyboardOpen();
 
   const getBrowserFingerPrint = useCallback(async () => {
     const fpPromise = FingerprintJS.load();
@@ -414,194 +394,200 @@ const LoginForm: NextApplicationPage = () => {
   }, [router.isReady]);
 
   return (
+    <div className="fixed inset-x-0 top-0 mx-auto flex h-(--app-height) w-full max-w-md flex-col items-center overflow-hidden">
+      {/* The page shrinks with the keyboard, so the gradient lives on a
+          full-height layer behind it; otherwise its bottom-anchored glow
+          would jump every time the keyboard opens or closes. */}
       <div
-        className="fixed inset-x-0 top-0 mx-auto flex  h-(--app-height) overflow-hidden w-full max-w-md flex-col items-center overflow-clip bg-app-gradient"
-        // style={viewportHeight ? { height: viewportHeight } : undefined}
-      >
-        <BrandHero collapse={keyboardCollapse} />
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-lvh bg-app-gradient"
+      />
+      <BrandHero collapsed={keyboardOpen} />
 
-        {loginWithOtp && (
-          <Formik
-            initialValues={{ username: "", login_otp: "", device_id: "local" }}
-            onSubmit={(values, { setSubmitting }) => {
-              if (otpRequired && values.login_otp.length != 6) {
-                toast.error("Enter OTP");
-                setSubmitting(false);
-              } else {
-                onSubmit(values);
-              }
-            }}
-            validateOnChange={false}
-            validateOnBlur={false}
-          >
-            {({ values, setFieldValue }) => (
-              <Form className={cardClass}>
-                {otpRequired ? (
-                  <OtpInput
-                    value={values.login_otp}
-                    onChange={(e) => setFieldValue("login_otp", e)}
+      {loginWithOtp && (
+        <Formik
+          initialValues={{ username: "", login_otp: "", device_id: "local" }}
+          onSubmit={(values, { setSubmitting }) => {
+            if (otpRequired && values.login_otp.length != 6) {
+              toast.error("Enter OTP");
+              setSubmitting(false);
+            } else {
+              onSubmit(values);
+            }
+          }}
+          validateOnChange={false}
+          validateOnBlur={false}
+        >
+          {({ values, setFieldValue }) => (
+            <Form className={cardClass}>
+              {otpRequired ? (
+                <OtpInput
+                  value={values.login_otp}
+                  onChange={(e) => setFieldValue("login_otp", e)}
+                  autoFocus
+                  secure
+                  numInput={6}
+                />
+              ) : (
+                <label className="flex items-center gap-3 rounded-full bg-slate-50 px-5 py-3.5 shadow-[inset_0_2px_6px_rgba(15,23,42,0.08)] focus-within:ring-2 focus-within:ring-violet-300">
+                  <Phone className="size-5 shrink-0 text-brand-900" />
+                  <input
+                    name="username"
+                    required
                     autoFocus
-                    secure
-                    numInput={6}
+                    inputMode="text"
+                    value={values.username}
+                    placeholder="Enter your mobile number"
+                    className="w-full bg-transparent text-lg text-gray-700 placeholder-gray-500 outline-none"
+                    onChange={(e) =>
+                      setFieldValue(
+                        "username",
+                        String(e.target.value).replaceAll(/\s+/g, ""),
+                      )
+                    }
                   />
+                </label>
+              )}
+              <Button
+                variant="gradient"
+                type="submit"
+                className="mx-auto w-2/3"
+                disabled={loading}
+                loading={loading}
+              >
+                {forgotPinShow || otpRequired ? "Login" : "Get OTP"}
+              </Button>
+              <div className="flex w-full px-1 justify-between items-center font-semibold text-blue-900">
+                {forgotPinShow ? (
+                  <button
+                    type="button"
+                    onClick={forgotPin}
+                    className="hover:underline"
+                  >
+                    Forgot Pin?
+                  </button>
                 ) : (
-                  <label className="flex items-center gap-3 rounded-full bg-slate-50 px-5 py-3.5 shadow-[inset_0_2px_6px_rgba(15,23,42,0.08)] focus-within:ring-2 focus-within:ring-violet-300">
-                    <Phone className="size-5 shrink-0 text-brand-900" />
-                    <input
-                      name="username"
-                      required
-                      autoFocus
-                      inputMode="tel"
-                      value={values.username}
-                      placeholder="Enter your mobile number"
-                      className="w-full bg-transparent text-lg text-gray-700 placeholder-gray-500 outline-none"
-                      onChange={(e) =>
-                        setFieldValue(
-                          "username",
-                          String(e.target.value).replaceAll(/\s+/g, ""),
-                        )
-                      }
-                    />
-                  </label>
+                  <span />
                 )}
-                <Button
-                  variant="gradient"
-                  type="submit"
-                  className="mx-auto w-2/3"
-                  disabled={loading}
-                  loading={loading}
-                >
-                  {forgotPinShow || otpRequired ? "Login" : "Get OTP"}
-                </Button>
-                <div className="flex w-full px-1 justify-between items-center font-semibold text-blue-900">
-                  {forgotPinShow ? (
-                    <button
-                      type="button"
-                      onClick={forgotPin}
-                      className="hover:underline"
-                    >
-                      Forgot Pin?
-                    </button>
-                  ) : (
-                    <span />
-                  )}
-                  <Link href={"/register"} className="hover:underline">
-                    Register
-                  </Link>
-                </div>
-              </Form>
-            )}
-          </Formik>
-        )}
+                <Link href={"/register"} className="hover:underline">
+                  Register
+                </Link>
+              </div>
+            </Form>
+          )}
+        </Formik>
+      )}
 
-        {!loginWithOtp && !isPinSet && (
-          <Formik
-            initialValues={{ pin: "" }}
-            onSubmit={(values, { setSubmitting }) => {
-              if (authMethod === "mobile" && values.pin.length != 4) {
-                toast.error("Enter pin");
-                setSubmitting(false);
-              } else {
-                setPin(values);
-              }
-            }}
-          >
-            {({ values, setFieldValue }) => (
-              <Form className={cardClass}>
-                <p className="text-lg font-bold text-center text-brand-ink">
-                  Set {authMethod === "username" ? "Password" : "Pin"}
-                </p>
+      {!loginWithOtp && !isPinSet && (
+        <Formik
+          initialValues={{ pin: "" }}
+          onSubmit={(values, { setSubmitting }) => {
+            if (authMethod === "mobile" && values.pin.length != 4) {
+              toast.error("Enter pin");
+              setSubmitting(false);
+            } else {
+              setPin(values);
+            }
+          }}
+        >
+          {({ values, setFieldValue }) => (
+            <Form className={cardClass}>
+              <p className="text-lg font-bold text-center text-brand-ink">
+                Set {authMethod === "username" ? "Password" : "Pin"}
+              </p>
 
-                {authMethod === "username" ? (
-                  <Input
-                    name="pin"
-                    type="password"
-                    value={values.pin}
-                    placeholder="Enter password..."
-                    required={authMethod === "username"}
-                    className="h-12 rounded-full bg-slate-50 px-5"
-                    onChange={(e) => setFieldValue("pin", e.target.value)}
-                  />
-                ) : (
-                  <OtpInput
-                    value={values.pin}
-                    onChange={(e) => setFieldValue("pin", e)}
-                    autoFocus={false}
-                    numInput={4}
-                    secure
-                  />
-                )}
+              {authMethod === "username" ? (
+                <Input
+                  name="pin"
+                  type="password"
+                  value={values.pin}
+                  autoFocus
+                  placeholder="Enter password..."
+                  required={authMethod === "username"}
+                  className="h-12 rounded-full bg-slate-50 px-5"
+                  onChange={(e) => setFieldValue("pin", e.target.value)}
+                />
+              ) : (
+                <OtpInput
+                  value={values.pin}
+                  onChange={(e) => setFieldValue("pin", e)}
+                  autoFocus={false}
+                  numInput={4}
+                  secure
+                />
+              )}
 
-                <Button
-                  variant="gradient"
-                  type="submit"
-                  className="mx-auto w-2/3"
-                  disabled={loading}
-                  loading={loading}
-                >
-                  Submit
-                </Button>
-              </Form>
-            )}
-          </Formik>
-        )}
+              <Button
+                variant="gradient"
+                type="submit"
+                className="mx-auto w-2/3"
+                disabled={loading}
+                loading={loading}
+              >
+                Submit
+              </Button>
+            </Form>
+          )}
+        </Formik>
+      )}
 
-        {isPinSet && startWithPin && (
-          <Formik
-            initialValues={{
-              pin: "",
-              username: username,
-              device_id: "local",
-            }}
-            onSubmit={(values, { setSubmitting }) => {
-              if (authMethod === "mobile" && values.pin.length != 4) {
-                toast.error("Enter pin");
-                setSubmitting(false);
-              } else {
-                onSubmit(values);
-              }
-            }}
-          >
-            {({ values, setFieldValue }) => (
-              <Form className={cardClass}>
-                <p className="text-lg font-bold text-center text-brand-ink">
-                  Enter {authMethod === "username" ? "Password" : "Pin"}
-                </p>
+      {isPinSet && startWithPin && (
+        <Formik
+          initialValues={{
+            pin: "",
+            username: username,
+            device_id: "local",
+          }}
+          onSubmit={(values, { setSubmitting }) => {
+            if (authMethod === "mobile" && values.pin.length != 4) {
+              toast.error("Enter pin");
+              setSubmitting(false);
+            } else {
+              onSubmit(values);
+            }
+          }}
+        >
+          {({ values, setFieldValue }) => (
+            <Form className={cardClass}>
+              <p className="text-lg font-bold text-center text-brand-ink">
+                Enter {authMethod === "username" ? "Password" : "Pin"}
+              </p>
 
-                {authMethod === "username" ? (
-                  <Input
-                    name="pin"
-                    type="password"
-                    value={values.pin}
-                    placeholder="Enter password..."
-                    required={authMethod === "username"}
-                    className="h-12 rounded-full bg-slate-50 px-5"
-                    onChange={(e) => setFieldValue("pin", e.target.value)}
-                  />
-                ) : (
-                  <OtpInput
-                    value={values.pin}
-                    onChange={(e) => setFieldValue("pin", e)}
-                    autoFocus
-                    numInput={4}
-                    secure
-                  />
-                )}
+              {authMethod === "username" ? (
+                <Input
+                  name="pin"
+                  type="password"
+                  value={values.pin}
+                  autoFocus
+                  placeholder="Enter password..."
+                  required={authMethod === "username"}
+                  className="h-12 rounded-full bg-slate-50 px-5"
+                  onChange={(e) => setFieldValue("pin", e.target.value)}
+                />
+              ) : (
+                <OtpInput
+                  value={values.pin}
+                  onChange={(e) => setFieldValue("pin", e)}
+                  autoFocus
+                  numInput={4}
+                  secure
+                />
+              )}
 
-                <Button
-                  variant="gradient"
-                  type="submit"
-                  className="mx-auto w-2/3"
-                  disabled={loading}
-                  loading={loading}
-                >
-                  Login
-                </Button>
-              </Form>
-            )}
-          </Formik>
-        )}
-      </div>
+              <Button
+                variant="gradient"
+                type="submit"
+                className="mx-auto w-2/3"
+                disabled={loading}
+                loading={loading}
+              >
+                Login
+              </Button>
+            </Form>
+          )}
+        </Formik>
+      )}
+    </div>
   );
 };
 

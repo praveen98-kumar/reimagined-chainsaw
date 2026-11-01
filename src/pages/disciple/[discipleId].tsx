@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { Form, Formik, useFormikContext } from "formik";
 import { useRouter } from "next/router";
 import toast from "react-hot-toast";
@@ -20,7 +21,16 @@ const discipleProfileSchema = Yup.object({
   district_id: Yup.number().required("District is required."),
   tehsil_id: Yup.number().required("Tehsil is required."),
   address: Yup.string().required("Address is required."),
+  old_mobile_no: Yup.string(),
+  mobile_no: Yup.string().matches(
+    /^\d{10}$/,
+    "Enter a valid 10 digit mobile no.",
+  ),
 });
+
+type SevadarUser = { id: number; mobile_no: string; active: boolean };
+
+const stripCountryCode = (mobile: string) => mobile.replace(/^\+91/, "");
 
 type DiscipleFormValues = {
   name: string;
@@ -30,6 +40,8 @@ type DiscipleFormValues = {
   district_id: number | "";
   tehsil_id: number | "";
   address: string | "";
+  old_mobile_no: string;
+  mobile_no: string;
 };
 const relationOptions: Array<Option> = [
   { label: "S/O", value: "S/o" },
@@ -68,8 +80,7 @@ function LocationFields({ countryId }: { countryId?: number }) {
         name="district_id"
         placeholder={"Select District"}
         value={
-          districts?.find((d: Option) => d.value === values.district_id) ??
-          null
+          districts?.find((d: Option) => d.value === values.district_id) ?? null
         }
         onChange={(e: any) => {
           setFieldValue("district_id", e?.value ?? "");
@@ -97,20 +108,91 @@ function LocationFields({ countryId }: { countryId?: number }) {
   );
 }
 
+function MobileFields({ users }: { users: SevadarUser[] }) {
+  const { values, setFieldValue } = useFormikContext<DiscipleFormValues>();
+
+  if (users.length === 0) {
+    return (
+      <p className="text-sm text-gray-600">
+        This disciple is not a sevadar; mobile no can't be changed here.
+      </p>
+    );
+  }
+
+  const mobileOptions: Array<Option> = users.map((u) => ({
+    label: `${u.mobile_no}${u.active ? "" : " (inactive)"}`,
+    value: u.mobile_no,
+  }));
+
+  return (
+    <>
+      {users.length > 1 && (
+        <Select
+          options={mobileOptions}
+          label="Current Mobile No."
+          name="old_mobile_no"
+          placeholder={"Select Mobile No."}
+          value={
+            mobileOptions.find((o) => o.value === values.old_mobile_no) ?? null
+          }
+          onChange={(e: any) => {
+            setFieldValue("old_mobile_no", e?.value ?? "");
+            setFieldValue("mobile_no", stripCountryCode(e?.value ?? ""));
+          }}
+        />
+      )}
+      <TextInput
+        name="mobile_no"
+        label="Mobile No."
+        placeholder="Enter mobile no"
+        type="tel"
+        maxLength={10}
+        className="pl-12"
+        appendEle={
+          <div
+            style={{ marginLeft: "1px" }}
+            className="absolute bg-gray-200 rounded p-2 font-semibold text-gray-800 -translate-y-1/2 pointer-events-none top-1/2 left-0"
+          >
+            +91
+          </div>
+        }
+      />
+    </>
+  );
+}
+
 export default function DiscipleIdPage() {
   const router = useRouter();
   const discipleIdParam = router.query.discipleId;
   const discipleId =
     typeof discipleIdParam === "string" ? Number(discipleIdParam) : undefined;
 
-  const isLoading = false;
   const [disciple, ,] = useLocalstorage<Disciple | null>(
     "selectedDisciple",
     null,
   );
 
+  const { data: sevadarUsers, isLoading } = useQuery({
+    queryKey: ["disciple-sevadar-mobiles", discipleId],
+    queryFn: async () => {
+      const { data } = await apiClient.get(`disciple/${discipleId}/edit`);
+      return (data?.data?.users ?? []) as SevadarUser[];
+    },
+    enabled: !!discipleId,
+  });
+  const users = sevadarUsers ?? [];
+  const defaultOldMobile =
+    users.find((u) => u.mobile_no === disciple?.mobile_no)?.mobile_no ??
+    users[0]?.mobile_no ??
+    "";
+
   const handleSubmit = async (values: DiscipleFormValues) => {
     if (!discipleId) return;
+    const newMobile = values.mobile_no ? `+91${values.mobile_no}` : "";
+    const mobileChanged =
+      !!values.old_mobile_no &&
+      !!newMobile &&
+      newMobile !== values.old_mobile_no;
     try {
       await apiClient.put(`disciple/${discipleId}/edit`, {
         name: values.name,
@@ -119,7 +201,11 @@ export default function DiscipleIdPage() {
         state_id: values.state_id,
         district_id: values.district_id,
         tehsil_id: values.tehsil_id,
-        address: values.address
+        address: values.address,
+        ...(mobileChanged && {
+          old_mobile_no: values.old_mobile_no,
+          mobile_no: newMobile,
+        }),
       });
       toast.success("Disciple updated successfully.");
 
@@ -154,6 +240,8 @@ export default function DiscipleIdPage() {
               district_id: disciple.district_id ?? "",
               tehsil_id: disciple.tehsil_id ?? "",
               address: disciple.address ?? "",
+              old_mobile_no: defaultOldMobile,
+              mobile_no: stripCountryCode(defaultOldMobile),
             }}
             validationSchema={discipleProfileSchema}
             onSubmit={handleSubmit}
@@ -190,6 +278,7 @@ export default function DiscipleIdPage() {
                   placeholder="Enter address"
                 />
                 <LocationFields countryId={disciple.country_id} />
+                <MobileFields users={users} />
 
                 <div className="flex justify-end space-x-2">
                   <Button

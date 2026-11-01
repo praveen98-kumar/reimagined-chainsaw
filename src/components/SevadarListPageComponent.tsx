@@ -1,4 +1,4 @@
-import { regionHirarchyMap } from "@/constants/app";
+import { isRoleBelow, regionHirarchyMap } from "@/constants/app";
 import { useUsersWithRoleListQuery } from "@/hooks/useUsersWithRole";
 import {
   type Dispatch,
@@ -34,7 +34,7 @@ export const SevadarListPageComponent = ({ group }: { group: string }) => {
           fetchNextPage();
         }
       },
-      { threshold: 1.0 }
+      { threshold: 1.0 },
     );
     observer.observe(loadingRef.current);
 
@@ -87,26 +87,26 @@ export const SevadarListFilter = ({
 }: SevadarListFilterProps) => {
   const { data: roles } = useGetRoles();
   const { active_permission, active_region_index } = useAppSelector(
-    (s) => s.auth
+    (s) => s.auth,
   );
 
   const activeRoleRegion = active_permission?.role_region as RoleRegion;
-  const currentUserHierarchy = regionHirarchyMap[activeRoleRegion];
+  const currentRole = roles?.find((r) => r.id === active_permission?.role_id);
   const activeRegion = active_permission?.region[active_region_index];
   const roleOptions = useMemo(() => {
     if (roles) {
-      const options = getOptionArray(roles, "name", "id", true);
-      const filteredOptions = options
-        .map((o) =>
-          Object.assign(o, {
-            hierarchy: regionHirarchyMap[o.region as RoleRegion],
-          })
-        )
-        .filter((o) => o.group === group && o.hierarchy > currentUserHierarchy);
-      return filteredOptions;
+      const visibleRoles = roles.filter(
+        (r) =>
+          r.group === group && isRoleBelow(r, activeRoleRegion, currentRole),
+      );
+      return getOptionArray(visibleRoles, "name", "id", true).map((o) =>
+        Object.assign(o, {
+          hierarchy: regionHirarchyMap[o.region as RoleRegion],
+        }),
+      );
     }
     return [];
-  }, [roles, group, currentUserHierarchy]);
+  }, [roles, group, activeRoleRegion, currentRole]);
 
   return (
     <div>

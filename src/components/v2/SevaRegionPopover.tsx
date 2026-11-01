@@ -93,8 +93,13 @@ export function SevaRegionPopover({ sevas }: SevaRegionPopoverProps) {
                   <button
                     type="button"
                     onClick={() => {
-                      setLocation(option);
                       setIsPopoverOpen(false);
+                      if (isSelected) return;
+                      // setActiveLocation persists the pick to localStorage
+                      // synchronously, so a full reload restarts every page
+                      // on the new region (fresh queries, filters and state).
+                      setLocation(option);
+                      window.location.reload();
                     }}
                     className={cn(
                       "flex w-full items-center justify-between gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors",

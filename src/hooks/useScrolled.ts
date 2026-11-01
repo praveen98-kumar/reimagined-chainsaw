@@ -68,4 +68,3 @@ function getScrollParent(node: HTMLElement | null): HTMLElement | Window {
 }
 
 export default useScrolled;
-

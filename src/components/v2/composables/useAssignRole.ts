@@ -3,7 +3,11 @@
 import { useCallback, useMemo, useState, useRef, useEffect } from "react";
 import { useAppSelector } from "@/redux/store";
 import { useGetRoles, useRoleCreatePermissions } from "@/http/role";
-import { regionHirarchy, regionHirarchyIndex } from "@/constants/app";
+import {
+  isRoleBelow,
+  regionHirarchy,
+  regionHirarchyIndex,
+} from "@/constants/app";
 import { objectWithValues, capitalizeWords } from "@/shared/functions/utils";
 import type { Option } from "@/shared/interfaces/option";
 import type { Role } from "@/http/role";
@@ -115,10 +119,12 @@ export function useAssignRole(
   const roleOptions = useMemo((): RoleOption[] => {
     if (!allRoles) return [];
 
-    let filtered = allRoles.filter((r) => {
-      const roleLevel = regionHirarchyIndex(r.region);
-      return roleLevel > currentUserLevel;
-    });
+    const currentRole = allRoles.find(
+      (r) => r.id === activePermission?.role_id,
+    );
+    let filtered = allRoles.filter((r) =>
+      isRoleBelow(r, activePermission?.role_region, currentRole),
+    );
 
     if (allowedRoles?.length) {
       filtered = filtered.filter((r) => allowedRoles.includes(r.id));
@@ -138,7 +144,8 @@ export function useAssignRole(
     }));
   }, [
     allRoles,
-    currentUserLevel,
+    activePermission?.role_id,
+    activePermission?.role_region,
     allowedRoles,
     allowedGroups,
     createPermissions,
@@ -282,7 +289,18 @@ export function useAssignRole(
         return { payload: null, error: "Select a role" };
       }
 
-      for (const field of visibleFields) {
+      // A role in the assigner's own region (e.g. a tehsil team leader adding a
+      // sevadar) shows no location selects; its location comes from the
+      // assigner's region, which must still be present.
+      const selectedRegion = selectedRole?.region as LocationField | undefined;
+      const fieldsToValidate =
+        visibleFields.length ||
+        !selectedRegion ||
+        !FIELD_TO_ID_KEY[selectedRegion]
+          ? visibleFields
+          : [selectedRegion];
+
+      for (const field of fieldsToValidate) {
         const idKey = FIELD_TO_ID_KEY[field];
         const value = formValues[idKey];
         if (!value || value === 0) {

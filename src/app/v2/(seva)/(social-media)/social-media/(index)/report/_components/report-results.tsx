@@ -130,13 +130,11 @@ function transformPlatformWiseResult(apiData: any): SevadarRow[] {
 
 function transformAllPlatformsResult(apiData: any) {
   return {
-    rows: (apiData?.reports ?? []).map(
-      (r: any): PlatformRow => ({
-        question: r.question ?? "",
-        icon: r.icon ?? "facebook",
-        seva_count: r.seva_count ?? 0,
-      }),
-    ),
+    rows: (apiData?.reports ?? []).map((r: any): PlatformRow => ({
+      question: r.question ?? "",
+      icon: r.icon ?? "facebook",
+      seva_count: r.seva_count ?? 0,
+    })),
     total_sevadar: apiData?.total_sevadar ?? 0,
     total_submissions: apiData?.total_submissions ?? 0,
   };
@@ -308,13 +306,24 @@ export function ReportResults() {
           // setMessages(splitLongMessage(msg));
         }
       } else if (topTab === "book-order") {
-        const { data } = await apiClient.get("book_order_count", {
+        const { data } = await apiClient.get("order_reports", {
           params: {
-            from_date: dateParams.start,
-            to_date: dateParams.end,
-            month_date: new Date().toISOString()
+            ...dateParams,
           },
         });
+        const reportData = data?.data?.report[0] ?? null;
+        const countData = reportData
+          ? {
+              national:
+                (reportData?.national ?? 0) + (reportData?.e_national ?? 0),
+              international:
+                (reportData?.international ?? 0) +
+                (reportData?.e_international ?? 0),
+            }
+          : {
+              national: 0,
+              international: 0,
+            };
         // const { data } = await apiClient.post("book_seva_reports", {
         //   report: {
         //     ...dateParams,
@@ -338,10 +347,7 @@ export function ReportResults() {
         //   0,
         // );
         // setBookOrderRows(rows);
-        setBookOrderTotals({
-          national: data?.data?.tnc ?? 0,
-          international: data?.data?.tic ?? 0,
-        });
+        setBookOrderTotals(countData);
         // setMessages([]);
       }
 

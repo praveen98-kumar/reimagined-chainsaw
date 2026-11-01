@@ -9,14 +9,14 @@ export const sidebarCardClass =
 
 export const sidebarOptionClass = (active: boolean) =>
   cn(
-    "flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-lg font-semibold text-brand-ink cursor-pointer",
+    "flex w-full items-center justify-between rounded-xl border px-4 py-2 text-left text-lg font-semibold text-brand-ink cursor-pointer",
     active
       ? "border-indigo-200 bg-indigo-50"
       : "border-transparent hover:bg-indigo-50/50",
   );
 
 export const SidebarIcon = ({ Icon }: { Icon: LucideIcon }) => (
-  <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-indigo-50 to-violet-100 text-brand-ink">
+  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-indigo-50 to-violet-100 text-brand-ink">
     <Icon className="size-5" />
   </span>
 );
@@ -54,7 +54,7 @@ const SidebarSection = ({
       type="button"
       onClick={onToggle}
       className={cn(
-        "flex w-full items-center gap-3 p-3 text-left",
+        "flex w-full items-center gap-3 px-3 py-2 text-left",
         open && "bg-linear-to-r from-violet-100 to-pink-100",
       )}
     >
@@ -80,7 +80,7 @@ const SidebarSection = ({
           transition={{ duration: 0.2 }}
         >
           <div className="border-t border-dashed border-indigo-200" />
-          <div className={cn("space-y-1 p-2", contentClassName)}>
+          <div className={cn("space-y-1 p-1.5", contentClassName)}>
             {children}
           </div>
         </motion.div>

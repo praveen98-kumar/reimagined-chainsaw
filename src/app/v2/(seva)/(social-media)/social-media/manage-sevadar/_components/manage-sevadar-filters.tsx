@@ -5,8 +5,8 @@ import { SearchButton } from "@/components/v2/SearchButton";
 import { Input } from "@/components/v2/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/v2/ui/radio-group";
 import {
+  isRoleBelow,
   regionHirarchy,
-  regionHirarchyIndex,
   regionHirarchyMap,
 } from "@/constants/app";
 import { sevaWiseRoleIds } from "@/constants/roles";
@@ -220,6 +220,9 @@ export function ManageSMSevadarFilters({
 
   const roleOptions = useMemo(() => {
     const sevaRoleIds = sevaType ? sevaWiseRoleIds[sevaType as SevaType] : null;
+    const currentRole = allRoles.find(
+      (role) => role.id === active_permission?.role_id,
+    );
 
     return allRoles
       .filter((role) =>
@@ -227,12 +230,12 @@ export function ManageSMSevadarFilters({
           ? sevaRoleIds.includes(role.id)
           : ALLOWED_ROLE_GROUPS.includes(role.group),
       )
-      .filter((role) => regionHirarchyIndex(role.region) > userLevel)
+      .filter((role) => isRoleBelow(role, roleRegion ?? "ashram", currentRole))
       .map((role) => ({
         label: capitalizeWords(role.name.replace(/_/g, " ")),
         value: role.id,
       }));
-  }, [allRoles, sevaType, userLevel]);
+  }, [allRoles, sevaType, roleRegion, active_permission?.role_id]);
 
   const handleTabChange = (next: ActiveTab) => {
     if (next === activeTab) return;
