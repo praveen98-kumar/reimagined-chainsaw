@@ -5,11 +5,13 @@ import { useMemo } from "react";
 import useAuthSync from "@/hooks/useAuthSync";
 import useIsMounted from "@/hooks/useIsMounted";
 import {
+  setActiveLocation,
   setActivePermission,
   setActiveRegion,
   setActiveRegionIndex,
 } from "@/redux/features/authSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/store";
+import { findSavedLocationSelection } from "@/shared/functions/seva-region";
 import { cn } from "@/utils/cn";
 import { SevaCard } from "./_components/seva-card";
 import {
@@ -48,7 +50,8 @@ function Header() {
 export default function DashboardPage() {
   const isMounted = useIsMounted();
   const dispatch = useAppDispatch();
-  const { user, all_permission } = useAppSelector((state) => state.auth);
+  const { user, all_permission, seva_regions, group_locations } =
+    useAppSelector((state) => state.auth);
 
   useAuthSync();
 
@@ -83,6 +86,27 @@ export default function DashboardPage() {
           all_permission.roles.includes(permission.role_id) &&
           permission.permissions.some((current) => required.includes(current)),
       ) ?? null;
+
+    const matchingPermissions = user.permission.filter(
+      (permission) =>
+        all_permission.roles.includes(permission.role_id) &&
+        permission.permissions.some((current) => required.includes(current)),
+    );
+
+    // Keep the location the user picked for the active sidebar group so
+    // opening a seva from the dashboard does not reset the picker.
+    const savedSelection = findSavedLocationSelection(
+      matchingPermissions,
+      seva_regions,
+      group_locations,
+      all_permission.group,
+      match,
+    );
+
+    if (savedSelection) {
+      dispatch(setActiveLocation(savedSelection));
+      return;
+    }
 
     dispatch(setActiveRegionIndex(0));
     dispatch(setActivePermission(match));

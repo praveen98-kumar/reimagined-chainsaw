@@ -9,7 +9,7 @@ import {
   buildLocationOptions,
   createLocationSelection,
   findLocationOption,
-  findSavedLocationOption,
+  findPreferredLocationOption,
   getActiveLocation,
   getActivePermissions,
   getSevaRoleIds,
@@ -22,6 +22,7 @@ export function useSevaRegions(sevas?: readonly SevaType[]) {
   const user = useAppSelector((state) => state.auth.user);
   const allPermission = useAppSelector((state) => state.auth.all_permission);
   const sevaRegions = useAppSelector((state) => state.auth.seva_regions);
+  const groupLocations = useAppSelector((state) => state.auth.group_locations);
   const activePermission = useAppSelector(
     (state) => state.auth.active_permission,
   );
@@ -68,23 +69,34 @@ export function useSevaRegions(sevas?: readonly SevaType[]) {
     [activePermission, activeRegion, activeRegionIndex],
   );
 
+  const isCurrentPermissionInGroup = useMemo(
+    () =>
+      activePermission !== null &&
+      activePermissions.some(
+        (permission) => permission.role_id === activePermission.role_id,
+      ),
+    [activePermission, activePermissions],
+  );
+
   const selectedLocation = useMemo(() => {
     const currentLocation = activeRegion ? activeLocation : null;
 
-    return (
-      findLocationOption(locations, currentLocation) ??
-      findSavedLocationOption(
-        locations,
-        sevaRegions,
-        allPermission.group,
-        configuredSevas,
-      )
+    return findPreferredLocationOption(
+      locations,
+      sevaRegions,
+      groupLocations,
+      allPermission.group,
+      configuredSevas,
+      currentLocation,
+      isCurrentPermissionInGroup,
     );
   }, [
     activeLocation,
     activeRegion,
     allPermission.group,
     configuredSevas,
+    groupLocations,
+    isCurrentPermissionInGroup,
     locations,
     sevaRegions,
   ]);

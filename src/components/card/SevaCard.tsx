@@ -3,12 +3,20 @@ import React, { useCallback, useMemo, useState } from "react";
 import Button from "@/components/Button";
 import Modal from "@/components/modal/Modal";
 import {
+  setActiveLocation,
   setActivePermission,
   setActiveRegion,
   setActiveRegionIndex,
 } from "@/redux/features/authSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/store";
-import { getRegionIndex, isSameRegion } from "@/shared/functions/seva-region";
+import {
+  buildLocationOptions,
+  createLocationSelection,
+  findLocationOptionForRegion,
+  findSavedLocationSelection,
+  getRegionIndex,
+  isSameRegion,
+} from "@/shared/functions/seva-region";
 import { cn } from "@/shared/functions/utils";
 import type { Region } from "@/shared/interfaces/user";
 import useValidUser from "../../hooks/useValidUser";
@@ -81,7 +89,8 @@ const SevaCard: React.FC<SevaCardProps> = React.forwardRef(
   ) => {
     const router = useRouter();
     const dispatch = useAppDispatch();
-    const { user, all_permission } = useAppSelector((state) => state.auth);
+    const { user, all_permission, seva_regions, group_locations } =
+      useAppSelector((state) => state.auth);
     const hasPermission = useValidUser(permission);
     if (!hasPermission) {
       return null;
@@ -91,7 +100,7 @@ const SevaCard: React.FC<SevaCardProps> = React.forwardRef(
       ? () => onClick()
       : () => {
           if (changePermission && user && !regions) {
-            const item = user.permission.filter((p) => {
+            const items = user.permission.filter((p) => {
               if (Array.isArray(permission)) {
                 return (
                   all_permission.roles.includes(p.role_id) &&
@@ -104,10 +113,25 @@ const SevaCard: React.FC<SevaCardProps> = React.forwardRef(
                 );
               }
             });
-            const activePermission = item[0] ?? null;
-            dispatch(setActiveRegionIndex(0));
-            dispatch(setActivePermission(activePermission));
-            dispatch(setActiveRegion(activePermission?.region?.[0] ?? null));
+            const activePermission = items[0] ?? null;
+
+            // Keep the location the user picked for the active sidebar group
+            // so navigating between pages does not reset the picker.
+            const savedSelection = findSavedLocationSelection(
+              items,
+              seva_regions,
+              group_locations,
+              all_permission.group,
+              activePermission,
+            );
+
+            if (savedSelection) {
+              dispatch(setActiveLocation(savedSelection));
+            } else {
+              dispatch(setActiveRegionIndex(0));
+              dispatch(setActivePermission(activePermission));
+              dispatch(setActiveRegion(activePermission?.region?.[0] ?? null));
+            }
           }
           href && router.push(href, undefined, { locale: router.locale });
         };
@@ -209,12 +233,29 @@ export const SevaCardWithMenu = ({
           ) ?? items[0])
         : items[0];
 
-      dispatch(setActivePermission(permission ?? null));
+      const option =
+        region && permission
+          ? findLocationOptionForRegion(
+              buildLocationOptions(items),
+              permission.role_region,
+              region,
+            )
+          : null;
+      const selection = option
+        ? createLocationSelection(option, permission)
+        : null;
 
-      if (permission) {
-        dispatch(setActiveRegionIndex(getRegionIndex(permission, region)));
-        if (region) {
-          dispatch(setActiveRegion(region));
+      if (selection) {
+        // Also remember the chosen location for the active sidebar group.
+        dispatch(setActiveLocation(selection));
+      } else {
+        dispatch(setActivePermission(permission ?? null));
+
+        if (permission) {
+          dispatch(setActiveRegionIndex(getRegionIndex(permission, region)));
+          if (region) {
+            dispatch(setActiveRegion(region));
+          }
         }
       }
     }

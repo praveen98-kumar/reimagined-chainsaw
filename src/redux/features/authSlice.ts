@@ -12,6 +12,8 @@ import {
   getSevaRegionLevels,
   migrateSevaRegionsToGroup,
   parseSevaRegionKey,
+  seedGroupLocation,
+  type ActiveLocation,
   type LocationSelection,
 } from "@/shared/functions/seva-region";
 
@@ -22,6 +24,7 @@ import {
   setActiveUserId,
   updateActiveUserAllPermission,
   updateActiveUser as updateActiveUserInStorage,
+  updateActiveUserGroupLocations,
   updateActiveUserPermission,
   updateActiveUserRegionIndex,
   updateActiveUserRegion,
@@ -35,6 +38,7 @@ interface IState {
   active_region_index: number;
   active_region: Region | null;
   seva_regions: Record<string, Region>;
+  group_locations: Record<string, ActiveLocation>;
 }
 
 interface SetPermissionAction {
@@ -53,6 +57,7 @@ let active_permission = null;
 let active_region_index = 0;
 let active_region = null;
 let seva_regions: Record<string, Region> = {};
+let group_locations: Record<string, ActiveLocation> = {};
 let all_permission: GroupPermission = {
   group: "",
   permissions: [],
@@ -67,6 +72,7 @@ if (typeof window !== "undefined") {
     active_region_index = activeUserData.active_region_index;
     active_region = activeUserData.active_region;
     seva_regions = activeUserData.seva_regions ?? {};
+    group_locations = activeUserData.group_locations ?? {};
     // Get all_permission from active user's stored data
     if (activeUserData.all_permission) {
       all_permission = activeUserData.all_permission;
@@ -100,6 +106,14 @@ seva_regions = migrateSevaRegionsToGroup(
   getSevaRegionLevels(user, all_permission),
 );
 
+group_locations = seedGroupLocation(
+  group_locations,
+  all_permission.group,
+  all_permission.roles,
+  active_permission,
+  active_region,
+);
+
 const initialState: IState = {
   user,
   active_permission,
@@ -107,6 +121,7 @@ const initialState: IState = {
   active_region_index,
   active_region,
   seva_regions,
+  group_locations,
 };
 
 interface UpdateRoleAction {
@@ -151,6 +166,7 @@ const authSlice = createSlice({
           (r) => r["role_id"] === action.payload[0].active_role,
         )[0] ?? null;
       let storedSevaRegions: Record<string, Region> = {};
+      let storedGroupLocations: Record<string, ActiveLocation> = {};
 
       for (const [index, user] of action.payload.entries()) {
         const activePermission =
@@ -166,6 +182,7 @@ const authSlice = createSlice({
 
         if (index === 0) {
           storedSevaRegions = storedUser.seva_regions ?? {};
+          storedGroupLocations = storedUser.group_locations ?? {};
         }
       }
 
@@ -175,6 +192,7 @@ const authSlice = createSlice({
       state.active_region_index = active_region_index;
       state.active_region = null;
       state.seva_regions = storedSevaRegions;
+      state.group_locations = storedGroupLocations;
     },
     switchUser: (state: IState, action: SwitchUserAction) => {
       const discipleId = action.payload;
@@ -190,6 +208,7 @@ const authSlice = createSlice({
         state.active_region_index = switchedUser.active_region_index;
         state.active_region = switchedUser.active_region;
         state.seva_regions = switchedUser.seva_regions ?? {};
+        state.group_locations = switchedUser.group_locations ?? {};
         // Sync all_permission from switched user
         if (switchedUser.all_permission) {
           state.all_permission = switchedUser.all_permission;
@@ -200,6 +219,7 @@ const authSlice = createSlice({
           getSevaRegionLevels(state.user, state.all_permission),
         );
         updateActiveUserSevaRegions(state.seva_regions);
+        updateActiveUserGroupLocations(state.group_locations);
       }
     },
     removeUser: (state: IState, action: RemoveUserAction) => {
@@ -215,6 +235,7 @@ const authSlice = createSlice({
           state.active_region_index = activeUserData.active_region_index;
           state.active_region = activeUserData.active_region;
           state.seva_regions = activeUserData.seva_regions ?? {};
+          state.group_locations = activeUserData.group_locations ?? {};
           // Sync all_permission from active user
           if (activeUserData.all_permission) {
             state.all_permission = activeUserData.all_permission;
@@ -225,6 +246,7 @@ const authSlice = createSlice({
             getSevaRegionLevels(state.user, state.all_permission),
           );
           updateActiveUserSevaRegions(state.seva_regions);
+          updateActiveUserGroupLocations(state.group_locations);
         } else {
           // No users left
           state.user = null;
@@ -232,6 +254,7 @@ const authSlice = createSlice({
           state.active_region_index = 0;
           state.active_region = null;
           state.seva_regions = {};
+          state.group_locations = {};
           state.all_permission = {
             group: "",
             permissions: [],
@@ -251,6 +274,7 @@ const authSlice = createSlice({
         state.active_region_index = activeUserData.active_region_index;
         state.active_region = activeUserData.active_region;
         state.seva_regions = activeUserData.seva_regions ?? {};
+        state.group_locations = activeUserData.group_locations ?? {};
         if (activeUserData.all_permission) {
           state.all_permission = activeUserData.all_permission;
         }
@@ -265,6 +289,7 @@ const authSlice = createSlice({
         state.active_region_index = activeUserData.active_region_index;
         state.active_region = activeUserData.active_region;
         state.seva_regions = activeUserData.seva_regions ?? {};
+        state.group_locations = activeUserData.group_locations ?? {};
         // Sync all_permission from active user
         if (activeUserData.all_permission) {
           state.all_permission = activeUserData.all_permission;
@@ -285,6 +310,15 @@ const authSlice = createSlice({
           getSevaRegionLevels(state.user, state.all_permission),
         );
         updateActiveUserSevaRegions(state.seva_regions);
+
+        state.group_locations = seedGroupLocation(
+          state.group_locations,
+          state.all_permission.group,
+          state.all_permission.roles,
+          state.active_permission,
+          state.active_region,
+        );
+        updateActiveUserGroupLocations(state.group_locations);
       } else {
         // No active user, clear state
         state.user = null;
@@ -292,6 +326,7 @@ const authSlice = createSlice({
         state.active_region_index = 0;
         state.active_region = null;
         state.seva_regions = {};
+        state.group_locations = {};
       }
       return state;
     },
@@ -332,10 +367,23 @@ const authSlice = createSlice({
         ] = selection.region;
       }
 
+      // Remember the pick at group level as well. A location can only be
+      // stored for the sevas that actually have it, so the per-seva records
+      // alone are ambiguous when a group contains sevas with different
+      // locations.
+      const roleRegion = permission.role_region || selections[0]?.roleRegion;
+      if (roleRegion) {
+        state.group_locations = {
+          ...state.group_locations,
+          [state.all_permission.group ?? ""]: { roleRegion, region },
+        };
+      }
+
       updateActiveUserPermission(permission);
       updateActiveUserRegion(region);
       updateActiveUserRegionIndex(regionIndex);
       updateActiveUserSevaRegions(state.seva_regions);
+      updateActiveUserGroupLocations(state.group_locations);
 
       return state;
     },
@@ -411,6 +459,20 @@ const authSlice = createSlice({
           }),
         );
         updateActiveUserSevaRegions(state.seva_regions);
+
+        // A picker selection made before the sidebar group was resolved is
+        // stored under the empty group. Move it to the resolved group, the
+        // same way legacy seva selections are migrated above.
+        const unresolvedLocation = state.group_locations[""];
+        if (
+          activeGroup &&
+          unresolvedLocation &&
+          !state.group_locations[activeGroup]
+        ) {
+          state.group_locations[activeGroup] = unresolvedLocation;
+          delete state.group_locations[""];
+          updateActiveUserGroupLocations(state.group_locations);
+        }
 
         return state;
       }

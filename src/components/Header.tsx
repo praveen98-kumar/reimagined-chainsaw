@@ -4,9 +4,10 @@ import { useRouter } from "next/router";
 import { HiOutlineChevronLeft } from "react-icons/hi";
 import React from "react";
 import { useAppSelector } from "@/redux/store";
-import { capitalizeWords } from "@/shared/functions/utils";
+import { capitalizeWords, cn } from "@/shared/functions/utils";
 import useLocalStorage from "@/hooks/useLocalstorage";
 import useAuthSync from "@/hooks/useAuthSync";
+import useScrolled from "@/hooks/useScrolled";
 
 export interface HeaderProps {
   isBack?: boolean;
@@ -44,6 +45,9 @@ const Header: React.FC<HeaderProps> = ({
   variant = "classic",
 }) => {
   const router = useRouter();
+
+  const headerRef = React.useRef<HTMLElement>(null);
+  const scrolled = useScrolled(headerRef);
   useAuthSync();
   const { all_permission, active_permission, active_region_index } =
     useAppSelector((state) => state.auth);
@@ -67,7 +71,11 @@ const Header: React.FC<HeaderProps> = ({
 
   if (variant === "new" && !isBack) {
     return (
-      <div className="absolute top-0 inset-x-0 z-20 h-18.75 flex items-center justify-center px-4">
+      <div className={cn("fixed z-20 h-18.75 flex items-center w-full justify-center px-4 transition-[background-color,box-shadow,border-color] duration-200",
+      scrolled
+          ? "border-b border-black/5 bg-white/80 shadow-sm backdrop-blur-md supports-backdrop-filter:bg-white/70"
+          : "border-b border-transparent bg-transparent")}
+      >
         <button
           type="button"
           aria-label="Open menu"
@@ -91,7 +99,7 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <div
       className={`flex px-3 py-2 z-20 fixed bg-black top-0 left-0 w-full right-0 items-center shadow-lg justify-${
-        isBack ? "center h-[75px]" : "between"
+        isBack ? "center h-18.75" : "between"
       } bg-primary`}
     >
       {isBack ? (

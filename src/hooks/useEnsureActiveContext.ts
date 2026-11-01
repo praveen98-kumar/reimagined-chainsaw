@@ -7,8 +7,7 @@ import { useAppDispatch, useAppSelector } from "@/redux/store";
 import {
   buildLocationOptions,
   createLocationSelection,
-  findLocationOption,
-  findSavedLocationOption,
+  findPreferredLocationOption,
   getActiveLocation,
   getActivePermissions,
   getSevaForRoleId,
@@ -28,19 +27,22 @@ export function useEnsureActiveContext(
   const dispatch = useAppDispatch();
   const auth = useAppSelector((state) => state.auth);
 
+  const groupPermissions = useMemo(
+    () => getActivePermissions(auth.user, auth.all_permission),
+    [auth.user, auth.all_permission],
+  );
+
   const pagePermissions = useMemo(
     () =>
-      getActivePermissions(auth.user, auth.all_permission).filter(
-        (permission) => {
-          if (sevas && sevas.length > 0) {
-            const seva = getSevaForRoleId(permission.role_id);
-            if (!seva || !sevas.includes(seva)) return false;
-          }
+      groupPermissions.filter((permission) => {
+        if (sevas && sevas.length > 0) {
+          const seva = getSevaForRoleId(permission.role_id);
+          if (!seva || !sevas.includes(seva)) return false;
+        }
 
-          return permissionSatisfies(permission, requiredPermissions);
-        },
-      ),
-    [auth.user, auth.all_permission, requiredPermissions, sevas],
+        return permissionSatisfies(permission, requiredPermissions);
+      }),
+    [groupPermissions, requiredPermissions, sevas],
   );
 
   const locations = useMemo(
@@ -58,23 +60,34 @@ export function useEnsureActiveContext(
     [auth.active_permission, auth.active_region, auth.active_region_index],
   );
 
+  const isCurrentPermissionInGroup = useMemo(
+    () =>
+      auth.active_permission !== null &&
+      groupPermissions.some(
+        (permission) => permission.role_id === auth.active_permission?.role_id,
+      ),
+    [auth.active_permission, groupPermissions],
+  );
+
   const selectedLocation = useMemo(() => {
     const currentLocation = auth.active_region ? activeLocation : null;
 
-    return (
-      findLocationOption(locations, currentLocation) ??
-      findSavedLocationOption(
-        locations,
-        auth.seva_regions,
-        auth.all_permission.group,
-        sevas,
-      )
+    return findPreferredLocationOption(
+      locations,
+      auth.seva_regions,
+      auth.group_locations,
+      auth.all_permission.group,
+      sevas,
+      currentLocation,
+      isCurrentPermissionInGroup,
     );
   }, [
     activeLocation,
     auth.active_region,
     auth.all_permission.group,
+    auth.group_locations,
     auth.seva_regions,
+    isCurrentPermissionInGroup,
     locations,
     sevas,
   ]);

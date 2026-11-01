@@ -1,7 +1,7 @@
 "use client";
 
-import { Card, CardContent, CardHeader } from "@/components/v2/ui/card";
-import { Separator } from "@/components/v2/ui/separator";
+import { Card, CardContent } from "@/components/v2/ui/card";
+import Image from "next/image";
 
 export interface BookOrderRow {
   name: string;
@@ -29,88 +29,42 @@ export function BookOrderList({
     groups[key].push(row);
   }
 
-  if (!rows.length) {
-    return (
-      <Card className="rounded-2xl ring-0 shadow-sm">
-        <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          No data found
-        </CardContent>
-      </Card>
-    );
-  }
+  const orderCountrows = [
+    { title: "National Order", count: totalNational, icon: "/icons/v2/india-flag.svg" },
+    { title: "International Order", count: totalInternational, icon: "/icons/v2/world.svg" }
+  ]
 
   return (
     <Card className="rounded-2xl ring-0 shadow-sm py-0 overflow-hidden">
-      {/* Stats header */}
-      <CardHeader className="px-0 py-0 border-b border-border">
-        <div className="flex">
-          <div className="flex-1 flex flex-col items-center justify-center py-4 gap-0.5">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              National
-            </p>
-            <p className="text-2xl font-bold text-green-600 tabular-nums">
-              {totalNational}
-            </p>
-          </div>
-          <div className="w-px bg-border self-stretch" />
-          <div className="flex-1 flex flex-col items-center justify-center py-4 gap-0.5">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              International
-            </p>
-            <p className="text-2xl font-bold text-blue-600 tabular-nums">
-              {totalInternational}
-            </p>
-          </div>
-        </div>
-      </CardHeader>
-
-      {/* Column headers */}
-      <div className="flex items-center px-4 py-2 bg-muted/30">
-        <span className="flex-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Name
-        </span>
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-green-600 w-10 text-center">
-          Natl
-        </span>
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-600 w-10 text-center">
-          Intl
-        </span>
-      </div>
-
-      <CardContent className="px-0 py-0">
-        {Object.entries(groups).map(([region, items], groupIdx) => (
-          <div key={region}>
-            {groupIdx > 0 && <Separator />}
-            <div className="flex items-center gap-2 px-4 py-1.5 bg-muted/20">
-              <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                {region}
-              </span>
-            </div>
-            {items.map((row, i) => (
-              <div key={`${row.name}-${i}`}>
-                <div className="flex items-center px-4 py-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-foreground truncate">
-                      {row.name}
-                    </p>
-                    {row.guardian_name && (
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
-                        s/o {row.guardian_name}
-                      </p>
-                    )}
+      <CardContent className="p-2">
+        <table className="w-full border-collapse">
+          <tbody>
+            {orderCountrows.map((row) => (
+              <tr
+                key={row.title}
+                className="border-b border-border/80 last:border-0"
+              >
+                <td className="w-10 py-0 align-middle">
+                  <div className="flex size-8 items-center justify-center rounded-xl bg-muted/50">
+                    <Image
+                          src={row.icon}
+                          alt={`${row.title || "social"}-platform-icon`}
+                          width={24}
+                          height={24}
+                          className="shrink-0 object-contain"
+                        />
                   </div>
-                  <span className="w-10 text-center text-sm font-bold text-green-600 tabular-nums">
-                    {row.national}
-                  </span>
-                  <span className="w-10 text-center text-sm font-bold text-blue-600 tabular-nums">
-                    {row.international}
-                  </span>
-                </div>
-                {i < items.length - 1 && <Separator className="mx-4 w-auto" />}
-              </div>
+                </td>
+                <td className="pr-3 align-middle text-left text-sm font-medium text-foreground">
+                  {row.title}
+                </td>
+                <td className="pr-4 align-middle text-right text-sm font-medium tabular-nums text-foreground">
+                  {String(row.count).padStart(2, "0")}
+                </td>
+              </tr>
             ))}
-          </div>
-        ))}
+          </tbody>
+        </table>
       </CardContent>
     </Card>
   );

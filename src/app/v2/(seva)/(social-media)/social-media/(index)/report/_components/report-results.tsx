@@ -295,48 +295,54 @@ export function ReportResults() {
               }) as PlatformRow,
           );
           setPlatformRows(repsonsePlatformRows);
-          console.log(questionIdToCountMap, repsonsePlatformRows);
-          const rows = transformSevadarWiseResult(data?.data);
-          setSevadarRows(rows);
-          const msg = buildSevadarPendingMsg({
-            location: locationName,
-            date: dateLabel,
-            rows: rows.map((r) => ({
-              name: r.name,
-              tehsil_name: r.region ?? "",
-            })),
-          });
-          setMessages(splitLongMessage(msg));
+          // const rows = transformSevadarWiseResult(data?.data);
+          // setSevadarRows(rows);
+          // const msg = buildSevadarPendingMsg({
+          //   location: locationName,
+          //   date: dateLabel,
+          //   rows: rows.map((r) => ({
+          //     name: r.name,
+          //     tehsil_name: r.region ?? "",
+          //   })),
+          // });
+          // setMessages(splitLongMessage(msg));
         }
       } else if (topTab === "book-order") {
-        const { data } = await apiClient.post("book_seva_reports", {
-          report: {
-            ...dateParams,
-            ...regionParams,
-            ...tehsilParam,
-            book_order_scope: filters.book_order_scope,
+        const { data } = await apiClient.get("book_order_count", {
+          params: {
+            from_date: dateParams.start,
+            to_date: dateParams.end,
+            month_date: new Date().toISOString()
           },
         });
-        setRawDebug(data);
-        const rawRows: any[] = data?.data ?? [];
-        const rows: BookOrderRow[] = rawRows.map((r) => ({
-          name: r.sevadar_name ?? r.name ?? "Unknown",
-          guardian_name: r.guardian_name,
-          region: r.tehsil_name ?? r.district_name,
-          national: r.national_orders ?? r.national ?? 0,
-          international: r.international_orders ?? r.international ?? 0,
-        }));
-        const totalNational = rows.reduce((sum, r) => sum + r.national, 0);
-        const totalInternational = rows.reduce(
-          (sum, r) => sum + r.international,
-          0,
-        );
-        setBookOrderRows(rows);
+        // const { data } = await apiClient.post("book_seva_reports", {
+        //   report: {
+        //     ...dateParams,
+        //     ...regionParams,
+        //     ...tehsilParam,
+        //     book_order_scope: filters.book_order_scope,
+        //   },
+        // });
+        // setRawDebug(data);
+        // const rawRows: any[] = data?.data ?? [];
+        // const rows: BookOrderRow[] = rawRows.map((r) => ({
+        //   name: r.sevadar_name ?? r.name ?? "Unknown",
+        //   guardian_name: r.guardian_name,
+        //   region: r.tehsil_name ?? r.district_name,
+        //   national: r.national_orders ?? r.national ?? 0,
+        //   international: r.international_orders ?? r.international ?? 0,
+        // }));
+        // const totalNational = rows.reduce((sum, r) => sum + r.national, 0);
+        // const totalInternational = rows.reduce(
+        //   (sum, r) => sum + r.international,
+        //   0,
+        // );
+        // setBookOrderRows(rows);
         setBookOrderTotals({
-          national: totalNational,
-          international: totalInternational,
+          national: data?.data?.tnc ?? 0,
+          international: data?.data?.tic ?? 0,
         });
-        setMessages([]);
+        // setMessages([]);
       }
 
       setFilterCollapsed(true);

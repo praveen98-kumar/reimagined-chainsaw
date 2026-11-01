@@ -4,6 +4,7 @@ import type {
   Region,
   User,
 } from "@/shared/interfaces/user";
+import type { ActiveLocation } from "@/shared/functions/seva-region";
 
 export interface StoredUser {
   id: number;
@@ -15,6 +16,7 @@ export interface StoredUser {
   all_permission?: GroupPermission;
   active_region: Region | null;
   seva_regions?: Record<string, Region>;
+  group_locations?: Record<string, ActiveLocation>;
   login_time: string;
   mobile_no: string;
   name: string;
@@ -70,6 +72,7 @@ export const migrateOldStorage = (): void => {
         all_permission: oldAllPermission,
         active_region: null,
         seva_regions: {},
+        group_locations: {},
         login_time: new Date().toISOString(),
         mobile_no: parsedUser.mobile_no,
         name: parsedUser.disciple?.name || parsedUser.mobile_no,
@@ -172,6 +175,8 @@ export const addOrUpdateUser = (
     active_region: null,
     all_permission: all_permission,
     seva_regions: userIndex >= 0 ? (users[userIndex].seva_regions ?? {}) : {},
+    group_locations:
+      userIndex >= 0 ? (users[userIndex].group_locations ?? {}) : {},
     login_time: new Date().toISOString(),
     mobile_no: user.mobile_no,
     name: user.disciple?.name || user.mobile_no,
@@ -294,6 +299,26 @@ export const updateActiveUserSevaRegions = (
 
   if (userIndex >= 0) {
     users[userIndex].seva_regions = sevaRegions;
+    localStorage.setItem(USERS_LIST_KEY, JSON.stringify(users));
+  }
+};
+
+/**
+ * Updates the location last picked in each sidebar group for the active user
+ */
+export const updateActiveUserGroupLocations = (
+  groupLocations: Record<string, ActiveLocation>,
+): void => {
+  const activeUser = getActiveUser();
+  if (!activeUser) return;
+
+  const users = getUsersList();
+  const userIndex = users.findIndex(
+    (u) => u.disciple_id === activeUser.disciple_id,
+  );
+
+  if (userIndex >= 0) {
+    users[userIndex].group_locations = groupLocations;
     localStorage.setItem(USERS_LIST_KEY, JSON.stringify(users));
   }
 };

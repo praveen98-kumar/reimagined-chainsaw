@@ -92,7 +92,7 @@ const ChartComponent = ({
         },
       ]
     : chartData;
-  const total = chartData.reduce((a, c) => a + c.value, 0);
+  const total = finalChartData.reduce((a, c) => a + c.value, 0);
   const RADIAN = Math.PI / 180;
 
   const renderLabel = (props: PieLabelRenderProps) => {

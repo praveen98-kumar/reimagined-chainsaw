@@ -231,7 +231,12 @@ export function findLocationOption(
   );
 }
 
-export function findSavedLocationOption(
+/**
+ * Returns the location remembered for the active group and sevas, or `null`
+ * when nothing has been saved yet. Callers that want a fallback should use
+ * `findGroupLocationOption` / `findPreferredLocationOption`.
+ */
+export function findSavedRegionOption(
   locations: readonly LocationOption[],
   sevaRegions: Record<string, Region> | null | undefined,
   group: string | null | undefined,
@@ -260,7 +265,122 @@ export function findSavedLocationOption(
     }
   }
 
-  return locations[0] ?? null;
+  return null;
+}
+
+/**
+ * Returns the location last picked while a sidebar group was active. The
+ * group-level record is authoritative because one picker selection can only be
+ * stored for the sevas that actually have that location. Relying on the
+ * per-seva records alone lets a stale entry for another seva win.
+ */
+export function findGroupLocationOption(
+  locations: readonly LocationOption[],
+  groupLocations: Record<string, ActiveLocation> | null | undefined,
+  group: string | null | undefined,
+): LocationOption | null {
+  const saved = groupLocations?.[group ?? ""];
+  if (!saved) return null;
+
+  return findLocationOption(locations, saved);
+}
+
+/**
+ * Seeds a group's remembered location from the persisted active location.
+ * This keeps existing users' last selection after upgrading to group-level
+ * tracking. An existing group entry is never overwritten.
+ */
+export function seedGroupLocation(
+  groupLocations: Record<string, ActiveLocation> | null | undefined,
+  group: string | null | undefined,
+  roles: readonly number[] | null | undefined,
+  permission: Permission | null | undefined,
+  region: Region | null | undefined,
+): Record<string, ActiveLocation> {
+  const current = groupLocations ?? {};
+  const groupKey = group ?? "";
+
+  if (
+    current[groupKey] ||
+    !permission ||
+    !region ||
+    !permission.role_region ||
+    !roles?.includes(permission.role_id)
+  ) {
+    return current;
+  }
+
+  return {
+    ...current,
+    [groupKey]: { roleRegion: permission.role_region, region },
+  };
+}
+
+/**
+ * Resolves the location a page should display. The location chosen while the
+ * current sidebar group was active is kept. When the active permission does not
+ * belong to the group selected in the sidebar (for example right after
+ * switching groups), the last location picked in that group wins instead so
+ * the picker does not keep the previous group's selection.
+ */
+export function findPreferredLocationOption(
+  locations: readonly LocationOption[],
+  sevaRegions: Record<string, Region> | null | undefined,
+  groupLocations: Record<string, ActiveLocation> | null | undefined,
+  group: string | null | undefined,
+  sevas: readonly SevaType[] | undefined,
+  currentLocation: ActiveLocation | null | undefined,
+  isCurrentPermissionInGroup: boolean,
+): LocationOption | null {
+  const currentOption = findLocationOption(locations, currentLocation);
+
+  if (isCurrentPermissionInGroup && currentOption) {
+    return currentOption;
+  }
+
+  return (
+    findGroupLocationOption(locations, groupLocations, group) ??
+    findSavedRegionOption(locations, sevaRegions, group, sevas) ??
+    currentOption ??
+    locations[0] ??
+    null
+  );
+}
+
+/** Finds the option that represents a specific region and role level. */
+export function findLocationOptionForRegion(
+  locations: readonly LocationOption[],
+  roleRegion: string,
+  region: Region,
+): LocationOption | null {
+  return (
+    locations.find(
+      (option) =>
+        option.roleRegion === roleRegion &&
+        isSameRegion(option.region, region, roleRegion),
+    ) ?? null
+  );
+}
+
+/**
+ * Builds the selection used when a seva card navigates to its page. Uses the
+ * location last picked in the active group (then the per-seva record) so the
+ * target page keeps the same location instead of falling back to the first
+ * region of a permission.
+ */
+export function findSavedLocationSelection(
+  permissions: Permission[],
+  sevaRegions: Record<string, Region> | null | undefined,
+  groupLocations: Record<string, ActiveLocation> | null | undefined,
+  group: string | null | undefined,
+  preferredPermission?: Permission | null,
+): LocationSelection | null {
+  const options = buildLocationOptions(permissions);
+  const option =
+    findGroupLocationOption(options, groupLocations, group) ??
+    findSavedRegionOption(options, sevaRegions, group);
+
+  return option ? createLocationSelection(option, preferredPermission) : null;
 }
 
 export function findRegionInPermission(
